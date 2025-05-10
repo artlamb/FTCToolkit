@@ -14,7 +14,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 
 import common.Logger;
 import common.Robot;
-import utils.Dashboard;
 
 @TeleOp(name=" Dashboard Test", group="Test")
 @SuppressLint("DefaultLocale")

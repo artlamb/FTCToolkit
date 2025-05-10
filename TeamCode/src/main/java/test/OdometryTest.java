@@ -79,7 +79,6 @@ public class OdometryTest extends LinearOpMode {
 
         double robotWidth = 18;
         double robotHeight = 18;
-        double robotCenter = robotHeight/2;
 
         TelemetryPacket packet = new TelemetryPacket(false);
         packet.fieldOverlay()
