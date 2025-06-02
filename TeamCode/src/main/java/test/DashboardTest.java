@@ -14,6 +14,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 
 import common.Logger;
 import common.Robot;
+import utils.Dashboard;
+import utils.Pose;
 
 @TeleOp(name=" Dashboard Test", group="Test")
 @SuppressLint("DefaultLocale")
@@ -21,18 +23,26 @@ import common.Robot;
 public class DashboardTest extends LinearOpMode {
 
     Robot robot;
+    Dashboard dashboard;
 
     @Override
     public void runOpMode() {
         try {
             robot = new Robot(this);
+            dashboard = new Dashboard();
+
             telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
             telemetry.addLine("Press start");
             telemetry.update();
 
-            drawOnDashboard(new Pose2D(DistanceUnit.INCH,-(24*2), 23.5, AngleUnit.RADIANS, Math.PI));
+            //drawOnDashboard(new Pose2D(DistanceUnit.INCH,-(24), 23.5, AngleUnit.RADIANS, Math.PI));
 
-            //Dashboard.drawRobot(new Pose2D(DistanceUnit.INCH,-(23.5*2), 23.5, AngleUnit.RADIANS, Math.PI));
+            dashboard.setPose(new Pose(2, 0.75, 0, 0, Math.PI/2));
+            dashboard.addWaypoint(new Pose(0, 0, 0, 0, 0));
+            dashboard.addWaypoint(new Pose(1, 0, 0, 0, 0));
+            dashboard.addWaypoint(new Pose(-2, -2, -10, -10, 0));
+
+            dashboard.drawField();
 
             waitForStart();
 
@@ -68,15 +78,17 @@ public class DashboardTest extends LinearOpMode {
                 //.setScale(0.75, 0.75)
                 //.setTranslation(10, 10)
 
+
                 .setRotation(-Math.PI/2)
 
                 .setAlpha(0.5)
                 .drawImage("/images/into-the-deep.png", 72, 72, 144, 144, Math.PI/2, 0, 0 , false)
 
-                .setAlpha(1.0)
-                .drawImage("/images/robot1.png", offsetX, offsetY, robotLength, robotWidth, -heading, 0, 0, false)
-
                 .drawGrid(0, 0, 144, 144, 7, 7)
+
+                .setAlpha(1.0)
+                .drawImage("/images/test.png", offsetX, offsetY, robotLength, robotWidth, -heading, 0, 0, false)
+
 
                 .setStrokeWidth(1)
                 .setStroke("green")

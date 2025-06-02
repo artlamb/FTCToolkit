@@ -15,10 +15,10 @@ import utils.PoseData;
 
 public class AutoTest extends LinearOpMode {
 
-    public static PoseData START = new PoseData(8.5, 102.5, 90);
+    public static PoseData START = new PoseData(0, 0, 0);
     public static PoseData WAYPOINT_1 = new PoseData(20, 20, 90);
-    public static PoseData WAYPOINT_2 = new PoseData(20, 20, 90);
-    public static PoseData PARK = new PoseData(8.5, 102.5, 90);
+    public static PoseData WAYPOINT_2 = new PoseData(20, 400, 90);
+    public static PoseData PARK = new PoseData(0, 0, 00);
 
     Auto auto;
 
@@ -27,9 +27,11 @@ public class AutoTest extends LinearOpMode {
 
         try {
             initialize();
+
             telemetry.addLine("Press start");
             telemetry.update();
             waitForStart();
+
             auto.runAuto();
 
         } catch (Exception e) {

@@ -15,7 +15,6 @@ import utils.Pose;
  * of and end post or an end pose and one or more waypoints(poses).
  * The start of a path is the robot's current pose.
  */
-@com.acmerobotics.dashboard.config.Config           // allows public static to be changed in TFC Dashboard
 public class Navigate {
 
     private static class Path {
@@ -26,17 +25,18 @@ public class Navigate {
 
     private final ElapsedTime timer = new ElapsedTime();
     private final LinearOpMode opMode;
-    private final DriveControl navigator;
+    private final DriveControl driveControl;
 
-    public Navigate(LinearOpMode opMode, DriveControl navigator) {
+    public Navigate(LinearOpMode opMode, DriveControl driveControl) {
 
         this.opMode = opMode;
-        this.navigator = navigator;
-        navigator.resetIMU();
+        this.driveControl = driveControl;
+        driveControl.resetIMU();
+
     }
 
     public void setStartingPose(Pose pose) {
-        navigator.setPose(pose);
+        driveControl.setPose(pose);
         Logger.message("Start (%.0f, %.0f) heading: %.0f",
                 pose.getX(), pose.getY(), pose.getHeading(AngleUnit.DEGREES));
     }
@@ -60,20 +60,40 @@ public class Navigate {
             Logger.message("path %s index %d  (%.1f, %.1f) heading: %.0f", path.name, index, x, y, heading);
         }
 
-        navigator.followPath(path.poses, 4000);
+        driveControl.followPath(path.poses, 4000);
+    }
+
+    public void followPath(String name) {
+        for (Path path : paths) {
+            if (path.name.equals(name)) {
+                followPath(path);
+            }
+        }
+    }
+
+    private void followPath(Path path) {
+
+        for (Pose pose: path.poses) {
+            double x = pose.getX();
+            double y = pose.getY();
+            double heading = pose.getHeading(AngleUnit.DEGREES);
+            Logger.message("path %s (%.1f, %.1f) heading: %.0f", path.name, x, y, heading);
+        }
+
+        driveControl.followPath(path.poses, 4000);
     }
 
     /**
      * Wait until the robot stops moving
      */
     public void waitUntilNotMoving () {
-        Logger.message("waiting, navigator is %b", navigator.isBusy());
-        if (!navigator.isBusy() )
-            Logger.warning("navigator is not busy");
+        Logger.message("waiting, driveControl is %b", driveControl.isBusy());
+        if (!driveControl.isBusy() )
+            Logger.warning("driveControl is not busy");
         timer.reset();
-        while (navigator.isBusy() &&  opMode.opModeIsActive()) {
+        while (driveControl.isBusy() &&  opMode.opModeIsActive()) {
             if (timer.milliseconds() > 3000) {
-                Logger.warning("navigator timed out");
+                Logger.warning("driveControl timed out");
                 break;
             }
         }
@@ -84,29 +104,27 @@ public class Navigate {
      * Display the current pose of the robot
      */
     public void displayPose () {
-        Pose pose = navigator.getPose();
+        Pose pose = driveControl.getPose();
         opMode.telemetry.addData("pose", "x %5.1f  y %5.1f  heading %5.1f  is busy %b",
                 pose.getX(),
                 pose.getY(),
                 pose.getHeading(AngleUnit.DEGREES),
-                navigator.isBusy());
+                driveControl.isBusy());
         opMode.telemetry.update();
     }
 
     /**
-     * Create a path with an ending pose and zero or more waypoints (poses)
+     * Add a path with an ending pose and zero or more waypoints (poses)
      *
      * @param name name of the pose
-     * @param index order of the path
      * @param poses one or more poses
      */
-    public void createPath(String name, int index, Pose... poses) {
+    public void addPath(String name, Pose... poses) {
         Path path = new Path();
         path.name = name;
         path.poses = new ArrayList<>();
         Collections.addAll(path.poses, poses);
-
-        paths.add(index, path);
+        paths.add(path);
     }
 }
 

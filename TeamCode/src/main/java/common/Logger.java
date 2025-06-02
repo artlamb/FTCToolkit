@@ -52,18 +52,18 @@ public final class Logger {
     }
 
     public static void error (Exception e, String msg) {
-        error(e, msg, true);
+        error(e, msg, 10);
     }
 
-    public static void error (Exception e, String msg, boolean stacktrace) {
+    public static void error (Exception e, String msg, int traceDepth) {
 
         Log.e(TAG, "\n");
         Log.println(Log.ERROR, TAG, msg);
         Log.e(TAG, Objects.requireNonNull(e.getMessage()));
 
-        if (stacktrace) {
+        if (traceDepth > 0 ) {
             StackTraceElement[] stackTraceElements = e.getStackTrace();
-            for (int i=0; i<Math.min(stackTraceElements.length, 10); i++)
+            for (int i=0; i<Math.min(stackTraceElements.length, traceDepth); i++)
                 Log.e(TAG, stackTraceElements[i].toString());
         }
     }

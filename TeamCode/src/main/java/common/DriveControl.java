@@ -11,6 +11,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 import java.util.ArrayList;
 
+import utils.Dashboard;
 import utils.Pose;
 import utils.PIDFCoefficients;
 import utils.PIDFController;
@@ -92,6 +93,7 @@ public class DriveControl extends Thread {
     VoltageSensor voltageSensor;
     private DistanceSensor leftFrontSensor;
     private DistanceSensor rightFrontSensor;
+    private final Dashboard dashboard;
 
     public DriveControl(LinearOpMode opMode, Drive drive) {
 
@@ -100,6 +102,7 @@ public class DriveControl extends Thread {
         this.drive = drive;
         driveState = DRIVE_STATE.IDLE;
         timeoutTimer = new ElapsedTime();
+        dashboard = new Dashboard();
 
         voltageSensor = opMode.hardwareMap.voltageSensor.iterator().next();
         initDistanceSensors();
@@ -116,13 +119,13 @@ public class DriveControl extends Thread {
         try {
             leftFrontSensor = opMode.hardwareMap.get(DistanceSensor.class, Config.LEFT_FRONT_SENSOR);
         } catch (Exception e) {
-            Logger.error(e, "Left distance sensor not found");
+            Logger.error(e, "Left distance sensor not found", 2);
         }
 
         try {
             rightFrontSensor = opMode.hardwareMap.get(DistanceSensor.class, Config.RIGHT_FRONT_SENSOR);
         } catch (Exception e) {
-            Logger.error(e, "Right distance sensor not found");
+            Logger.error(e, "Right distance sensor not found", 2);
         }
     }
 
@@ -412,7 +415,9 @@ public class DriveControl extends Thread {
         timeoutTimer.reset();
 
         for (Pose pose : poses) {
+            dashboard.addWaypoint(pose);
             moveToPose(pose);
+            dashboard.drawField();
         }
 
         int count = poses.size();
@@ -421,6 +426,8 @@ public class DriveControl extends Thread {
         moveToPose(last);
 
         drive.stopRobot();
+        dashboard.setPose(last);
+        dashboard.drawField();
 
         Pose pose = getPose();
         double x = pose.getX();
@@ -723,6 +730,8 @@ public class DriveControl extends Thread {
         synchronized (this) {
             interruptAction();
             this.poses = poses;
+            this.maxSpeed = MAX_SPEED;
+            this.minSpeed = MIN_SPEED;
             this.timeout = timeout;
             driveState = DRIVE_STATE.FOLLOW_PATH;
         }
@@ -798,14 +807,17 @@ public class DriveControl extends Thread {
 
     public Pose getPose() {
         //Logger.message("%-20s %-24s", Thread.currentThread().getName(), Logger.getCaller());
-            Pose pose;
-            localizer.update();
-            pose = localizer.getPose();
-            return pose;
+        Pose pose;
+        localizer.update();
+        pose = localizer.getPose();
+        //Logger.message("x: %5.1f  y:%5.1f", pose.getX(), pose.getY());
+        return pose;
     }
     
     public void setPose(Pose pose) {
         localizer.setPose(pose);
+        dashboard.setPose(pose);
+
     }
 
     public boolean nearPose() {

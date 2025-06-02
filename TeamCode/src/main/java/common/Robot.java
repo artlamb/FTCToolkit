@@ -136,7 +136,7 @@ public class Robot extends Thread {
             dropperFingers = opMode.hardwareMap.get(Servo.class, Config.DROPPER_FINGERS);
 
         } catch (Exception e) {
-            Logger.error(e, "hardware not found", false);
+            Logger.error(e, "hardware not found", 2);
         }
 
         try {
@@ -151,7 +151,7 @@ public class Robot extends Thread {
             extendingArmControl.start();
 
         } catch (Exception e) {
-            Logger.error(e, "hardware not found", false);
+            Logger.error(e, "hardware not found", 2);
         }
 
         try {
@@ -161,7 +161,7 @@ public class Robot extends Thread {
 
         } catch (Exception e) {
             testRobot = true;
-            Logger.error(e, "hardware not found", false);
+            Logger.error(e, "hardware not found", 2);
         }
 
         if (! testRobot)

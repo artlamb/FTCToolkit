@@ -14,6 +14,14 @@ public class Pose extends Pose2D {
         super(DistanceUnit.INCH, x, y, AngleUnit.RADIANS, h);
     }
 
+    public Pose(double tileX, double tileY, double offsetX, double offsetY, double heading)  {
+        super(DistanceUnit.INCH,
+                tileX * 23.5 + offsetX,
+                tileY * 23.5 + offsetY,
+                AngleUnit.RADIANS,
+                heading);
+    }
+
     /**
      * This returns the x value.
      *

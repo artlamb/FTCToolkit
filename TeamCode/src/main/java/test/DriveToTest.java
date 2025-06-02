@@ -43,7 +43,6 @@ import utils.Pose;
 
 @TeleOp(name="DriveToTest", group="Test")
 //@SuppressLint("DefaultLocale")
-@com.acmerobotics.dashboard.config.Config
 
 public class DriveToTest extends LinearOpMode {
 

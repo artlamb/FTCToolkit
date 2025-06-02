@@ -1,7 +1,6 @@
 package utils;
 
 import kotlin.jvm.JvmField;
-import pedroPathing.util.FeedForwardConstant;
 
 /**
  * This is the CustomPIDFCoefficients class. This class handles holding coefficients for PIDF

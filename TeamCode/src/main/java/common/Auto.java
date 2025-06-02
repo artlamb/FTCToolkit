@@ -9,7 +9,7 @@ import utils.Pose;
 
 public class Auto {
 
-    public static boolean enableWait = false;
+    public static boolean enableWait = true;
 
     public enum PathState {
         START, WAYPOINT_1, WAYPOINT_2, PARK;
@@ -79,9 +79,11 @@ public class Auto {
     }
 
     public void addPath(PathState pathState, double x, double y, double heading) {
-        int index = pathState.ordinal();
-        String name = String.format("%s", pathState);
-        navigate.createPath(name, index, createPose(x, y, heading));
+        navigate.addPath(getPathName(pathState), createPose(x, y, heading));
+    }
+
+    private String getPathName(PathState pathState) {
+        return String.format("%s", pathState);
     }
 
     private void followPath() {
@@ -90,7 +92,7 @@ public class Auto {
 
         int index = pathState.ordinal() + 1;
         pathState  = PathState.next(index);
-        navigate.followPath(index);
+        navigate.followPath(getPathName(pathState));
     }
 
     private void waitUntilRobotIdIdle() {

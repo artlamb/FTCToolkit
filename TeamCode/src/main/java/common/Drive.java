@@ -145,7 +145,7 @@ public class Drive extends Thread {
         try {
             distanceSensor = opMode.hardwareMap.get(DistanceSensor.class, Config.DISTANCE_SENSOR);
         } catch (Exception e) {
-            Logger.error(e, "Distance sensor not found");
+            Logger.error(e, "Distance sensor not found", 2);
         }
 
         /*
