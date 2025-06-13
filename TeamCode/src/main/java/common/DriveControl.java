@@ -28,6 +28,7 @@ import utils.PIDFController;
 public class DriveControl extends Thread {
 
     public static boolean verbose = false;
+    public static boolean debug = true;
 
     public static double MAX_SPEED       = 0.6;
     public static double MAX_STICK_SPEED = 0.90;
@@ -322,7 +323,6 @@ public class DriveControl extends Thread {
                 String.format("pose: x %5.1f  y %5.1f  heading %5.1f", x, y, heading),
                 String.format("error: x %5.1f  y %5.1f  heading %5.1f", Math.abs(targetX-x), Math.abs(targetY-y), Math.abs(targetHeading-heading)),
                 String.format("time: %4.2f", timeoutTimer.seconds()));
-
     }
 
     private void moveToPose(Pose target) {
@@ -341,11 +341,11 @@ public class DriveControl extends Thread {
             double currentHeading = pose.getHeading();
             double a = targetY - currentY;
             double b = targetX - currentX;
-            double signedAngle = polarToSignedAngle(currentHeading);
-            double angle = Math.atan2(a, b) - signedAngle;   // angle is robot relative
+            //double signedAngle = polarToSignedAngle(currentHeading);
+            double angle = Math.atan2(a, b); // - signedAngle;   // angle is robot relative
             double distance = Math.hypot(a, b);
-            double sin = Math.sin(angle - (Math.PI / 4));
-            double cos = Math.cos(angle - (Math.PI / 4));
+            double sin = Math.sin(angle + (Math.PI / 4));
+            double cos = Math.cos(angle + (Math.PI / 4));
             double max = Math.max(Math.abs(sin), Math.abs(cos));
             double headingError = angleWrap(currentHeading - Math.toRadians(targetHeading));
 
@@ -372,10 +372,12 @@ public class DriveControl extends Thread {
             double leftRearPower   = (power * (sin / max) + turn) / scale;
             double rightRearPower  = (power * (cos / max) - turn) / scale;
 
-            drive.setVelocity(leftFrontPower * maxVelocity,
-                    rightFrontPower * maxVelocity,
-                    leftRearPower * maxVelocity,
-                    rightRearPower * maxVelocity);
+            if (! debug) {
+                drive.setVelocity(leftFrontPower * maxVelocity,
+                        rightFrontPower * maxVelocity,
+                        leftRearPower * maxVelocity,
+                        rightRearPower * maxVelocity);
+            }
 
             double currentVelocity = drive.getCurrentVelocity();
             nearPose = currentVelocity / maxVelocity <= 0.20 && power < 0.5 && turn < 0.4;
@@ -407,6 +409,8 @@ public class DriveControl extends Thread {
             if (isEmergencyStop()) {
                 break;
             }
+
+            if (debug) return;
         }
     }
 
@@ -636,6 +640,12 @@ public class DriveControl extends Thread {
 
     }
 
+    /**
+     * Returns an signed angle in radians between -pi and pi.
+     *
+     * @param radians angle in radians
+     * @return signed angle in radians between -pi and pi.
+     */
     private double angleWrap(double radians) {
         while (radians > Math.PI) {
             radians -= 2 * Math.PI;

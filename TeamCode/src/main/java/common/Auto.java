@@ -48,7 +48,7 @@ public class Auto {
 
             switch (pathState) {
                 case START:
-                    robot.setToStartPosition();
+                    //robot.setToStartPosition();
                     followPath();
                     break;
 

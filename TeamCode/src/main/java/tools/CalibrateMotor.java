@@ -321,6 +321,7 @@ public class CalibrateMotor extends LinearOpMode {
         motor.setPower(speed);
         while (opModeIsActive()) {
             Logger.message("position %d", motor.getCurrentPosition());
+            Thread.yield();
             if (! motor.isBusy())
                 break;
         }

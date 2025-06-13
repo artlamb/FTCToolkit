@@ -4,53 +4,49 @@ import android.annotation.SuppressLint;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
-import com.qualcomm.robotcore.hardware.configuration.annotations.DigitalIoDeviceType;
-
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import com.qualcomm.robotcore.hardware.LED;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import common.Logger;
 import common.Robot;
-import utils.Dashboard;
-import utils.Pose;
 
 @TeleOp(name=" Claw Test", group="Test")
 @SuppressLint("DefaultLocale")
 
 public class ClawTest extends LinearOpMode {
 
+    private double SERVO_CLOSED = 0.57;
+    private double SERVO_OPENED = 0.50;
+    private double SERVO_CLOSED_VOLTAGE =0.3;
+
     Robot robot;
     AnalogInput currentSensor;
     DigitalChannel digitalChannel;
+    LED redLED;
+    LED greenLED;
+    Servo servo;
+    double lastRead = 0;
+
 
     @Override
     public void runOpMode() {
         try {
             robot = new Robot(this);
+            servo = hardwareMap.get(Servo.class, "servo");
             currentSensor = hardwareMap.get(AnalogInput.class, "currentSensor");
-            //currentSensor = new AnalogInput(0);
+            greenLED = hardwareMap.get(LED.class, "greenLED");
+            redLED = hardwareMap.get(LED.class, "redLED");
 
-            digitalChannel = hardwareMap.get(DigitalChannel.class, "led");
-            digitalChannel.setMode(DigitalChannel.Mode.OUTPUT);
+            redLED.off();
+            greenLED.off();
 
-            boolean state = false;
-            for (int i = 0; i < 10; i++) {
-                state = ! state;
-                digitalChannel.setState(state);
-                Logger.message("led is %b", state);
-                if (state)
-                    sleep(3000);
-                else
-                    sleep(1000);
-            }
-
-
+            //digitalChannel = hardwareMap.get(DigitalChannel.class, "led");
+            //digitalChannel.setMode(DigitalChannel.Mode.OUTPUT);
+            //digitalChannel.setState(true);
 
             telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
             telemetry.addLine("Press start");
@@ -59,21 +55,15 @@ public class ClawTest extends LinearOpMode {
             waitForStart();
 
             while (opModeIsActive()) {
-                double max = currentSensor.getMaxVoltage();
-                double sensorValue = currentSensor.getVoltage();
+                if (gamepad1.x) {
+                    servo.setPosition(SERVO_OPENED);
+                    while (gamepad1.x) sleep(10);
+                } else if (gamepad1.b) {
+                    servo.setPosition(SERVO_CLOSED);
+                    while (gamepad1.b) sleep(10);
+                }
 
-                // Remap the ADC value into a voltage number (5V reference)
-                int RS = 10;          // Shunt resistor value (in ohms)
-                int VOLTAGE_REF = 5;  // Reference voltage for analog read
-                double voltage = (sensorValue * VOLTAGE_REF) / 1023;
-
-                // Follow the equation given by the INA169 datasheet to
-                // determine the current flowing through RS. Assume RL = 10k
-                // Is = (Vout x 1k) / (RS x RL)
-                double current = voltage / (10 * RS);
-
-                Logger.message("sensor value: %f  max: %f  voltage: %f  current: %f", sensorValue, max, voltage, current);
-                sleep(500);
+                readCurrentSensor();
             }
 
         } catch (Exception e) {
@@ -81,4 +71,27 @@ public class ClawTest extends LinearOpMode {
         }
     }
 
+    void readCurrentSensor() {
+        double milliSeconds = System.currentTimeMillis();
+        if (milliSeconds - lastRead < 500)
+            return;
+
+        lastRead = milliSeconds;
+
+        double max = currentSensor.getMaxVoltage();
+        double voltage = currentSensor.getVoltage();
+
+        double RS = .10;          // Shunt resistor value (in ohms)
+
+        // Follow the equation given by the INA169 datasheet to
+        // determine the current flowing through RS. Assume RL = 10k
+        // Is = (Vout x 1k) / (RS x RL)
+        double current = voltage / (10 * RS);
+
+        boolean closed =  (voltage > SERVO_CLOSED_VOLTAGE);
+        redLED.enableLight(closed);
+        greenLED.enableLight(!closed);
+
+        Logger.message("sensor value: %f  max: %f  current: %f  closed: %b", voltage, max, voltage, current, closed);
+    }
 }

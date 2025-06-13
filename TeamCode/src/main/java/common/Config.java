@@ -21,7 +21,7 @@ public class Config {
 
     public static final String LIFTER_LEFT         = "lifterLeft";
     public static final String LIFTER_RIGHT        = "lifterRight";
-    public static final String ARM                 = "extendingArm";
+    public static final String ARM                 = "arm";
     public static final String PICKER_WRIST        = "pickerWrist";
     public static final String PICKER_FINGERS      = "pickerFingers";
     public static final String PICKER_YAW          = "pickerYaw";

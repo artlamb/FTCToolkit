@@ -74,7 +74,7 @@ public class Robot extends Thread {
     private boolean dropperOpened = false;
     private boolean pickerUp = false;
     private boolean dropperUp = false;
-    private double pickerYawPosition = PICKER_YAW_0_DEGREES;
+    private double  pickerYawPosition = PICKER_YAW_0_DEGREES;
 
     // Define Motor and Servo objects
     private Servo           pickerWrist;
@@ -85,8 +85,8 @@ public class Robot extends Thread {
 
     private Lifter          lifter;
 
-    private DcMotor         extendingArm;
-    private MotorControl    extendingArmControl;
+    private DcMotor         arm;
+    private MotorControl    armControl;
 
     // drivetrain
     public Drive      drive = null;
@@ -140,15 +140,15 @@ public class Robot extends Thread {
         }
 
         try {
-            extendingArm = opMode.hardwareMap.get(DcMotor.class, Config.ARM);
-            extendingArm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-            extendingArm.setDirection(DcMotorSimple.Direction.REVERSE);
-            extendingArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);       // ToDo should we do this?
-            extendingArm.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            arm = opMode.hardwareMap.get(DcMotor.class, Config.ARM);
+            arm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            arm.setDirection(DcMotorSimple.Direction.REVERSE);
+            arm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);       // ToDo should we do this?
+            arm.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-            extendingArmControl = new MotorControl(opMode, extendingArm);
-            extendingArmControl.setName("extendingArm");
-            extendingArmControl.start();
+            armControl = new MotorControl(opMode, arm);
+            armControl.setName("arm");
+            armControl.start();
 
         } catch (Exception e) {
             Logger.error(e, "hardware not found", 2);
@@ -169,9 +169,9 @@ public class Robot extends Thread {
     }
 
     public void resetEncoders () {
-        DcMotor.RunMode mode = extendingArm.getMode();
-        extendingArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        extendingArm.setMode(mode);
+        DcMotor.RunMode mode = arm.getMode();
+        arm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        arm.setMode(mode);
 
         lifter.resetEncoders();
     }
@@ -415,7 +415,7 @@ public class Robot extends Thread {
      * @return true if extendable, false if fully extend
      */
     public boolean armExtendable() {
-        int position = extendingArm.getCurrentPosition();
+        int position = arm.getCurrentPosition();
         boolean extendable = position < ARM_OUT;
         Logger.message("arm position %d %B", position, extendable);
         return extendable;
@@ -426,7 +426,7 @@ public class Robot extends Thread {
      * @return true if fully retracted
      */
     public boolean armRetractable() {
-        int position = extendingArm.getCurrentPosition();
+        int position = arm.getCurrentPosition();
         boolean retractable = position > ARM_IN;
         Logger.message("arm position %d %B", position, retractable);
         return  retractable;
@@ -436,36 +436,36 @@ public class Robot extends Thread {
      * Extend arm to the specified position
      */
     public void armExtend() {
-        extendingArmControl.runMotor(ARM_SPEED);
+        armControl.runMotor(ARM_SPEED);
     }
 
     /**
      * Retract arm to the specified position
      */
     public void amrRetract() {
-        extendingArmControl.runMotor(-ARM_SPEED);
+        armControl.runMotor(-ARM_SPEED);
     }
 
     /**
      * Stop the arm from moving
      */
     public void armStop () {
-        extendingArmControl.stopMotor();
+        armControl.stopMotor();
     }
 
     public boolean armIsBusy() {
-        return extendingArmControl.motorIsBusy();
+        return armControl.motorIsBusy();
     }
     /**
      * Move the arm to the specified position
      * @param position target position
      */
     public void armMoveTo (int position) {
-        extendingArmControl.setPosition(position, ARM_SPEED, ARM_SPEED);
+        armControl.setPosition(position, ARM_SPEED, ARM_SPEED);
     }
 
     public void armMoveTo (int position, double speed) {
-        extendingArmControl.setPosition(position, speed, speed);
+        armControl.setPosition(position, speed, speed);
     }
 
     private void runMotorToPosition(DcMotor motor, int position, double speed, double lowSpeed) {
@@ -641,7 +641,7 @@ public class Robot extends Thread {
     }
 
     public boolean isBusy () {
-        return lifter.lifterIsBusy() || extendingArmControl.motorIsBusy() || robotState != ROBOT_STATE.IDLE;
+        return lifter.lifterIsBusy() || armControl.motorIsBusy() || robotState != ROBOT_STATE.IDLE;
     }
 
     public void setToStartPosition() {
