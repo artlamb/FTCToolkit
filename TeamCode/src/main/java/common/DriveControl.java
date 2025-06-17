@@ -34,7 +34,7 @@ public class DriveControl extends Thread {
     public static double MAX_SPEED       = 0.6;
     public static double MAX_STICK_SPEED = 0.90;
     public static double MAX_TURN_SPEED  = 0.5;
-    public static double MIN_SPEED       = 0.10;
+    public static double MIN_SPEED       = 0.05;
     public static double MIN_TURN_SPEED  = 0.100;
 
     public static double DISTANCE_TOLERANCE_HIGH_SPEED = 10;
@@ -351,7 +351,7 @@ public class DriveControl extends Thread {
             double magnitude  = Math.hypot(localizer.getVelocityX(), localizer.getVelocityY());
             double velocityAngle = Math.atan2(localizer.getVelocityY(), localizer.getVelocityX());
             double deltaAngle = AngleUnit.normalizeRadians(angle - velocityAngle);
-            double rotation = localizer.getVelocityHeading();
+            double rotation = -localizer.getVelocityHeading();
 
             double error = distance;
             if (magnitude > 10 && Math.abs(deltaAngle) < Math.PI/6) {
@@ -360,8 +360,6 @@ public class DriveControl extends Thread {
 
             drivePID.updateError(error);
             double power = drivePID.runPIDF();
-
-            power = 0;
 
             headingPID.updateError(headingError);
             double turn = headingPID.runPIDF();
@@ -375,6 +373,16 @@ public class DriveControl extends Thread {
             if (power + Math.abs(turn) > maxSpeed) {
                 scale = (power + Math.abs(turn)) / maxSpeed;
             }
+
+            if (power + Math.abs(turn) > maxSpeed) {
+                scale = (power + Math.abs(turn)) / maxSpeed;
+                power /= scale;
+                turn /= scale;
+                scale = 1;
+            } else if (magnitude <= 10 && power < MIN_SPEED) {
+                power = MIN_SPEED;
+            }
+
             double max = Math.max(Math.abs(sin), Math.abs(cos));
             double leftFrontPower  = (power * (cos / max) + turn) / scale;
             double rightFrontPower = (power * (sin / max) - turn) / scale;
@@ -387,7 +395,7 @@ public class DriveControl extends Thread {
                     leftRearPower * maxVelocity,
                     rightRearPower * maxVelocity);
 
-            nearPose = magnitude <= 10 && Math.abs(rotation) < 10;
+            nearPose = magnitude <= 10 && Math.abs(rotation) <= Math.toDegrees(10);
 
             Logger.verbose("%s",
                     String.format("x %5.1f  y %5.1f  h %5.1f  ", current.getX(), current.getY(), current.getHeading(AngleUnit.DEGREES)) +
@@ -396,7 +404,6 @@ public class DriveControl extends Thread {
                     String.format("turn: %5.2f  power: %4.2f  ", turn, power) +
                     String.format("wheels: %5.2f  %5.2f  %5.2f  %5.2f   ", leftFrontPower, rightFrontPower, leftRearPower, rightRearPower) +
                     String.format("vm: %3.0f  va: %4.0f  vh: %4.0f   ", magnitude, Math.toDegrees(deltaAngle), Math.toDegrees(rotation)) +
-                    //String.format("velocity: %6.1f   ", currentVelocity) +
                     //String.format("near: %5b  ", nearPose) +
                     //String.format("volts: %4.1f  ", voltageSensor.getVoltage()) +
                     String.format("time: %4.0f   ", timeoutTimer.milliseconds())
@@ -404,7 +411,8 @@ public class DriveControl extends Thread {
 
             if (Math.abs(a) < distanceTolerance && Math.abs(b) < distanceTolerance &&
                     Math.abs(Math.toDegrees(headingError)) < headingTolerance &&
-                    Math.abs(magnitude) <= 5) {
+                    Math.abs(magnitude) <= 5 &&
+                    Math.abs(rotation) <= Math.toDegrees(10)) {
                 break;
             }
 
