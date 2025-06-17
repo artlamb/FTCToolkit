@@ -1,5 +1,6 @@
 package test;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -7,6 +8,7 @@ import common.Logger;
 import common.Settings;
 
 @TeleOp(name="SettingsTest", group="Test")
+@Disabled
 @SuppressWarnings("unused")
 
 public class SettingsTest extends LinearOpMode {

@@ -19,7 +19,7 @@ import utils.Increment;
  * This OpMode calibrate any of the robot servos.
  */
 
-@TeleOp(name="Calibrate Servo", group="Test")
+@TeleOp(name="Calibrate Servo", group="Tools")
 
 public class CalibrateServo extends LinearOpMode {
 

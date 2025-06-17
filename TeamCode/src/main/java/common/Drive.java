@@ -142,13 +142,13 @@ public class Drive extends Thread {
             Logger.error(e, "Drive hardware not found");
         }
 
+        /*
         try {
             distanceSensor = opMode.hardwareMap.get(DistanceSensor.class, Config.DISTANCE_SENSOR);
         } catch (Exception e) {
             Logger.error(e, "Distance sensor not found", 2);
         }
 
-        /*
         try {
             colorSensor = opMode.hardwareMap.get(NormalizedColorSensor.class, Config.COLOR_SENSOR);
             colorSensor.setGain(COLOR_SENSOR_GAIN);

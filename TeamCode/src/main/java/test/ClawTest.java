@@ -7,25 +7,23 @@ import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
-import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.LED;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import common.Logger;
 import common.Robot;
 
-@TeleOp(name=" Claw Test", group="Test")
+@TeleOp(name="Claw Test", group="Test")
 @SuppressLint("DefaultLocale")
 
 public class ClawTest extends LinearOpMode {
 
-    private double SERVO_CLOSED = 0.57;
-    private double SERVO_OPENED = 0.50;
-    private double SERVO_CLOSED_VOLTAGE =0.3;
+    private final double SERVO_CLOSED = 0.57;
+    private final double SERVO_OPENED = 0.50;
+    private final double SERVO_CLOSED_VOLTAGE =0.3;
 
     Robot robot;
     AnalogInput currentSensor;
-    DigitalChannel digitalChannel;
     LED redLED;
     LED greenLED;
     Servo servo;
@@ -43,10 +41,6 @@ public class ClawTest extends LinearOpMode {
 
             redLED.off();
             greenLED.off();
-
-            //digitalChannel = hardwareMap.get(DigitalChannel.class, "led");
-            //digitalChannel.setMode(DigitalChannel.Mode.OUTPUT);
-            //digitalChannel.setState(true);
 
             telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
             telemetry.addLine("Press start");

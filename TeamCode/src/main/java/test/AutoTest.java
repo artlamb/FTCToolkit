@@ -16,9 +16,9 @@ import utils.PoseData;
 public class AutoTest extends LinearOpMode {
 
     public static PoseData START = new PoseData(0, 0, 0);
-    public static PoseData WAYPOINT_1 = new PoseData(20, 0, 0);
-    public static PoseData WAYPOINT_2 = new PoseData(20, 400, 90);
-    public static PoseData PARK = new PoseData(0, 0, 00);
+    public static PoseData WAYPOINT_1 = new PoseData(0, 0, 90);
+    public static PoseData WAYPOINT_2 = new PoseData(0, 0, 0);
+    public static PoseData PARK = new PoseData(0, 0, 0);
 
     Auto auto;
 

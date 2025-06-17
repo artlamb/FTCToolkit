@@ -9,7 +9,7 @@ import utils.Pose;
 
 public class Auto {
 
-    public static boolean enableWait = true;
+    public static boolean enableWait = false;
 
     public enum PathState {
         START, WAYPOINT_1, WAYPOINT_2, PARK;
@@ -44,7 +44,7 @@ public class Auto {
         while (running && opMode.opModeIsActive()) {
 
             PathState currentState = pathState;
-            Logger.message("\n**\n** %s starts,  time: %6.2f", currentState, elapsedTime.seconds());
+            Logger.info("%s starts,  time: %6.2f", currentState, elapsedTime.seconds());
 
             switch (pathState) {
                 case START:
@@ -62,20 +62,21 @@ public class Auto {
 
                 case WAYPOINT_2:
                     navigate.waitUntilNotMoving();
-                    waitUntilOkToLift();
                     waitUntilRobotIdIdle();
                     waitForButtonPress();
+                    waitUntilOkToLift();
                     opMode.sleep(500);
                     followPath();
                     break;
 
                 case PARK:
+                    navigate.waitUntilNotMoving();
                     running = false;
                     break;
             }
-            Logger.message("\n** %s ends,  time: %6.2f\n**", currentState, elapsedTime.seconds());
+            Logger.info("%s ends,  time: %6.2f\n", currentState, elapsedTime.seconds());
         }
-        Logger.message("elapsed time %4.1f", elapsedTime.seconds());
+        Logger.message("opmode elapsed time %4.1f", elapsedTime.seconds());
     }
 
     public void addPath(PathState pathState, double x, double y, double heading) {
@@ -104,6 +105,7 @@ public class Auto {
                 break;
             }
         }
+        Logger.message("done waiting, time: %5.0f", timer.seconds());
         Logger.message("done waiting");
     }
 
@@ -116,7 +118,7 @@ public class Auto {
                 break;
             }
         }
-        Logger.message("done waiting, time: %5.0f", timer.milliseconds());
+        Logger.message("done waiting, time: %5.0f", timer.seconds());
     }
 
     private void waitUntilOkToLift() {
@@ -133,7 +135,7 @@ public class Auto {
                 break;
             }
         }
-        Logger.message("done waiting, time: %5.0f", timer.milliseconds());
+        Logger.message("done waiting, time: %5.0f", timer.seconds());
     }
 
     private void waitForButtonPress() {

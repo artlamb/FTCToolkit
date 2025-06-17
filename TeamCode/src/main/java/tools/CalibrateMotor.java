@@ -22,7 +22,7 @@ import common.Logger;
 import utils.Increment;
 
 @com.acmerobotics.dashboard.config.Config
-@TeleOp(name="Calibrate Motor", group="Test")
+@TeleOp(name="Calibrate Motor", group="Tools")
 //@SuppressWarnings({"FieldCanBeLocal", "unused"})
 
 public class CalibrateMotor extends LinearOpMode {

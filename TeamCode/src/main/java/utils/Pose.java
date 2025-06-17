@@ -50,6 +50,19 @@ public class Pose extends Pose2D {
     }
 
     /**
+     * Add the first Pose to the second Pose and returns the result as a Pose.
+     *
+     * @param one the first Pose.
+     * @param two the second Pose.
+     * @return returns the sum of the two Pose.
+     */
+    public static Pose add(Pose one, Pose two) {
+        double x = one.getX(DistanceUnit.INCH) + two.getX(DistanceUnit.INCH);
+        double y = one.getY(DistanceUnit.INCH) + two.getY(DistanceUnit.INCH);
+        double heading = one.getHeading(AngleUnit.RADIANS) + two.getHeading(AngleUnit.RADIANS);
+        return new Pose(x, y, heading);
+    }
+    /**
      * This subtracts the second Pose from the first Pose and returns the result as a Pose.
      * Do note that order matters here.
      *
@@ -63,23 +76,6 @@ public class Pose extends Pose2D {
         double heading = one.getHeading(AngleUnit.RADIANS) - two.getHeading(AngleUnit.RADIANS);
         return new Pose(x, y, heading);
     }
-
-
-    /**
-     * Add the first Pose to the first Pose and returns the result as a Pose.
-     * Do note that order matters here.
-     *
-     * @param one the first Pose.
-     * @param two the second Pose.
-     * @return returns the difference of the two Pose.
-     */
-    public static Pose add(Pose one, Pose two) {
-        double x = one.getX(DistanceUnit.INCH) + two.getX(DistanceUnit.INCH);
-        double y = one.getY(DistanceUnit.INCH) + two.getY(DistanceUnit.INCH);
-        double heading = one.getHeading(AngleUnit.RADIANS) - two.getHeading(AngleUnit.RADIANS);
-        return new Pose(x, y, heading);
-    }
-
     /**
      * This rotates the given pose by the given theta,
      *
@@ -110,6 +106,4 @@ public class Pose extends Pose2D {
         while (angle > 2 * Math.PI) angle -= 2 * Math.PI;
         return angle;
     }
-
-
 }

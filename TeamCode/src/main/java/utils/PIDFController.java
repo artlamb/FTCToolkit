@@ -26,6 +26,8 @@ public class PIDFController {
     private long previousUpdateTimeNano;
     private long deltaTimeNano;
 
+    private boolean reset;
+
     /**
      * This creates a new PIDFController from a PIDFCoefficients.
      *
@@ -71,7 +73,12 @@ public class PIDFController {
      * @param error The error specified.
      */
     public void updateError(double error) {
-        previousError = this.error;
+        if (reset) {
+            previousError = error;
+            reset = false;
+        } else {
+            previousError = this.error;
+        }
         this.error = error;
 
         deltaTimeNano = System.nanoTime() - previousUpdateTimeNano;
@@ -94,6 +101,7 @@ public class PIDFController {
      * This resets all the PIDF's error and position values, as well as the time stamps.
      */
     public void reset() {
+        reset = true;
         previousError = 0;
         error = 0;
         position = 0;

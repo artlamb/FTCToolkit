@@ -17,7 +17,7 @@ import common.Robot;
 import utils.Dashboard;
 import utils.Pose;
 
-@TeleOp(name=" Dashboard Test", group="Test")
+@TeleOp(name="Dashboard Test", group="Test")
 @SuppressLint("DefaultLocale")
 
 public class DashboardTest extends LinearOpMode {
@@ -96,7 +96,7 @@ public class DashboardTest extends LinearOpMode {
                 .setFill("red")
                 .fillCircle(24, 24, 1)
 
-                //.strokeLine(0, 0, 0, 24) //y axis
+                .strokeLine(0, 0, 0, 24) //y axis
                 //.setStroke("red")
                 //.strokeLine(0, 0, 24, 0)//x axis
                 ;

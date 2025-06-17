@@ -12,19 +12,9 @@ public final class Logger {
     public static final boolean VERBOSE = true;
     private static final String TAG = "DELMAR";
 
-    public static String getCaller () {
-        String caller = Thread.currentThread().getStackTrace()[4].getMethodName();
-        return String.format("%-16s", caller);
-    }
-
     private static String format(String str) {
-        String caller = Thread.currentThread().getStackTrace()[5].getMethodName();
-        return String.format("%-20s %-24s %s", Thread.currentThread().getName(), caller, str);
-    }
-
-    private static void logString (String message) {
-        String str = format(message);
-        Log.d(TAG, str);
+        String caller = Thread.currentThread().getStackTrace()[4].getMethodName();
+        return String.format("%-16s %-24s %s", Thread.currentThread().getName(), caller, str);
     }
 
     public static void warning(String warning) {
@@ -38,16 +28,26 @@ public final class Logger {
     }
 
     public static void message(String msg) {
-        logString(msg);
+        String str = format(msg);
+        Log.d(TAG, str);
     }
 
     public static void message(String format, Object... args){
-        logString(String.format(format, args));
+        String str = format(String.format(format, args));
+        Log.d(TAG, str);
     }
 
     public static void verbose(String format, Object... args) {
         if (VERBOSE) {
-            logString(String.format(format, args));
+            String str = format(String.format(format, args));
+            Log.v(TAG, str);
+        }
+    }
+
+    public static void info(String format, Object... args) {
+        if (VERBOSE) {
+            String str = format(String.format(format, args));
+            Log.i(TAG, str);
         }
     }
 

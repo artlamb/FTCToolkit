@@ -16,6 +16,7 @@ import common.Logger;
 public class Dashboard {
 
     public static boolean enabled = true;
+    public static boolean drawFieldImage = false;
 
     private TelemetryPacket packet;
     Pose robotPose = new Pose(0, 0,0);
@@ -42,11 +43,14 @@ public class Dashboard {
         TelemetryPacket packet = getPacket();
         Canvas canvas = packet.fieldOverlay();
 
-        // Draw the image of the field
         // Rotate the field image so the top right quadrant is positive x and y.
-        canvas.setRotation(-Math.PI/2)
-                .setAlpha(0.5)
-                .drawImage("/images/into-the-deep.png", 72, 72, 144, 144, Math.PI/2, 0, 0 , false);
+        canvas.setRotation(-Math.PI / 2);
+
+        // Draw the image of the field
+        if (drawFieldImage) {
+            canvas.setAlpha(0.5);
+            canvas.drawImage("/images/into-the-deep.png", 72, 72, 144, 144, Math.PI / 2, 0, 0, false);
+        }
 
 
         double scale = 24 / 23.5;                           // tiles are 23.5 inches not 24
@@ -76,11 +80,21 @@ public class Dashboard {
 
         canvas.drawGrid(0, 0, 144, 144, 7, 7);
 
-        dashboard.sendTelemetryPacket(packet);
+        sendPacket();
     }
 
     private TelemetryPacket getPacket() {
         if (packet == null) packet = new TelemetryPacket(false);
         return packet;
     }
+
+    public boolean sendPacket() {
+        if (packet != null) {
+            FtcDashboard.getInstance().sendTelemetryPacket(packet);
+            packet = null;
+            return true;
+        }
+        return false;
+    }
+
 }

@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit;
 
 import drivers.GoBildaPinpointDriver;
 import utils.Pose;
@@ -23,10 +24,10 @@ public class Pinpoint {
         pinpointDrive = opMode.hardwareMap.get(GoBildaPinpointDriver.class,Config.PINPOINT);
 
         // Set encoder directions
-        pinpointDrive.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.REVERSED);
+        pinpointDrive.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.FORWARD);
 
         // Set tracking point to the center of the robot (in mm)
-        pinpointDrive.setOffsets(-84, 0, DistanceUnit.MM);
+        pinpointDrive.setOffsets(-84, -168, DistanceUnit.MM);
 
         // Scale the encoder resolution if necessary
         if (ENCODER_SCALE == 1.0)
@@ -69,7 +70,27 @@ public class Pinpoint {
     public Pose getPose() {
         Pose2D rawPose = pinpointDrive.getPosition();
         Pose pose = new Pose(rawPose.getX(DistanceUnit.INCH), rawPose.getY(DistanceUnit.INCH), rawPose.getHeading(AngleUnit.RADIANS));
-        return Pose.add(startPose, Pose.rotatePose(pose, startPose.getHeading(), false));
+        return Pose.add(Pose.rotatePose(pose, startPose.getHeading(), false), startPose);
+    }
+
+    public Pose getVelocity() {
+        Pose pose = new Pose(
+                pinpointDrive.getVelX(DistanceUnit.INCH),
+                pinpointDrive.getVelY(DistanceUnit.INCH),
+                pinpointDrive.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS));
+        return (pose);
+    }
+
+    public double getVelocityX() {
+        return pinpointDrive.getVelX(DistanceUnit.INCH);
+    }
+
+    public double getVelocityY() {
+        return pinpointDrive.getVelY(DistanceUnit.INCH);
+    }
+
+    public double getVelocityHeading() {
+        return (pinpointDrive.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS));
     }
 
     public void update() {

@@ -12,14 +12,14 @@ import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import common.Drive;
+import common.DriveControl;
 import common.Logger;
+import utils.Pose;
 
 @TeleOp(name="DecelerationTest", group="Test")
 @SuppressLint("DefaultLocale")
 
 public class DecelerationTest extends LinearOpMode {
-
-    private ElapsedTime runtime = new ElapsedTime();
 
     public static double MIN_POWER = 0.25;
     public static double MAX_POWER = 0.95;
@@ -30,6 +30,7 @@ public class DecelerationTest extends LinearOpMode {
     double ODOMETER_COUNT_PER_WHEEL_REV = ODOMETER_COUNT_PER_REV * ODOMETER_WHEEL_DIAMETER * Math.PI;
 
     Drive drive  = null;
+    DriveControl driveControl;
     DcMotorEx odometer;
 
     @Override
@@ -37,6 +38,9 @@ public class DecelerationTest extends LinearOpMode {
         try {
             drive = new Drive(this);
             drive.start();
+            driveControl = new DriveControl(this, drive);
+            driveControl.resetIMU();
+
             odometer = drive.leftFrontDrive;
 
             telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
@@ -60,30 +64,47 @@ public class DecelerationTest extends LinearOpMode {
 
         double maxVelocity = drive.getMaxVelocity();
         for (double percent = 0.1; percent <= 0.7; percent += 0.1) {
-            double velocity = maxVelocity * percent;
+            double targetVelocity = maxVelocity * percent;
             double currentVelocity;
-            double scaled =  Math.min(maxVelocity, velocity * 1.5);
-            //Logger.message("percent %5.0f   velocity %5.2f", percent*100, velocity);
+            double accelerationTime = 0;
+            double scaled =  Math.min(maxVelocity, targetVelocity * 1.5);
+            Logger.message("percent %5.0f   velocity %5.2f", percent*100, targetVelocity);
             drive.resetEncoders();
+
             drive.setVelocity(scaled, scaled, scaled, scaled);
             timer.reset();
+
+            boolean accelerate = true;
+            Pose start = null;
+            Pose stop;
+            Pose velocity;
+            double magnitude = 0;
+            double angle = 0;
             do {
                 currentVelocity = drive.getCurrentVelocity();
-                //Logger.message("%5.2f  %5.0f  %5.0f", timer.seconds(), currentVelocity, currentVelocity/velocity*100);
-            } while (Math.abs(currentVelocity / velocity) < 1);
+                velocity = driveControl.getVelocity();
+                Logger.message("%5.2f  %5.0f  %5.0f   %6.2f  %6.2f  %6.2f",
+                        timer.seconds(), currentVelocity, currentVelocity/targetVelocity*100, velocity.getX(), velocity.getY(), Math.toDegrees(velocity.getHeading()));
 
-            double accelerationTime = timer.seconds();
-            drive.setVelocity(0);
+                if (accelerate && currentVelocity >= targetVelocity) {
+                    start = driveControl.getPose();
+                    accelerationTime = timer.seconds();
+                    magnitude  = Math.hypot(velocity.getX(), velocity.getY());
+                    angle = Math.toDegrees(Math.atan2(velocity.getX(), velocity.getY()));
+                    drive.setVelocity(0);
+                    accelerate = false;
 
-            do {
-                currentVelocity = drive.getCurrentVelocity();
-                //Logger.message("%5.2f  %5.2f", timer.seconds(), currentVelocity);
-            } while (Math.abs(currentVelocity) > 10);
+                } else if ((! accelerate) && (Math.abs(currentVelocity) <= 10)) {
+                    stop = driveControl.getPose();
+                    break;
+                }
+            } while (true);
 
+            double distance = Math.hypot(stop.getX() - start.getX(), stop.getY() - start.getY());
             double decelerationTime = timer.seconds() - accelerationTime;
             double traveled = drive.getDistanceTraveled();
-            Logger.message("percent %5.0f  time %5.2f  acceleration %5.2f  deceleration %5.2f  velocity %5.2f   traveled %5.2f",
-                    percent*100, timer.seconds(), accelerationTime, decelerationTime, velocity,  traveled);
+            Logger.message("percent %5.0f  time %5.2f  acceleration %5.2f  deceleration %5.2f  velocity %5.2f  angle %6.1f  magnitude %6.1f  deceleration distance %5.2f",
+                    percent*100, timer.seconds(), accelerationTime, decelerationTime, targetVelocity, angle, magnitude, distance);
 
             sleep(2000);
 
