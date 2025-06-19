@@ -88,35 +88,35 @@ public class DriveToTest extends LinearOpMode {
         while (opModeIsActive()) {
 
             if (gamepad1.y) {
-                driveControl.moveToCoordinate(0, y, targetHeading,2000);
+                driveControl.moveToPose(0, y, targetHeading,2000);
                 while (gamepad1.y) sleep(10);
                 sleep(1000);
                 displayPose();
             }
 
             if (gamepad1.a) {
-                driveControl.moveToCoordinate(0, -y, targetHeading,2000);
+                driveControl.moveToPose(0, -y, targetHeading,2000);
                 while (gamepad1.a) sleep(10);
                 sleep(1000);
                 displayPose();
             }
 
             if (gamepad1.b) {
-                driveControl.moveToCoordinate(x, 0, targetHeading,2000);
+                driveControl.moveToPose(x, 0, targetHeading,2000);
                 while (gamepad1.b) sleep(10);
                 sleep(1000);
                 displayPose();
             }
 
             if (gamepad1.x) {
-                driveControl.moveToCoordinate(-x, 0,targetHeading,2000);
+                driveControl.moveToPose(-x, 0,targetHeading,2000);
                 sleep(1000);
                 displayPose();
                 while (gamepad1.x) sleep(10);
             }
 
             if (gamepad1.right_bumper) {
-                driveControl.moveToCoordinate(0, 0, startHeading,2000);
+                driveControl.moveToPose(0, 0, startHeading,2000);
                 sleep(1000);
                 displayPose();
                 while (gamepad1.right_bumper) sleep(10);

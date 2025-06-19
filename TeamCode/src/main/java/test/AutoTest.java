@@ -2,6 +2,8 @@ package test;
 
 import android.annotation.SuppressLint;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -16,7 +18,7 @@ import utils.PoseData;
 public class AutoTest extends LinearOpMode {
 
     public static PoseData START = new PoseData(0, 0, 0);
-    public static PoseData WAYPOINT_1 = new PoseData(20, 0, 0);
+    public static PoseData WAYPOINT_1 = new PoseData(0, 0, 90);
     public static PoseData WAYPOINT_2 = new PoseData(0, 0, 0);
     public static PoseData PARK = new PoseData(0, 0, 0);
 
@@ -28,9 +30,7 @@ public class AutoTest extends LinearOpMode {
         try {
             initialize();
 
-            telemetry.addLine("Press start");
-            telemetry.update();
-            waitForStart();
+            telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
             auto.runAuto();
 

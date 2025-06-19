@@ -183,7 +183,7 @@ public class DriveGamepad extends Thread {
             double heading = Math.toDegrees(pose.getHeading());
 
             Logger.message("%s  move to (%.1f, %.1f) heading: %.0f", button, x, y, heading);
-            driveControl.moveToCoordinate(x, y, heading, MAX_WAYPOINT_SPEED, 4000 );
+            driveControl.moveToPose(x, y, heading, MAX_WAYPOINT_SPEED, 4000 );
         }
     }
 }

@@ -115,37 +115,37 @@ public class PathTest extends LinearOpMode {
         while (opModeIsActive()) {
 
             if (gamepad1.a) {
-                driveControl.moveToCoordinate(BUCKET_X, BUCKET_Y, BUCKET_HEADING, timeout);
+                driveControl.moveToPose(BUCKET_X, BUCKET_Y, BUCKET_HEADING, timeout);
                 while (gamepad1.a) sleep(10);
             }
 
             if (gamepad1.b) {
-                driveControl.moveToCoordinate(YELLOW_RIGHT_X, YELLOW_RIGHT_Y, YELLOW_RIGHT_HEADING, timeout);
+                driveControl.moveToPose(YELLOW_RIGHT_X, YELLOW_RIGHT_Y, YELLOW_RIGHT_HEADING, timeout);
                 while (gamepad1.b) sleep(10);
             }
 
             if (gamepad1.x) {
-                driveControl.moveToCoordinate(YELLOW_MIDDLE_X, YELLOW_MIDDLE_Y, YELLOW_MIDDLE_HEADING, timeout);
+                driveControl.moveToPose(YELLOW_MIDDLE_X, YELLOW_MIDDLE_Y, YELLOW_MIDDLE_HEADING, timeout);
                 while (gamepad1.x) sleep(10);
             }
 
             if (gamepad1.y) {
-                driveControl.moveToCoordinate(YELLOW_LEFT_X, YELLOW_LEFT_Y, YELLOW_LEFT_HEADING, timeout);
+                driveControl.moveToPose(YELLOW_LEFT_X, YELLOW_LEFT_Y, YELLOW_LEFT_HEADING, timeout);
                 while (gamepad1.y) sleep(10);
             }
 
             if (gamepad1.dpad_up) {
-                driveControl.moveToCoordinate(PARK_X, PARK_Y, PARK_HEADING, timeout);
+                driveControl.moveToPose(PARK_X, PARK_Y, PARK_HEADING, timeout);
                 while (gamepad1.dpad_up) sleep(10);
             }
 
             if (gamepad1.dpad_down) {
-                driveControl.moveToCoordinate(ASCENT_X, ASCENT_Y, ASCENT_HEADING, 0.2, timeout);
+                driveControl.moveToPose(ASCENT_X, ASCENT_Y, ASCENT_HEADING, 0.2, timeout);
                 while (gamepad1.dpad_down) sleep(10);
             }
 
             if (gamepad1.right_bumper) {
-                driveControl.moveToCoordinate(START_X, START_Y, START_HEADING, timeout);
+                driveControl.moveToPose(START_X, START_Y, START_HEADING, timeout);
                 while (gamepad1.right_bumper) sleep(10);
             }
 
@@ -165,25 +165,25 @@ public class PathTest extends LinearOpMode {
 
         driveControl.setPose(new Pose(START_X, START_Y, Math.toRadians(START_HEADING)));
 
-        driveControl.moveToCoordinate(BUCKET_X, BUCKET_Y, BUCKET_HEADING, timeout);
+        driveControl.moveToPose(BUCKET_X, BUCKET_Y, BUCKET_HEADING, timeout);
         waitUntilNotMoving();
 
-        driveControl.moveToCoordinate(YELLOW_RIGHT_X, YELLOW_RIGHT_Y, YELLOW_RIGHT_HEADING, timeout);
+        driveControl.moveToPose(YELLOW_RIGHT_X, YELLOW_RIGHT_Y, YELLOW_RIGHT_HEADING, timeout);
         waitUntilNotMoving();
 
-        driveControl.moveToCoordinate(BUCKET_X, BUCKET_Y, BUCKET_HEADING, timeout);
+        driveControl.moveToPose(BUCKET_X, BUCKET_Y, BUCKET_HEADING, timeout);
         waitUntilNotMoving();
 
-        driveControl.moveToCoordinate(YELLOW_MIDDLE_X, YELLOW_MIDDLE_Y, YELLOW_MIDDLE_HEADING, timeout);
+        driveControl.moveToPose(YELLOW_MIDDLE_X, YELLOW_MIDDLE_Y, YELLOW_MIDDLE_HEADING, timeout);
         waitUntilNotMoving();
 
-        driveControl.moveToCoordinate(BUCKET_X, BUCKET_Y, BUCKET_HEADING, timeout);
+        driveControl.moveToPose(BUCKET_X, BUCKET_Y, BUCKET_HEADING, timeout);
         waitUntilNotMoving();
 
-        driveControl.moveToCoordinate(YELLOW_LEFT_X, YELLOW_LEFT_Y, YELLOW_LEFT_HEADING, timeout);
+        driveControl.moveToPose(YELLOW_LEFT_X, YELLOW_LEFT_Y, YELLOW_LEFT_HEADING, timeout);
         waitUntilNotMoving();
 
-        driveControl.moveToCoordinate(BUCKET_X, BUCKET_Y, BUCKET_HEADING, timeout);
+        driveControl.moveToPose(BUCKET_X, BUCKET_Y, BUCKET_HEADING, timeout);
         waitUntilNotMoving();
 
         Logger.message(String.format("time: %,d milliseconds", System.currentTimeMillis() - start));
@@ -194,10 +194,10 @@ public class PathTest extends LinearOpMode {
 
         for (int i = 0; i < 10; i++) {
             driveControl.setPose(new Pose(startX, startY, Math.toRadians(startHeading)));
-            driveControl.moveToCoordinate(targetX, targetY, targetHeading, timeout);
+            driveControl.moveToPose(targetX, targetY, targetHeading, timeout);
             waitUntilNotMoving();
             sleep(1000);
-            driveControl.moveToCoordinate(startX, startY, startHeading, timeout);
+            driveControl.moveToPose(startX, startY, startHeading, timeout);
             waitUntilNotMoving();
             sleep(1000);
         }

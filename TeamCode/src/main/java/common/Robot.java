@@ -769,7 +769,7 @@ public class Robot extends Thread {
     }
 
     public void moveToCoordinate(double targetX, double targetY, double targetHeading, double timeout) {
-        driveControl.moveToCoordinate(targetX, targetY, targetHeading, timeout);
+        driveControl.moveToPose(targetX, targetY, targetHeading, timeout);
     }
 
     public boolean driveIsBusy() {

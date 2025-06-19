@@ -23,7 +23,6 @@ public class Navigate {
     }
     private final ArrayList<Path> paths = new ArrayList<>();
 
-    private final ElapsedTime timer = new ElapsedTime();
     private final LinearOpMode opMode;
     private final DriveControl driveControl;
 
@@ -81,23 +80,6 @@ public class Navigate {
         }
 
         driveControl.followPath(path.poses, 4000);
-    }
-
-    /**
-     * Wait until the robot stops moving
-     */
-    public void waitUntilNotMoving () {
-        Logger.message("waiting, driveControl is %b", driveControl.isBusy());
-        if (!driveControl.isBusy() )
-            Logger.warning("driveControl is not busy");
-        timer.reset();
-        while (driveControl.isBusy() &&  opMode.opModeIsActive()) {
-            if (timer.milliseconds() > 3000) {
-                Logger.warning("driveControl timed out");
-                break;
-            }
-        }
-        Logger.message("done waiting, time: %5.0f", timer.milliseconds());
     }
 
     /**
