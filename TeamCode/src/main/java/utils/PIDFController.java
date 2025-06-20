@@ -1,7 +1,5 @@
 package utils;
 
-import common.Logger;
-
 /**
  * This is the PIDFController class. This class handles the running of PIDFs. PIDF stands for
  * proportional, integral, derivative, and feedforward. PIDFs take the error of a system as an input.
@@ -28,8 +26,6 @@ public class PIDFController {
     public long previousUpdateTimeNano;
     public long deltaTimeNano;
 
-    private boolean reset;
-
     /**
      * This creates a new PIDFController from a PIDFCoefficients.
      *
@@ -50,11 +46,12 @@ public class PIDFController {
     }
 
     /**
-     * This can be used to update the PIDF's current position when inputting a current position and
+     * This can be used to update the PID's current position when inputting a current position and
      * a target position to calculate error. This will update the error from the current position to
      * the target position specified.
      *
      * @param update This is the current position.
+     * @noinspection unused
      */
     public void updatePosition(double update) {
         position = update;
@@ -77,14 +74,10 @@ public class PIDFController {
     public void updateError(double error) {
         if (previousError == 0) {
             previousError = error;
-            reset = false;
         } else {
             previousError = this.error;
         }
         this.error = error;
-
-        //deltaTimeNano = System.nanoTime() - previousUpdateTimeNano;
-        //previousUpdateTimeNano = System.nanoTime();
 
         long nanoSeconds = System.nanoTime();
         deltaTimeNano = nanoSeconds - previousUpdateTimeNano;
@@ -98,6 +91,8 @@ public class PIDFController {
      * This can be used to update the feedforward equation's input, if applicable.
      *
      * @param input the input into the feedforward equation.
+     *
+     * @noinspection unused
      */
     public void updateFeedForwardInput(double input) {
         feedForwardInput = input;
@@ -107,7 +102,6 @@ public class PIDFController {
      * This resets all the PIDF's error and position values, as well as the time stamps.
      */
     public void reset() {
-        reset = true;
         previousError = 0;
         error = 0;
         position = 0;
@@ -122,6 +116,7 @@ public class PIDFController {
      * target position inputs rather than error inputs.
      *
      * @param set this sets the target position.
+     * @noinspection unused
      */
     public void setTargetPosition(double set) {
         targetPosition = set;
@@ -131,6 +126,7 @@ public class PIDFController {
      * This returns the target position of the PIDF.
      *
      * @return this returns the target position.
+     * @noinspection unused
      */
     public double getTargetPosition() {
         return targetPosition;
@@ -158,6 +154,7 @@ public class PIDFController {
      * This sets the proportional (P) coefficient of the PIDF only.
      *
      * @param set this sets the P coefficient.
+     * @noinspection unused
      */
     public void setP(double set) {
         coefficients.P = set;
@@ -176,6 +173,7 @@ public class PIDFController {
      * This sets the integral (I) coefficient of the PIDF only.
      *
      * @param set this sets the I coefficient.
+     * @noinspection unused
      */
     public void setI(double set) {
         coefficients.I = set;
