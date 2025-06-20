@@ -37,6 +37,11 @@ public final class Logger {
         Log.d(TAG, str);
     }
 
+    public static void debug(String format, Object... args){
+        String str = String.format(format, args);
+        Log.v(TAG, str);
+    }
+
     public static void verbose(String format, Object... args) {
         if (VERBOSE) {
             String str = format(String.format(format, args));

@@ -1,5 +1,7 @@
 package utils;
 
+import common.Logger;
+
 /**
  * This is the PIDFController class. This class handles the running of PIDFs. PIDF stands for
  * proportional, integral, derivative, and feedforward. PIDFs take the error of a system as an input.
@@ -15,16 +17,16 @@ package utils;
 public class PIDFController {
     private PIDFCoefficients coefficients;
 
-    private double previousError;
-    private double error;
+    public double previousError;
+    public double error;
     private double position;
     private double targetPosition;
     public double errorIntegral;
     public double errorDerivative;
     private double feedForwardInput;
 
-    private long previousUpdateTimeNano;
-    private long deltaTimeNano;
+    public long previousUpdateTimeNano;
+    public long deltaTimeNano;
 
     private boolean reset;
 
@@ -73,7 +75,7 @@ public class PIDFController {
      * @param error The error specified.
      */
     public void updateError(double error) {
-        if (reset) {
+        if (previousError == 0) {
             previousError = error;
             reset = false;
         } else {
@@ -81,8 +83,12 @@ public class PIDFController {
         }
         this.error = error;
 
-        deltaTimeNano = System.nanoTime() - previousUpdateTimeNano;
-        previousUpdateTimeNano = System.nanoTime();
+        //deltaTimeNano = System.nanoTime() - previousUpdateTimeNano;
+        //previousUpdateTimeNano = System.nanoTime();
+
+        long nanoSeconds = System.nanoTime();
+        deltaTimeNano = nanoSeconds - previousUpdateTimeNano;
+        previousUpdateTimeNano = nanoSeconds;
 
         errorIntegral += error * (deltaTimeNano / Math.pow(10.0, 9));
         errorDerivative = (error - previousError) / (deltaTimeNano / Math.pow(10.0, 9));

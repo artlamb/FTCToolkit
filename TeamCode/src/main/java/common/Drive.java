@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-@com.acmerobotics.dashboard.config.Config
+//@com.acmerobotics.dashboard.config.Config
 
 @SuppressLint("DefaultLocale")
 @SuppressWarnings("FieldCanBeLocal")
@@ -32,7 +32,7 @@ public class Drive extends Thread {
 
     final boolean LOG_VERBOSE = false;
 
-    public static double DRIFT_COEFFICIENT = 0.0015;
+    public double DRIFT_COEFFICIENT = 0.0015;
 
     // Drive train
     private final double MOTOR_TICKS_PER_REV = 384.5;           // Gobilda Yellow Jacket Motor 5203-2402-0014
@@ -48,12 +48,12 @@ public class Drive extends Thread {
     private final double RAMP_TIME = 1000;                       // ramp up time in milliseconds
     private final double RAMP_MIN_SPEED = 0.2;
 
-    public static double MIN_SPEED = 0.20;
-    public static double MAX_SPEED = 0.9;
-    public static double MIN_STRAFE_SPEED = 0.35;
-    public static double MAX_STRAFE_SPEED = 0.95;
-    public static double MIN_ROTATE_SPEED = 0.15;
-    public static double MAX_ROTATE_SPEED = 0.50;
+    public double MIN_SPEED = 0.20;
+    public double MAX_SPEED = 0.9;
+    public double MIN_STRAFE_SPEED = 0.35;
+    public double MAX_STRAFE_SPEED = 0.95;
+    public double MIN_ROTATE_SPEED = 0.15;
+    public double MAX_ROTATE_SPEED = 0.50;
 
     final double TURN_MIN_SPEED         = 0.2;
 

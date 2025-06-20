@@ -5,6 +5,7 @@ import android.annotation.SuppressLint;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -17,6 +18,7 @@ import common.Robot;
 import utils.Dashboard;
 import utils.Pose;
 
+@Disabled
 @TeleOp(name="Dashboard Test", group="Test")
 @SuppressLint("DefaultLocale")
 

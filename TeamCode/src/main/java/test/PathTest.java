@@ -31,6 +31,7 @@ package test;
 
 import android.annotation.SuppressLint;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -42,6 +43,7 @@ import common.DriveControl;
 import common.DriveGamepad;
 import common.Logger;
 
+@Disabled
 @TeleOp(name="Path Test", group="Test")
 @SuppressLint("DefaultLocale")
 @com.acmerobotics.dashboard.config.Config
