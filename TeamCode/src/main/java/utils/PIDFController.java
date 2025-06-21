@@ -1,5 +1,9 @@
 package utils;
 
+import android.annotation.SuppressLint;
+
+import androidx.annotation.NonNull;
+
 /**
  * This is the PIDFController class. This class handles the running of PIDFs. PIDF stands for
  * proportional, integral, derivative, and feedforward. PIDFs take the error of a system as an input.
@@ -21,10 +25,11 @@ public class PIDFController {
     private double targetPosition;
     public double errorIntegral;
     public double errorDerivative;
+    public double errorSteadyState;
     private double feedForwardInput;
 
-    public long previousUpdateTimeNano;
-    public long deltaTimeNano;
+    private long previousUpdateTimeNano;
+    private long deltaTimeNano;
 
     /**
      * This creates a new PIDFController from a PIDFCoefficients.
@@ -42,7 +47,31 @@ public class PIDFController {
      * @return this returns the value of the PIDF from the current error.
      */
     public double runPIDF() {
-        return error * P() + errorDerivative * D() + errorIntegral * I() + F();
+        return error * P() + errorDerivative * D() + errorIntegral * I() + F() + errorSteadyState * S();
+    }
+
+    /**
+     * As opposed to updating position against a target position, this just sets the error to some
+     * specified value.
+     *
+     * @param error The error specified.
+     */
+    public void updateError(double error) {
+        if (previousError == 0) {
+            previousError = error;
+        } else {
+            previousError = this.error;
+        }
+        this.error = error;
+
+        long nanoSeconds = System.nanoTime();
+        deltaTimeNano = nanoSeconds - previousUpdateTimeNano;
+        previousUpdateTimeNano = nanoSeconds;
+
+        double deltaError = error - previousError;
+        errorIntegral += error * (deltaTimeNano / Math.pow(10.0, 9));
+        errorDerivative = (error - previousError) / (deltaTimeNano / Math.pow(10.0, 9));
+        errorSteadyState = (Math.abs(deltaError) < coefficients.steadyState ? error : 0);
     }
 
     /**
@@ -64,29 +93,6 @@ public class PIDFController {
         errorIntegral += error * (deltaTimeNano / Math.pow(10.0, 9));
         errorDerivative = (error - previousError) / (deltaTimeNano / Math.pow(10.0, 9));
     }
-
-    /**
-     * As opposed to updating position against a target position, this just sets the error to some
-     * specified value.
-     *
-     * @param error The error specified.
-     */
-    public void updateError(double error) {
-        if (previousError == 0) {
-            previousError = error;
-        } else {
-            previousError = this.error;
-        }
-        this.error = error;
-
-        long nanoSeconds = System.nanoTime();
-        deltaTimeNano = nanoSeconds - previousUpdateTimeNano;
-        previousUpdateTimeNano = nanoSeconds;
-
-        errorIntegral += error * (deltaTimeNano / Math.pow(10.0, 9));
-        errorDerivative = (error - previousError) / (deltaTimeNano / Math.pow(10.0, 9));
-    }
-
     /**
      * This can be used to update the feedforward equation's input, if applicable.
      *
@@ -108,6 +114,7 @@ public class PIDFController {
         targetPosition = 0;
         errorIntegral = 0;
         errorDerivative = 0;
+        errorSteadyState = 0;
         previousUpdateTimeNano = System.nanoTime();
     }
 
@@ -225,11 +232,46 @@ public class PIDFController {
     }
 
     /**
+     * This sets the steady state (S) coefficient of the PIDF only.
+     *
+     * @param set this sets the S coefficient.
+     */
+    public void setS(double set) {
+        coefficients.S = set;
+    }
+
+    /**
+     * This returns the steady state (S) coefficient of the PIDF.
+     *
+     * @return this returns the S coefficient.
+     */
+    public double S() {
+        return coefficients.S;
+    }
+
+    /**
      * This returns the current error of the PIDF.
      *
      * @return this returns the error.
      */
     public double getError() {
         return error;
+    }
+
+    @NonNull
+    @Override
+    @SuppressLint("DefaultLocale")
+    public String toString() {
+
+        double output = runPIDF();
+        if (output == 0) return "";
+
+        String s = String.format("(%7.3f) = ", output);
+        if (P() != 0)  s+= String.format("P(%6.3f) ", error * P());
+        if (D() != 0)  s+= String.format("D(%6.3f) ", errorDerivative * D());
+        if (I() != 0)  s+= String.format("I(%6.3f) ", errorIntegral * I());
+        if (F() != 0)  s+= String.format("F(%6.3f) ", F());
+        if (errorSteadyState != 0)  s+= String.format("S(%+.3f) ", errorSteadyState * S());
+        return (s);
     }
 }

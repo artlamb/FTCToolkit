@@ -16,6 +16,8 @@ public class PIDFCoefficients {
     @JvmField public double I;
     @JvmField public double D;
     @JvmField public double F;
+    @JvmField public double S;
+    @JvmField public double steadyState;
 
     public FeedForwardConstant feedForwardConstantEquation;
 
@@ -34,6 +36,24 @@ public class PIDFCoefficients {
         I = i;
         D = d;
         F = f;
+    }
+
+    /**
+     * This creates a new CustomPIDFCoefficients with constant coefficients.
+     *
+     * @param p the coefficient for the proportional factor.
+     * @param i the coefficient for the integral factor.
+     * @param d the coefficient for the derivative factor.
+     * @param f the coefficient for the feedforward factor.
+     * @param s the coefficient for the steady state factor.
+     */
+    public PIDFCoefficients(double p, double i, double d, double f, double s, double steadyState) {
+        P = p;
+        I = i;
+        D = d;
+        F = f;
+        S = s;
+        this.steadyState = steadyState;
     }
 
     /**

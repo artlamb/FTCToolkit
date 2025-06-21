@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Locale;
 
 import utils.Dashboard;
+import utils.FeedForwardConstant;
 import utils.MathUtil;
 import utils.Pose;
 import utils.PIDFCoefficients;
@@ -54,24 +55,33 @@ public class DriveControl extends Thread {
     public static double SLOW_DRIVE = 10;
     public static double SLOW_TURN = 15;
 
-    public static double P_DRIVE_FAST = 0.15;
-    public static double P_DRIVE_SLOW = 0.1;
-    public static double P_TURN_FAST = 4;
-    public static double P_TURN_SLOW = 2;
+    public static double PID_P_DRIVE_FAST = 0.15;
+    public static double PID_P_DRIVE_SLOW = 0.1;
+    public static double PID_P_TURN_FAST = 4;
+    public static double PID_P_TURN_SLOW = 1.2;
+    public static double PID_S_TURN_SLOW = 0.02;
+
+    private FeedForwardConstant f = new FeedForwardConstant() {
+        @Override
+        public double getConstant(double input) {
+            Logger.message("input: %f", input);
+            return 0;
+        }
+    };
 
     private final PIDFCoefficients PIDFCoefficientsDriveFast = new PIDFCoefficients(
-            P_DRIVE_FAST, 0, 0, 0);
+            PID_P_DRIVE_FAST, 0, 0, 0);
 
     private final PIDFCoefficients PIDFCoefficientsDriveSlow = new PIDFCoefficients(
-            P_DRIVE_SLOW, 0, 0, 0);
+            PID_P_DRIVE_SLOW, 0, 0, 0, 0, 0);
 
     private final PIDFCoefficients PIDFCoefficientsTurnFast = new PIDFCoefficients(
-            P_TURN_FAST, 0, 0, 0);
+            PID_P_TURN_FAST, 0, 0, 0);
 
     private final PIDFCoefficients PIDFCoefficientsTurnSlow = new PIDFCoefficients(
-            P_TURN_SLOW, 0, 0, 0);
+            PID_P_TURN_SLOW, 0, 0, 0, Math.toDegrees(PID_S_TURN_SLOW), Math.toRadians(1));
 
-    PIDFController drivePID  = new PIDFController(PIDFCoefficientsDriveFast);
+    PIDFController drivePID = new PIDFController(PIDFCoefficientsDriveFast);
     PIDFController turnPID = new PIDFController(PIDFCoefficientsTurnFast);
 
     private double distanceTolerance;
@@ -215,6 +225,8 @@ public class DriveControl extends Thread {
         if (highSpeed) {
             turnPID.setCoefficients(PIDFCoefficientsTurnFast);
             drivePID.setCoefficients(PIDFCoefficientsDriveFast);
+
+            //turnPID.setS(0);
             distanceTolerance = TOLERANCE_DISTANCE_FAST;
             headingTolerance = TOLERANCE_HEADING_FAST;
             magnitudeTolerance = TOLERANCE_MAGNITUDE_FAST;
@@ -224,6 +236,8 @@ public class DriveControl extends Thread {
         } else {
             turnPID.setCoefficients(PIDFCoefficientsTurnSlow);
             drivePID.setCoefficients(PIDFCoefficientsDriveSlow);
+
+            //turnPID.setS(Math.toDegrees(PID_S_TURN_SLOW));
             distanceTolerance = TOLERANCE_DISTANCE_SLOW;
             headingTolerance = TOLERANCE_HEADING_SLOW;
             magnitudeTolerance = TOLERANCE_MAGNITUDE_SLOW;
@@ -276,8 +290,8 @@ public class DriveControl extends Thread {
      */
     private void moveToPose(Pose target) {
 
-        Logger.message("target  x: %3.0f, y: %3.0f, heading: %4.0f  p: %6.3f",
-                target.getX(), target.getY(), target.getHeading(AngleUnit.DEGREES), drivePID.getCoefficients().P);
+        Logger.message("target  x: %3.0f, y: %3.0f, heading: %4.0f  p: %6.3f %6.3f",
+                target.getX(), target.getY(), target.getHeading(AngleUnit.DEGREES), drivePID.getCoefficients().P, turnPID.getCoefficients().P);
 
         double maxVelocity = drive.getMaxVelocity();
         double slowSpeed = SLOW_DRIVE;                 // in inches per second
@@ -300,14 +314,18 @@ public class DriveControl extends Thread {
             double rotationVelocity = -localizer.getVelocityHeading();
 
             // adjust pid input errors to compensate for deceleration from current velocities
+            boolean decelerateDrive = false;
             double distanceError = distance;
             if ((magnitude > slowSpeed) && (Math.abs(deltaAngle) < Math.PI/6)) {
-                distanceError = Math.max(distanceError - ((magnitude) * DECELERATION_DRIVE), 0);
+                distanceError = Math.max(0, distanceError - ((magnitude) * DECELERATION_DRIVE));
+                decelerateDrive = true;
             }
 
+            boolean decelerateTurn = false;
             double rotationError = rotation;
             if ((Math.abs(rotationVelocity) > slowTurn) && (MathUtil.getSign(rotationVelocity) == MathUtil.getSign(rotation))) {
                 rotationError = Math.max(0, Math.abs(rotationError) - (Math.abs(rotationVelocity * DECELERATION_TURN))) * MathUtil.getSign(rotationVelocity);
+                decelerateTurn = true;
             }
 
             drivePID.updateError(distanceError);
@@ -362,18 +380,14 @@ public class DriveControl extends Thread {
                     String.format("wheels: %5.2f %5.2f %5.2f %5.2f   ", leftFrontPower, rightFrontPower, leftRearPower, rightRearPower) +
                     String.format("vm: %3.0f  va: %4.0f  vh: %4.0f   ", magnitude, Math.toDegrees(deltaAngle), Math.toDegrees(rotationVelocity)) +
                     //String.format("volts: %4.1f  ", voltageSensor.getVoltage()) +
-                    String.format("d: %6.2f %6.2f  ", drivePID.errorDerivative / distance, turnPID.errorDerivative / rotation) +
                     String.format("%s%s%s%s%s  ", (nearPose) ? "n":" ", (inRange) ? "i":" ", (onBearing) ? "o":" " , (stopped) ? "s":" ", (rotated) ? "r":" " )  +
-                    String.format("time: %4.0f   ", timeoutTimer.milliseconds())
+                    String.format("%s%s  ", (decelerateDrive) ? "d":" ", (decelerateTurn) ? "t":" ")  +
+                    //String.format("dr: %6.1f %6.1f  ", drivePID.errorDerivative, Math.toDegrees(turnPID.errorDerivative)) +
+                    //String.format("ss: %6.2f  ", Math.toDegrees(turnPID.error - turnPID.previousError)) +
+                    //String.format("%6.3f  ", Math.toDegrees(turnPID.errorSteadyState)) +
+                    String.format("time: %4.0f   ", timeoutTimer.milliseconds()) +
+                            turnPID.toString()
             );
-
-            /*
-             Logger.message("%s",
-                    String.format("%9.6f  ", drivePID.error) +
-                    String.format("%9.6f  ", drivePID.previousError) +
-                    String.format("%9.6f  ", drivePID.error - headingPID.previousError) +
-                    String.format("%10.3f  ", drivePID.errorDerivative));
-             */
 
             if (inRange && onBearing && stopped && rotated) {
                 break;

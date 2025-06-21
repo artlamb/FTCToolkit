@@ -90,7 +90,7 @@ public class Auto {
 
     void displayTelemetry() {
         opMode.telemetry.addData("distance", "%f", distance * 100/20);
-        opMode.telemetry.addData("power", "%f", power * 100/1);
+        opMode.telemetry.addData("power", "%f", power * 100);
         opMode.telemetry.update();
     }
 
