@@ -16,14 +16,14 @@ public class MathUtil {
 
     /**
      * Returns the value of the first argument raised to the power of the second argument.
-     *
+     * <p>
      * Special cases:
      * If the base is a negative number return the value of the positive base raise to the
      * exponent with a negative sign.
      *
      * @param a base
      * @param b exponent
-     * @return
+     * @return a to the power of b.
      */
     public static double pow(double a, double b) {
         if (b == 1)

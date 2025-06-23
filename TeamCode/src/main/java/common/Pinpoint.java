@@ -73,14 +73,6 @@ public class Pinpoint {
         return Pose.add(Pose.rotatePose(pose, startPose.getHeading(), false), startPose);
     }
 
-    public Pose getVelocity() {
-        Pose pose = new Pose(
-                pinpointDrive.getVelX(DistanceUnit.INCH),
-                pinpointDrive.getVelY(DistanceUnit.INCH),
-                pinpointDrive.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS));
-        return (pose);
-    }
-
     public double getVelocityX() {
         return pinpointDrive.getVelX(DistanceUnit.INCH);
     }

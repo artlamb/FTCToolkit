@@ -48,7 +48,7 @@ public class PIDFCoefficients {
      * @param p the coefficient for the proportional factor.
      * @param pExponent power to raise p to
      * @param s the coefficient for the steady state factor.
-     * @param pExponent power to raise p to
+     * @param sExponent power to raise s to
      */
     public PIDFCoefficients(double p, double pExponent, double s, double sExponent, double sError, double sThreshold) {
         P = p;

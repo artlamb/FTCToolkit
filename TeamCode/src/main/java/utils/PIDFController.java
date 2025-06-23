@@ -327,7 +327,6 @@ public class PIDFController {
         double errorP = (degrees) ? (Math.toDegrees(this.errorProportional)) : (this.errorProportional);
         double errorD = (degrees) ? (Math.toDegrees(this.errorDerivative)) : (this.errorDerivative);
         double errorI = (degrees) ? (Math.toDegrees(this.errorIntegral)) : (this.errorIntegral);
-        double errorS = (degrees) ? (Math.toDegrees(this.errorSteadyState)) : (this.errorSteadyState);
 
         String s = String.format("pid: %+.3f = ", output);
         if (P() != 0 && errorProportional != 0)  s+= String.format("P(%+.3f %7.3f) ", errorProportional * P(), errorP);
