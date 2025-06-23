@@ -99,6 +99,7 @@ public class Pinpoint {
 
     /**
      * This resets the imu and position.
+     * @noinspection unused
      */
     public void resetPinpoint(){
         pinpointDrive.resetPosAndIMU();
