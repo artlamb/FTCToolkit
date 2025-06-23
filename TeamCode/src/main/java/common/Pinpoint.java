@@ -123,6 +123,7 @@ public class Pinpoint {
                 break;
             } else if (System.currentTimeMillis() - time > 2000) {
                 Logger.warning("pinpointDrive sensor not ready");
+                throw new RuntimeException("pinpointDrive sensor is not ready");
             }
         } while (true);
     }

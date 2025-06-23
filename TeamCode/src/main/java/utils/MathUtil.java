@@ -15,13 +15,35 @@ public class MathUtil {
     }
 
     /**
+     * Returns the value of the first argument raised to the power of the second argument.
+     *
+     * Special cases:
+     * If the base is a negative number return the value of the positive base raise to the
+     * exponent with a negative sign.
+     *
+     * @param a base
+     * @param b exponent
+     * @return
+     */
+    public static double pow(double a, double b) {
+        if (b == 1)
+            return a;
+        else if (b == 0)
+            return 0;
+        else if (a >= 0)
+            return Math.pow(a, b);
+
+        return(Math.pow(Math.abs(a), b) * MathUtil.getSign(a));
+    }
+
+    /**
      * Returns an signed angle in radians between -pi and pi.
      *
      * @param radians angle in radians
      * @return signed angle in radians between -pi and pi.
      * @noinspection unused
      */
-    private double angleWrap(double radians) {
+    public double angleWrap(double radians) {
         while (radians > Math.PI) {
             radians -= 2 * Math.PI;
         }
@@ -39,7 +61,7 @@ public class MathUtil {
      * @return signed angle (-PI to PI) 0 is positive y, counterclockwise is positive direction
      * @noinspection unused
      */
-    private double polarToSignedAngle(double polarAngle) {
+    public double polarToSignedAngle(double polarAngle) {
 
         double angle = polarAngle - Math.PI/2;
         if (angle > Math.PI)

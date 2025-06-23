@@ -1,7 +1,6 @@
 package common;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
@@ -52,14 +51,7 @@ public class Navigate {
             Logger.warning("pose for %d missing", index);
         }
 
-        for (Pose pose: path.poses) {
-            double x = pose.getX();
-            double y = pose.getY();
-            double heading = pose.getHeading(AngleUnit.DEGREES);
-            Logger.message("path %s index %d  (%.1f, %.1f) heading: %.0f", path.name, index, x, y, heading);
-        }
-
-        driveControl.followPath(path.poses, 4000);
+        followPath(path);
     }
 
     public void followPath(String name) {

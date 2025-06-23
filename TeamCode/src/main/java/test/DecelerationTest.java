@@ -52,7 +52,7 @@ public class DecelerationTest extends LinearOpMode {
         Pose start = driveControl.getPose();
 
         boolean turn = true;
-        for (double percent = 0.1; percent <= 0.7; percent += 0.1) {
+        for (double percent = 0.01; percent <= 0.1; percent += 0.01) {
 
             driveControl.setPose(new Pose());
             driveControl.decelerationTest(percent, 0, true);
