@@ -70,8 +70,10 @@ public class Navigate {
             double heading = pose.getHeading(AngleUnit.DEGREES);
             Logger.message("path %s (%.1f, %.1f) heading: %.0f", path.name, x, y, heading);
         }
-
-        driveControl.followPath(path.poses, 4000);
+        if (path.poses.size() > 1)
+            driveControl.followPath(path.poses, 4000);
+        else
+            driveControl.moveToPose(path.poses.get(0), 4000);
     }
 
     /**

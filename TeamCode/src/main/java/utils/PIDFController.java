@@ -2,6 +2,9 @@ package utils;
 
 import android.annotation.SuppressLint;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+
 /**
  * This is the PIDFController class. This class handles the running of PIDFs. PIDF stands for
  * proportional, integral, derivative, and feedforward. PIDFs take the error of a system as an input.
@@ -35,6 +38,9 @@ public class PIDFController {
     private long previousUpdateTimeNano;
     private long deltaTimeNano;
 
+    private AngleUnit angleUnit;
+    private DistanceUnit distanceUnit = DistanceUnit.INCH;
+    private boolean unitIsDistance = true;
     boolean reset = false;
 
     /**
@@ -312,6 +318,16 @@ public class PIDFController {
         return error;
     }
 
+    public void setErrorUnit(AngleUnit unit) {
+        unitIsDistance = false;
+        angleUnit = unit;
+    }
+
+    public void setErrorUnit(DistanceUnit unit) {
+        unitIsDistance = true;
+        distanceUnit = unit;
+    }
+
     /**
      * Format the pid parameters into a string
      *
@@ -328,7 +344,7 @@ public class PIDFController {
         double errorD = (degrees) ? (Math.toDegrees(this.errorDerivative)) : (this.errorDerivative);
         double errorI = (degrees) ? (Math.toDegrees(this.errorIntegral)) : (this.errorIntegral);
 
-        String s = String.format("pid: %+.3f = ", output);
+        String s = String.format("pid: %+.3f(%+.3f %+.3f) = ", output, error, errorDecelerated);
         if (P() != 0 && errorProportional != 0)  s+= String.format("P(%+.3f %7.3f) ", errorProportional * P(), errorP);
         if (D() != 0 && errorDerivative != 0)    s+= String.format("D(%6.3f %6.3f) ", errorDerivative * D(), errorD);
         if (I() != 0 && errorIntegral != 0)      s+= String.format("I(%6.3f %6.3f) ", errorIntegral * I(), errorI);

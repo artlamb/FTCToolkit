@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import common.Auto;
 import common.Logger;
+import utils.PoseQueue;
 import utils.PoseData;
 
 @TeleOp(name="Auto Test", group="Test")
@@ -18,7 +19,7 @@ import utils.PoseData;
 public class AutoTest extends LinearOpMode {
 
     public static PoseData START = new PoseData(0, 0, 0);
-    public static PoseData WAYPOINT_1 = new PoseData(0, 0, 90);
+    public static PoseData WAYPOINT_1 = new PoseData(20, 0, 0);
     public static PoseData WAYPOINT_2 = new PoseData(0, 0, 0);
     public static PoseData PARK = new PoseData(0, 0, 0);
 

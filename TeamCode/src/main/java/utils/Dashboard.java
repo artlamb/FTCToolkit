@@ -22,11 +22,23 @@ public class Dashboard {
     Pose robotPose = new Pose(0, 0,0);
     ArrayList<Pose>  waypoints = new ArrayList<>();
 
+    int queueSize = 100;
+    PoseQueue poseQueue = new PoseQueue(queueSize);
+    double[] poseTrackerX = new double[queueSize];
+    double[] poseTrackerY = new double[queueSize];
+
     public void setPose(Pose pose) {
+
+        if (! enabled) return;
+
         robotPose = pose;
+        poseQueue.enqueue(pose);
     }
 
     public void addWaypoint(Pose waypoint) {
+
+        if (! enabled) return;
+
         waypoints.add(waypoint);
     }
 
@@ -51,7 +63,6 @@ public class Dashboard {
             canvas.setAlpha(0.5);
             canvas.drawImage("/images/into-the-deep.png", 72, 72, 144, 144, Math.PI / 2, 0, 0, false);
         }
-
 
         double scale = 24 / 23.5;                           // tiles are 23.5 inches not 24
         canvas.setAlpha(1.0);
@@ -78,9 +89,28 @@ public class Dashboard {
             canvas.fillCircle(x, y, 0.9);
         }
 
+        drawPosesTrace(canvas);
+
         canvas.drawGrid(0, 0, 144, 144, 7, 7);
 
         sendPacket();
+    }
+
+    private void drawPosesTrace(Canvas canvas) {
+
+        Pose pose = new Pose();
+        for (int i = 0; i < poseQueue.size(); i++) {
+            pose = poseQueue.peek(i);
+            poseTrackerX[i] = pose.getX();
+            poseTrackerY[i] = pose.getY();
+        }
+        for (int i = poseQueue.size(); i < queueSize; i++) {
+            poseTrackerX[i] = pose.getX();
+            poseTrackerY[i] = pose.getY();
+        }
+
+        canvas.setStroke("#4CAF50");
+        canvas.strokePolyline(poseTrackerX, poseTrackerY);
     }
 
     private TelemetryPacket getPacket() {
@@ -88,13 +118,11 @@ public class Dashboard {
         return packet;
     }
 
-    public boolean sendPacket() {
+    private void sendPacket() {
         if (packet != null) {
             FtcDashboard.getInstance().sendTelemetryPacket(packet);
             packet = null;
-            return true;
         }
-        return false;
     }
 
 }
