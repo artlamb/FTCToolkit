@@ -7,24 +7,15 @@ package common;
 import android.util.Log;
 
 import java.util.Objects;
+@com.acmerobotics.dashboard.config.Config
 
 public final class Logger {
-    public static final boolean VERBOSE = true;
+    public static int errorLevel = Log.VERBOSE;
     private static final String TAG = "DELMAR";
 
     private static String format(String str) {
         String caller = Thread.currentThread().getStackTrace()[4].getMethodName();
         return String.format("%-16s %-24s %s", Thread.currentThread().getName(), caller, str);
-    }
-
-    public static void warning(String warning) {
-        String str = format(warning);
-        Log.w(TAG, str);
-    }
-
-    public static void warning(String format, Object... args) {
-        String str = format(String.format(format, args));
-        Log.w(TAG, str);
     }
 
     public static void message(String msg) {
@@ -37,23 +28,35 @@ public final class Logger {
         Log.d(TAG, str);
     }
 
+    public static void info(String format, Object... args) {
+        if (errorLevel <= Log.INFO) {
+            String str = format(String.format(format, args));
+            Log.i(TAG, str);
+        }
+    }
+
     public static void debug(String format, Object... args){
-        String str = String.format(format, args);
-        Log.v(TAG, str);
+        if (errorLevel <= Log.DEBUG) {
+            String str = String.format(format, args);
+            Log.v(TAG, str);
+        }
     }
 
     public static void verbose(String format, Object... args) {
-        if (VERBOSE) {
+        if (errorLevel <= Log.VERBOSE) {
             String str = format(String.format(format, args));
             Log.v(TAG, str);
         }
     }
 
-    public static void info(String format, Object... args) {
-        if (VERBOSE) {
-            String str = format(String.format(format, args));
-            Log.i(TAG, str);
-        }
+    public static void warning(String warning) {
+        String str = format(warning);
+        Log.w(TAG, str);
+    }
+
+    public static void warning(String format, Object... args) {
+        String str = format(String.format(format, args));
+        Log.w(TAG, str);
     }
 
     public static void error (Exception e, String msg) {
