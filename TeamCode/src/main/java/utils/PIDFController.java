@@ -2,9 +2,6 @@ package utils;
 
 import android.annotation.SuppressLint;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-
 /**
  * This is the PIDFController class. This class handles the running of PIDFs. PIDF stands for
  * proportional, integral, derivative, and feedforward. PIDFs take the error of a system as an input.
@@ -38,9 +35,6 @@ public class PIDFController {
     private long previousUpdateTimeNano;
     private long deltaTimeNano;
 
-    private AngleUnit angleUnit;
-    private DistanceUnit distanceUnit = DistanceUnit.INCH;
-    private boolean unitIsDistance = true;
     boolean reset = false;
 
     /**
@@ -316,16 +310,6 @@ public class PIDFController {
      */
     public double getError() {
         return error;
-    }
-
-    public void setErrorUnit(AngleUnit unit) {
-        unitIsDistance = false;
-        angleUnit = unit;
-    }
-
-    public void setErrorUnit(DistanceUnit unit) {
-        unitIsDistance = true;
-        distanceUnit = unit;
     }
 
     /**
