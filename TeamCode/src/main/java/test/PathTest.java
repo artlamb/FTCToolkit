@@ -32,6 +32,7 @@ package test;
 import android.annotation.SuppressLint;
 
 import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -48,17 +49,18 @@ import utils.PoseData;
 
 @TeleOp(name=" Path Test", group="Test")
 @SuppressLint("DefaultLocale")
-@com.acmerobotics.dashboard.config.Config
+@Config
 
 public class PathTest extends LinearOpMode {
     public static Boolean AUTO_DRIVE = true;
 
-    public static PoseData START = new PoseData(0, 0, 0);
-    public static PoseData WAYPOINT_1 = new PoseData(20, 0, 0);
-    public static PoseData WAYPOINT_2 = new PoseData(0, 0, 0);
-    public static PoseData WAYPOINT_3 = new PoseData(0, 0, 0);
-
-    private final PoseData[] poseData = { WAYPOINT_1, WAYPOINT_2, WAYPOINT_3 };
+    public enum PathState { START, WAYPOINT_1, WAYPOINT_2, PARK }
+    public static PoseData[] WAYPOINTS = {
+            new PoseData( 0, 0, 0, PathState.START.toString()),
+            new PoseData(20, 0, 0, PathState.WAYPOINT_1.toString()),
+            new PoseData( 0, 0, 0, PathState.WAYPOINT_2.toString()),
+            new PoseData( 0, 0, 0, PathState.PARK.toString())
+    };
 
     private final ArrayList<Pose> poses = new ArrayList<>();
     private final ArrayList<String> names = new ArrayList<>();
@@ -81,10 +83,10 @@ public class PathTest extends LinearOpMode {
             waitForStart();
 
             if (AUTO_DRIVE) {
-                manualDrive();
-            } else {
                 driveGamepad.start();
                 followPaths();
+            } else {
+                manualDrive();
             }
 
         } catch (Exception e) {
@@ -104,22 +106,22 @@ public class PathTest extends LinearOpMode {
     }
 
     private void addPaths() {
-
-        double x = START.x;
-        double y = START.y;
-        double h = START.h;
-        int waypoint = 1;
-        for (PoseData poseData: poseData) {
-            // skip duplicate waypoints
-            if (x != poseData.x && y != poseData.y && h != poseData.h) {
-                Pose pose = createPose(poseData.x, poseData.y, poseData.h);
-                String name = String.format("WAYPOINT_%d", waypoint);
-                poses.add(pose);
-                names.add(name);
-                x = poseData.x;
-                y = poseData.y;
-                h = poseData.h;
+        double x = 0, y = 0, h = 0;
+        int waypoint = 0;
+        for (PoseData data: WAYPOINTS) {
+            // The first waypoint is the starting position
+            if (waypoint > 0) {
+                // skip duplicate waypoints
+                if (x != data.x || y != data.y || h != data.h) {
+                    Pose pose = createPose(data.x, data.y, data.h);
+                    String name = data.desc;
+                    poses.add(pose);
+                    names.add(name);
+                }
             }
+            x = data.x;
+            y = data.y;
+            h = data.h;
             waypoint++;
         }
     }
@@ -128,11 +130,13 @@ public class PathTest extends LinearOpMode {
 
         long start = System.currentTimeMillis();
 
-        driveControl.setPose(createPose(START.x, START.y, START.h));
+        Pose pose = poses.get(0);
+        driveControl.setPose(createPose(pose.getX(), pose.getY(), pose.getHeading()));
 
-        for (int i = 0; i < poses.size(); i++) {
-            Logger.info("Moving to %s", names.get(i));
-            driveControl.moveToPose(poses.get(i), 4000);
+        for (int i = 1; i < poses.size(); i++) {
+            pose = poses.get(i);
+            Logger.info("Moving to %s  x %5.1f  y %5.1f  heading %6.1f", names.get(i), pose.getX(), pose.getY(), pose.getHeading());
+            //driveControl.moveToPose(pose, 4000);
             while (driveControl.isBusy() && opModeIsActive()) {
                 sleep(1);
             }
@@ -148,29 +152,31 @@ public class PathTest extends LinearOpMode {
 
         double timeout = 5000;
 
-        driveControl.setPose(new Pose(START.x, START.y, START.h));
+        Pose pose = poses.get(0);
+        driveControl.setPose(pose);
 
         while (opModeIsActive()) {
 
             if (gamepad1.a) {
-                driveControl.moveToPose(START.x, START.y, START.h, timeout);
+                pose = poses.get(0);
+                driveControl.moveToPose(pose, timeout);
                 while (gamepad1.a) sleep(10);
             }
 
             if (gamepad1.b) {
-                Pose pose = poses.get(0);
+                pose = poses.get(1);
                 driveControl.moveToPose(pose, timeout);
                 while (gamepad1.b) sleep(10);
             }
 
             if (gamepad1.x) {
-                Pose pose = poses.get(1);
+                pose = poses.get(2);
                 driveControl.moveToPose(pose, timeout);
                 while (gamepad1.x) sleep(10);
             }
 
             if (gamepad1.y) {
-                Pose pose = poses.get(2);
+                pose = poses.get(3);
                 driveControl.moveToPose(pose, timeout);
                 while (gamepad1.y) sleep(10);
             }

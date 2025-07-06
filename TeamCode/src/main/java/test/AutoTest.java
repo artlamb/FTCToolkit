@@ -9,7 +9,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import common.Auto;
 import common.Logger;
-import utils.PoseQueue;
 import utils.PoseData;
 
 @TeleOp(name="Auto Test", group="Test")

@@ -29,6 +29,7 @@
 
 package test;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -41,8 +42,8 @@ import common.Logger;
 import drivers.GoBildaPinpointDriver;
 import utils.Pose;
 
+@Disabled
 @TeleOp(name="DriveToTest", group="Test")
-//@SuppressLint("DefaultLocale")
 
 public class DriveToTest extends LinearOpMode {
 
@@ -125,7 +126,6 @@ public class DriveToTest extends LinearOpMode {
             displayPose(true);
         }
     }
-
 
     private void displayPose() {
         displayPose(false);

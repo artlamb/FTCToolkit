@@ -29,9 +29,6 @@ public class Auto {
     private final DriveControl driveControl;
     private final Navigate navigate;
 
-    private static volatile double power;
-    private static volatile double distance;
-
     public Auto(LinearOpMode opMode) {
 
         this.opMode = opMode;
@@ -45,7 +42,6 @@ public class Auto {
         //opMode.telemetry.setMsTransmissionInterval(100);
         opMode.telemetry.addLine("Press start");
         opMode.telemetry.update();
-        displayTelemetry();
         opMode.waitForStart();
 
         running = true;
@@ -88,24 +84,12 @@ public class Auto {
         Logger.message("opmode elapsed time %4.1f", elapsedTime.seconds());
     }
 
-    void displayTelemetry() {
-        opMode.telemetry.addData("distance", "%f", distance * 100/20);
-        opMode.telemetry.addData("power", "%f", power * 100);
-        opMode.telemetry.update();
-    }
-
-    public static void updateTelemetry(double distance, double power) {
-        Auto.distance = distance;
-        Auto.power = power;
-    }
-
     public void waitUntilNotMoving () {
         Logger.message("waiting, driveControl is %b", driveControl.isBusy());
         if (!driveControl.isBusy() )
             Logger.warning("driveControl is not busy");
         timer.reset();
         while (driveControl.isBusy() &&  opMode.opModeIsActive()) {
-            //displayTelemetry();
             if (timer.milliseconds() > 3000) {
                 Logger.warning("driveControl timed out");
                 break;

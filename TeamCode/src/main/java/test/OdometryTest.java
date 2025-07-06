@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -23,6 +22,7 @@ import utils.Pose;
 @SuppressLint("DefaultLocale")
 
 public class OdometryTest extends LinearOpMode {
+    public boolean telemetryOnly = true;
 
     Robot robot;
     GoBildaPinpointDriver pinpoint;
@@ -45,8 +45,6 @@ public class OdometryTest extends LinearOpMode {
 
             waitForStart();
 
-            drawOnDashboard();
-
             angleTest(10,  0);
             angleTest(10,  10);
             angleTest(0,   10);
@@ -58,7 +56,7 @@ public class OdometryTest extends LinearOpMode {
 
 
             while (opModeIsActive()) {
-                displayPose(true);
+                displayPose();
                 moveTest();
                 sleep(500);
             }
@@ -80,11 +78,10 @@ public class OdometryTest extends LinearOpMode {
     }
 
     void angleTest(double x, double y) {
-        Logger.message("x: %5.0f  y: %5.0f  atan2(y, x): %5.0f ", x, y, Math.toDegrees(Math.atan2(y, x)));
+        Logger.message("x: %5.0f  y: %5.0f  arc tan2(y, x): %5.0f ", x, y, Math.toDegrees(Math.atan2(y, x)));
     }
 
-
-    private void displayPose(boolean telemetryOnly) {
+    private void displayPose() {
 
         pinpoint.update();
         Pose2D pose = pinpoint.getPosition();
@@ -108,37 +105,6 @@ public class OdometryTest extends LinearOpMode {
         if (! telemetryOnly) {
             Logger.message("pose: %s  localizer: %s  encoders %s", str1, str2, str3);
         }
-    }
-
-    private void drawOnDashboard() {
-        FtcDashboard dashboard = FtcDashboard.getInstance();
-        if (! dashboard.isEnabled()) {
-            Logger.warning("dashboard is not enabled");
-            return;
-        }
-
-        double robotWidth = 18;
-        double robotHeight = 18;
-
-        TelemetryPacket packet = new TelemetryPacket(false);
-        packet.fieldOverlay()
-                //.setScale(0.75, 0.75)
-                //.setTranslation(10, 10)
-                .setAlpha(1.0)
-                .setRotation(-Math.PI/2)
-                //.drawImage("/images/robot1.png", -(robotWidth/2), (robotHeight/2), robotWidth, robotHeight, -Math.PI/2, 0, 0, false)
-                //.drawImage("/images/robot1.png", -robotCenter, robotCenter, robotWidth, robotHeight, 0, 0, 0, false)
-                .drawImage("/images/robot1.png", 0, 0, robotWidth, robotHeight, -Math.PI/4, 0, robotHeight, false)
-                .drawGrid(0, 0, 144, 144, 7, 7)
-                .setStrokeWidth(1)
-                .setStroke("green")
-                .strokeLine(0, 0, 0, 24) //y axis
-                .setStroke("red")
-                .strokeLine(0, 0, 24, 0); //x axis
-
-        //packet.fieldOverlay().fillRect(10,10,100,100);
-        dashboard.sendTelemetryPacket(packet);
-        sleep(20);
     }
 
 }
