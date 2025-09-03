@@ -7,6 +7,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import utils.Dashboard;
 import utils.Pose;
 
 /**
@@ -31,6 +32,11 @@ public class Navigate {
         this.driveControl = driveControl;
         driveControl.resetIMU();
 
+    }
+
+    public void setStartingPose(int index) {
+        Path path = paths.get(index);
+        setStartingPose(path.poses.get(0));
     }
 
     public void setStartingPose(Pose pose) {
@@ -101,6 +107,57 @@ public class Navigate {
         path.poses = new ArrayList<>();
         Collections.addAll(path.poses, poses);
         paths.add(path);
+    }
+
+    /**
+     * Append a pose to an existing path.
+     *
+     * @param name name of the path
+     * @param pose pose to append
+     */
+    public void appendPose(String name, Pose pose) {
+        for (Path path : paths) {
+            if (path.name.equals(name)) {
+                path.poses.add(pose);
+                return;
+            }
+        }
+        Logger.warning("path not found");
+    }
+
+    /**
+     * Check if a path with the specified name exist.
+     *
+     * @param name  name of the path
+     * @return true if the path exist
+     */
+    public boolean pathExists(String name) {
+        for (Path path : paths) {
+            if (path.name.equals(name)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public int numberOfPaths() {
+        return paths.size();
+    }
+
+    public void displayPaths() {
+        Dashboard dashboard = new Dashboard();
+
+        dashboard.drawField();
+
+        for (Path path : paths) {
+            for (Pose pose : path.poses) {
+                dashboard.addWaypoint(pose);
+                dashboard.setPose(pose);
+                dashboard.drawField();
+                opMode.sleep(1000);
+            }
+        }
+        dashboard.drawField();
     }
 }
 

@@ -16,6 +16,7 @@ import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 import java.util.ArrayList;
@@ -218,6 +219,14 @@ public class Drive extends Thread {
                 Math.max(Math.abs(rightFrontDrive.getVelocity()),
                         Math.max(Math.abs(leftBackDrive.getVelocity()),
                                 Math.abs(rightBackDrive.getVelocity())))));
+    }
+
+    public double getCurrent() {
+        double current = 0;
+        for (DcMotorEx motor : motors) {
+            current += motor.getCurrent(CurrentUnit.AMPS);
+        }
+        return current;
     }
 
     public void setBraking(boolean enabled) {

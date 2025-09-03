@@ -732,7 +732,8 @@ public class DriveControl extends Thread {
     }
 
     public void resetIMU() {
-        localizer.resetIMU();
+        if (localizer != null)
+            localizer.resetIMU();
     }
 
     /**

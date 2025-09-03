@@ -30,16 +30,33 @@
 package test;
 
 import android.annotation.SuppressLint;
+import android.graphics.PathDashPathEffect;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 
+import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
+import common.Navigate;
 import common.Robot;
+import common.Settings;
 import utils.Pose;
 
 import common.DriveControl;
@@ -52,42 +69,75 @@ import utils.PoseData;
 @Config
 
 public class PathTest extends LinearOpMode {
-    public static Boolean AUTO_DRIVE = true;
+    public enum Mode {AUTO_POSE, AUTO_PATHS, MANUAL, GAMEPAD}
 
-    public enum PathState { START, WAYPOINT_1, WAYPOINT_2, PARK }
-    public static PoseData[] WAYPOINTS = {
-            new PoseData( 0, 0, 0, PathState.START.toString()),
-            new PoseData(20, 0, 0, PathState.WAYPOINT_1.toString()),
-            new PoseData( 0, 0, 0, PathState.WAYPOINT_2.toString()),
-            new PoseData( 0, 0, 0, PathState.PARK.toString())
+    public static Mode MODE = Mode.AUTO_PATHS;
+    public static boolean READ_POSES = true;
+    public static boolean WRITE_POSES = true;
+
+    public static volatile PoseData[] waypoints = {
+            new PoseData(0,  0,  0, PoseData.WayPoint.START),
+            new PoseData(20, 0,  0, PoseData.WayPoint.WAYPOINT_1),
+            new PoseData(25, 3,  0, PoseData.WayPoint.WAYPOINT_2),
+            new PoseData(30, 10, 0, PoseData.WayPoint.WAYPOINT_2),
+            new PoseData(0,  0,  0, PoseData.WayPoint.PARK)
     };
 
     private final ArrayList<Pose> poses = new ArrayList<>();
     private final ArrayList<String> names = new ArrayList<>();
 
+    private Robot robot;
     private DriveControl driveControl;
-    DriveGamepad driveGamepad;
+    private DriveGamepad driveGamepad;
+    private Navigate navigate;
 
     @Override
     public void runOpMode() {
 
         try {
-            telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
             initialize();
-            addPaths();
-            driveControl.start();
 
+            if (READ_POSES)
+                readPoses();
+
+            switch (MODE) {
+                case AUTO_POSE:
+                    addPoses();
+                    break;
+                case AUTO_PATHS:
+                    addPaths();
+                    break;
+                case GAMEPAD:
+                    driveGamepad.start();
+                    break;
+            }
+
+            telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
             telemetry.addLine("Press start");
             telemetry.update();
             waitForStart();
 
-            if (AUTO_DRIVE) {
-                driveGamepad.start();
-                followPaths();
-            } else {
-                manualDrive();
+            switch (MODE) {
+                case AUTO_POSE:
+                    moveToPoses();
+                    break;
+                case AUTO_PATHS:
+                    navigate.displayPaths();
+                    //followPaths();
+                    break;
+                case MANUAL:
+                    manualDrive();
+                    break;
+                case GAMEPAD:
+                    gamepadDrive();
+                    break;
             }
+
+            if (WRITE_POSES)
+                writePoses();
+
+            while (opModeIsActive()) sleep(10);
 
         } catch (Exception e) {
             Logger.error(e, "Exception");
@@ -96,19 +146,50 @@ public class PathTest extends LinearOpMode {
     }
 
     private void initialize() {
-        Robot  robot = new Robot(this);
+        robot = new Robot(this);
         driveControl = robot.getDriveControl();
         driveGamepad = new DriveGamepad(this, driveControl);
+        navigate = new Navigate(this, driveControl);
+
+    }
+
+    private void motorTest() {
+        String[] names = {
+                common.Config.LEFT_FRONT,
+                common.Config.RIGHT_FRONT,
+                common.Config.LEFT_BACK,
+                common.Config.RIGHT_BACK};
+        List<DcMotorEx> motors = new ArrayList<>();
+
+        for (String name : names) {
+            Logger.message("name %s", name);
+            DcMotorEx motor;
+            motor = hardwareMap.get(DcMotorEx.class, name);
+            motors.add(motor);
+        }
+        for (DcMotorEx motor : motors) {
+            int position = motor.getCurrentPosition();
+            Logger.message("position %d", position);
+            motor.setVelocity(robot.drive.getMaxVelocity() * 0.6);
+        }
+        long start = System.currentTimeMillis();
+        do {
+            Thread.yield();
+        } while (System.currentTimeMillis() < start + 2000);
+
+        for (DcMotorEx motor : motors) {
+            motor.setVelocity(0);
+        }
     }
 
     private Pose createPose(double x, double y, double heading) {
         return new Pose(x, y, Math.toRadians(heading));
     }
 
-    private void addPaths() {
+    private void addPoses() {
         double x = 0, y = 0, h = 0;
         int waypoint = 0;
-        for (PoseData data: WAYPOINTS) {
+        for (PoseData data: waypoints) {
             // The first waypoint is the starting position
             if (waypoint > 0) {
                 // skip duplicate waypoints
@@ -126,7 +207,7 @@ public class PathTest extends LinearOpMode {
         }
     }
 
-    private void followPaths() {
+    private void moveToPoses() {
 
         long start = System.currentTimeMillis();
 
@@ -136,7 +217,7 @@ public class PathTest extends LinearOpMode {
         for (int i = 1; i < poses.size(); i++) {
             pose = poses.get(i);
             Logger.info("Moving to %s  x %5.1f  y %5.1f  heading %6.1f", names.get(i), pose.getX(), pose.getY(), pose.getHeading());
-            //driveControl.moveToPose(pose, 4000);
+            driveControl.moveToPose(pose, 4000);
             while (driveControl.isBusy() && opModeIsActive()) {
                 sleep(1);
             }
@@ -146,6 +227,40 @@ public class PathTest extends LinearOpMode {
         }
 
         Logger.message(String.format("time: %,d milliseconds", System.currentTimeMillis() - start));
+    }
+
+    private void addPaths() {
+
+        double x = 0, y = 0, h = 0;
+        int waypoint = 0;
+        for (PoseData data: waypoints) {
+            Pose pose = createPose(data.x, data.y, data.h);
+            // The first waypoint is the starting position
+            if (waypoint == 0) {
+                navigate.addPath(data.desc, pose);
+
+            } else if (x != data.x || y != data.y || h != data.h) {   // skip duplicate waypoints
+                if (navigate.pathExists(data.desc)) {
+                    navigate.appendPose(data.desc, pose);
+                } else {
+                    navigate.addPath(data.desc, pose);
+                }
+            }
+            x = data.x;
+            y = data.y;
+            h = data.h;
+            waypoint++;
+        }
+    }
+
+    private void followPaths() {
+
+        navigate.setStartingPose(0);
+
+        for (int index = 1; index < navigate.numberOfPaths(); index++) {
+            navigate.followPath(index);
+            waitUntilNotMoving();
+        }
     }
 
     private void manualDrive() {
@@ -186,6 +301,12 @@ public class PathTest extends LinearOpMode {
         }
     }
 
+    private void gamepadDrive() {
+        while (opModeIsActive()) {
+            Thread.yield();
+        }
+    }
+
     private void waitUntilNotMoving() {
         while (driveControl.isBusy() && opModeIsActive()) {
             sleep(1);
@@ -204,4 +325,45 @@ public class PathTest extends LinearOpMode {
 
         Logger.message("pose: %s", str1);
     }
+
+    private void writePoses ()  {
+
+        try {
+            String filePath = String.format("%s/%s/%s", AppUtil.FIRST_FOLDER.getAbsolutePath(), "settings", "PathTest.txt");
+            String backPath = String.format("%s/%s/%s", AppUtil.FIRST_FOLDER.getAbsolutePath(), "settings", "PathTest_Backup.txt");
+
+            File file = new File(filePath);
+            Logger.message("%s exist is %b", filePath, file.exists());
+            if (file.exists()) {
+                boolean renamed = file.renameTo(new File(backPath));
+                if (renamed)
+                    Logger.message("%s renamed to %s", filePath, backPath);
+            }
+
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            FileWriter f = new FileWriter(filePath, false);
+
+            gson.toJson(waypoints, f);
+            f.flush();
+            f.close();
+
+        } catch (Exception e) {
+            Logger.error(e, "Error writing settings");
+        }
+    }
+
+    private void readPoses() {
+
+        String filePath = String.format("%s/%s/%s", AppUtil.FIRST_FOLDER.getAbsolutePath(), "settings", "PathTest.txt");
+
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(filePath));
+            //Type listType = new TypeToken<List<PoseData>>(){}.getType(); // For a List
+            waypoints = new Gson().fromJson(br, PoseData[].class);
+        } catch (Exception e) {
+            Logger.error(e, "Error reading settings");
+        }
+    }
+
+
 }
