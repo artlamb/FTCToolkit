@@ -38,7 +38,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 
@@ -46,8 +45,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.util.ArrayList;
-import java.util.List;
 
 import common.Navigate;
 import common.Robot;
@@ -79,7 +76,6 @@ public class PathTest extends LinearOpMode {
             new PoseData(0,  0,  0, Waypoint.PARK)
     };
 
-    private Robot robot;
     private DriveControl driveControl;
     private DriveGamepad driveGamepad;
     private Navigate navigate;
@@ -130,7 +126,7 @@ public class PathTest extends LinearOpMode {
     }
 
     private void initialize() {
-        robot = new Robot(this);
+        Robot robot = new Robot(this);
         driveControl = robot.getDriveControl();
         driveGamepad = new DriveGamepad(this, driveControl);
         navigate = new Navigate(this, driveControl);
