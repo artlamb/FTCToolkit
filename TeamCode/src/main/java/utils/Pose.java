@@ -20,6 +20,7 @@ public class Pose extends Pose2D {
                 tileY * 23.5 + offsetY,
                 AngleUnit.RADIANS,
                 heading);
+        //assert (heading >= 0 && heading <= 2 * Math.PI);
     }
 
     /**

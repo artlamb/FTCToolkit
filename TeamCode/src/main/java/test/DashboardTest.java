@@ -13,7 +13,7 @@ import common.Robot;
 import utils.Dashboard;
 import utils.Pose;
 
-@Disabled
+//@Disabled
 @TeleOp(name="Dashboard Test", group="Test")
 @SuppressLint("DefaultLocale")
 
@@ -35,9 +35,10 @@ public class DashboardTest extends LinearOpMode {
             //drawOnDashboard(new Pose2D(DistanceUnit.INCH,-(24), 23.5, AngleUnit.RADIANS, Math.PI));
 
             dashboard.setPose(new Pose(2, 0.75, 0, 0, Math.PI/2));
-            dashboard.addWaypoint(new Pose(0, 0, 0, 0, 0));
-            dashboard.addWaypoint(new Pose(1, 0, 0, 0, 0));
-            dashboard.addWaypoint(new Pose(-2, -2, -10, -10, 0));
+            dashboard.addWaypoint(new Pose(0,  0,  0,   0, 0));
+            dashboard.addWaypoint(new Pose(1,  0,  0,   0,   Math.toRadians(90)));
+            dashboard.addWaypoint(new Pose( 2, 0,  18,  0,   Math.toRadians(180)));
+            dashboard.addWaypoint(new Pose(-2, -2, -10, -10, Math.toRadians(270)));
 
             dashboard.drawField();
 

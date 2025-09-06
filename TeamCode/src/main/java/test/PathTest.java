@@ -30,14 +30,12 @@
 package test;
 
 import android.annotation.SuppressLint;
-import android.graphics.PathDashPathEffect;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -48,21 +46,18 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import common.Navigate;
 import common.Robot;
-import common.Settings;
 import utils.Pose;
 
 import common.DriveControl;
 import common.DriveGamepad;
 import common.Logger;
 import utils.PoseData;
+import utils.Waypoint;
 
 @TeleOp(name=" Path Test", group="Test")
 @SuppressLint("DefaultLocale")
@@ -76,11 +71,11 @@ public class PathTest extends LinearOpMode {
     public static boolean WRITE_POSES = true;
 
     public static volatile PoseData[] waypoints = {
-            new PoseData(0,  0,  0, PoseData.WayPoint.START),
-            new PoseData(20, 0,  0, PoseData.WayPoint.WAYPOINT_1),
-            new PoseData(25, 3,  0, PoseData.WayPoint.WAYPOINT_2),
-            new PoseData(30, 10, 0, PoseData.WayPoint.WAYPOINT_2),
-            new PoseData(0,  0,  0, PoseData.WayPoint.PARK)
+            new PoseData(0,  0,  0, Waypoint.START),
+            new PoseData(20, 0,  0, Waypoint.WAYPOINT_1),
+            new PoseData(25, 3,  0, Waypoint.WAYPOINT_2),
+            new PoseData(30, 10, 0, Waypoint.WAYPOINT_2),
+            new PoseData(0,  0,  0, Waypoint.PARK)
     };
 
     private final ArrayList<Pose> poses = new ArrayList<>();
@@ -195,7 +190,7 @@ public class PathTest extends LinearOpMode {
                 // skip duplicate waypoints
                 if (x != data.x || y != data.y || h != data.h) {
                     Pose pose = createPose(data.x, data.y, data.h);
-                    String name = data.desc;
+                    String name = data.desc.name();
                     poses.add(pose);
                     names.add(name);
                 }
@@ -237,13 +232,13 @@ public class PathTest extends LinearOpMode {
             Pose pose = createPose(data.x, data.y, data.h);
             // The first waypoint is the starting position
             if (waypoint == 0) {
-                navigate.addPath(data.desc, pose);
+                navigate.addPath(data.desc.name(), pose);
 
             } else if (x != data.x || y != data.y || h != data.h) {   // skip duplicate waypoints
-                if (navigate.pathExists(data.desc)) {
-                    navigate.appendPose(data.desc, pose);
+                if (navigate.pathExists(data.desc.name())) {
+                    navigate.appendPose(data.desc.name(), pose);
                 } else {
-                    navigate.addPath(data.desc, pose);
+                    navigate.addPath(data.desc.name(), pose);
                 }
             }
             x = data.x;

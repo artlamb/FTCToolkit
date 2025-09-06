@@ -1,5 +1,7 @@
 package utils;
 
+import android.graphics.Point;
+
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.canvas.Canvas;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
@@ -8,6 +10,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 import common.Logger;
 
@@ -21,6 +24,8 @@ public class Dashboard {
     private TelemetryPacket packet;
     Pose robotPose = new Pose(0, 0,0);
     ArrayList<Pose>  waypoints = new ArrayList<>();
+
+    double scale = 24 / 23.5;                               // tiles are 23.5 inches not 24
 
     int queueSize = 100;
     PoseQueue poseQueue = new PoseQueue(queueSize);
@@ -64,7 +69,6 @@ public class Dashboard {
             canvas.drawImage("/images/into-the-deep.png", 72, 72, 144, 144, Math.PI / 2, 0, 0, false);
         }
 
-        double scale = 24 / 23.5;                           // tiles are 23.5 inches not 24
         canvas.setAlpha(1.0);
 
         // draw the robot
@@ -80,20 +84,59 @@ public class Dashboard {
             canvas.drawImage("/images/robot.png", offsetX, offsetY, robotLength, robotWidth, -heading, 0, 0, false);
         }
 
-        // Draw the waypoints
-        canvas.setStrokeWidth(1);
-        canvas.setFill("red");
-        for (Pose waypoint : waypoints) {
-            double x = waypoint.getX(DistanceUnit.INCH) * scale;
-            double y = waypoint.getY(DistanceUnit.INCH) * scale;
-            canvas.fillCircle(x, y, 0.9);
-        }
-
         drawPosesTrace(canvas);
+
+        drawWaypoints(canvas);
 
         canvas.drawGrid(0, 0, 144, 144, 7, 7);
 
         sendPacket();
+    }
+
+    public static Pose calculateCoordinate(Pose origin, double offsetX, double offsetY) {
+
+        double angleRadians = origin.getHeading(AngleUnit.RADIANS);
+
+        // Rotate the local offsets to get global offsets
+        double rotatedOffsetX = offsetX * Math.cos(angleRadians) - offsetY * Math.sin(angleRadians);
+        double rotatedOffsetY = offsetX * Math.sin(angleRadians) + offsetY * Math.cos(angleRadians);
+
+        // Add global offsets to the origin
+        double x = origin.getX(DistanceUnit.INCH) + rotatedOffsetX;
+        double y = origin.getY(DistanceUnit.INCH) + rotatedOffsetY;
+
+        return new Pose(x, y, 0);
+    }
+
+    private void drawWaypoints(Canvas canvas) {
+        canvas.setStrokeWidth(1);
+        canvas.setFill("red");
+        canvas.setStroke("red");
+
+        for (Pose waypoint : waypoints) {
+            double x = waypoint.getX(DistanceUnit.INCH) * scale;
+            double y = waypoint.getY(DistanceUnit.INCH) * scale;
+            canvas.fillCircle(x, y, 1);
+
+            Pose end = calculateCoordinate(waypoint, 2, 0);
+            canvas.strokeLine(x, y, end.getX(DistanceUnit.INCH) * scale, end.getY(DistanceUnit.INCH) * scale);
+
+            double waypointX = waypoint.getX(DistanceUnit.INCH);
+            double waypointY = waypoint.getY(DistanceUnit.INCH);
+            String xString;
+            String yString;
+
+            if (Math.abs(waypointX) % 1.0 == 0.0)
+                xString= String.format(Locale.US, "%.0f", waypointX);
+            else
+                xString= String.format(Locale.US, "%.1f", waypointX);
+            if (Math.abs(waypointY) % 1.0 == 0.0)
+                yString= String.format(Locale.US, "%.0f", waypointY);
+            else
+                yString= String.format(Locale.US, "%.1f", waypointY);
+            String position = String.format(Locale.US, "(%s,%s)", xString, yString);
+            canvas.fillText(position, x+1.5, y-1, "3px Arial", 0, false);
+        }
     }
 
     private void drawPosesTrace(Canvas canvas) {
