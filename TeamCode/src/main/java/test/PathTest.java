@@ -64,11 +64,12 @@ import utils.Waypoint;
 @Config
 
 public class PathTest extends LinearOpMode {
-    public enum Mode {AUTO_POSE, AUTO_PATHS, MANUAL, GAMEPAD}
+    public enum Mode { AUTO_PATHS, MANUAL, GAMEPAD }
 
     public static Mode MODE = Mode.AUTO_PATHS;
     public static boolean READ_POSES = true;
     public static boolean WRITE_POSES = true;
+    public static boolean DRAW_ONLY = true;
 
     public static volatile PoseData[] waypoints = {
             new PoseData(0,  0,  0, Waypoint.START),
@@ -77,9 +78,6 @@ public class PathTest extends LinearOpMode {
             new PoseData(30, 10, 0, Waypoint.WAYPOINT_2),
             new PoseData(0,  0,  0, Waypoint.PARK)
     };
-
-    private final ArrayList<Pose> poses = new ArrayList<>();
-    private final ArrayList<String> names = new ArrayList<>();
 
     private Robot robot;
     private DriveControl driveControl;
@@ -96,16 +94,10 @@ public class PathTest extends LinearOpMode {
             if (READ_POSES)
                 readPoses();
 
-            switch (MODE) {
-                case AUTO_POSE:
-                    addPoses();
-                    break;
-                case AUTO_PATHS:
-                    addPaths();
-                    break;
-                case GAMEPAD:
-                    driveGamepad.start();
-                    break;
+            addPaths();
+
+            if (MODE == Mode.GAMEPAD) {
+                driveGamepad.start();
             }
 
             telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
@@ -114,12 +106,9 @@ public class PathTest extends LinearOpMode {
             waitForStart();
 
             switch (MODE) {
-                case AUTO_POSE:
-                    moveToPoses();
-                    break;
                 case AUTO_PATHS:
                     navigate.displayPaths();
-                    //followPaths();
+                    followPaths();
                     break;
                 case MANUAL:
                     manualDrive();
@@ -148,80 +137,8 @@ public class PathTest extends LinearOpMode {
 
     }
 
-    private void motorTest() {
-        String[] names = {
-                common.Config.LEFT_FRONT,
-                common.Config.RIGHT_FRONT,
-                common.Config.LEFT_BACK,
-                common.Config.RIGHT_BACK};
-        List<DcMotorEx> motors = new ArrayList<>();
-
-        for (String name : names) {
-            Logger.message("name %s", name);
-            DcMotorEx motor;
-            motor = hardwareMap.get(DcMotorEx.class, name);
-            motors.add(motor);
-        }
-        for (DcMotorEx motor : motors) {
-            int position = motor.getCurrentPosition();
-            Logger.message("position %d", position);
-            motor.setVelocity(robot.drive.getMaxVelocity() * 0.6);
-        }
-        long start = System.currentTimeMillis();
-        do {
-            Thread.yield();
-        } while (System.currentTimeMillis() < start + 2000);
-
-        for (DcMotorEx motor : motors) {
-            motor.setVelocity(0);
-        }
-    }
-
     private Pose createPose(double x, double y, double heading) {
         return new Pose(x, y, Math.toRadians(heading));
-    }
-
-    private void addPoses() {
-        double x = 0, y = 0, h = 0;
-        int waypoint = 0;
-        for (PoseData data: waypoints) {
-            // The first waypoint is the starting position
-            if (waypoint > 0) {
-                // skip duplicate waypoints
-                if (x != data.x || y != data.y || h != data.h) {
-                    Pose pose = createPose(data.x, data.y, data.h);
-                    String name = data.desc.name();
-                    poses.add(pose);
-                    names.add(name);
-                }
-            }
-            x = data.x;
-            y = data.y;
-            h = data.h;
-            waypoint++;
-        }
-    }
-
-    private void moveToPoses() {
-
-        long start = System.currentTimeMillis();
-
-        Pose pose = poses.get(0);
-        driveControl.setPose(createPose(pose.getX(), pose.getY(), pose.getHeading()));
-
-        for (int i = 1; i < poses.size(); i++) {
-            pose = poses.get(i);
-            Logger.info("Moving to %s  x %5.1f  y %5.1f  heading %6.1f", names.get(i), pose.getX(), pose.getY(), pose.getHeading());
-            driveControl.moveToPose(pose, 4000);
-            while (driveControl.isBusy() && opModeIsActive()) {
-                sleep(1);
-            }
-            sleep(100);
-            if (! opModeIsActive())
-                break;
-        }
-
-        Logger.message(String.format("time: %,d milliseconds", System.currentTimeMillis() - start));
     }
 
     private void addPaths() {
@@ -250,6 +167,8 @@ public class PathTest extends LinearOpMode {
 
     private void followPaths() {
 
+        if (DRAW_ONLY) return;
+
         navigate.setStartingPose(0);
 
         for (int index = 1; index < navigate.numberOfPaths(); index++) {
@@ -260,34 +179,27 @@ public class PathTest extends LinearOpMode {
 
     private void manualDrive() {
 
-        double timeout = 5000;
-
-        Pose pose = poses.get(0);
-        driveControl.setPose(pose);
+        navigate.setStartingPose(0);
 
         while (opModeIsActive()) {
 
             if (gamepad1.a) {
-                pose = poses.get(0);
-                driveControl.moveToPose(pose, timeout);
+                navigate.followPath(0);
                 while (gamepad1.a) sleep(10);
             }
 
             if (gamepad1.b) {
-                pose = poses.get(1);
-                driveControl.moveToPose(pose, timeout);
+                navigate.followPath(1);
                 while (gamepad1.b) sleep(10);
             }
 
             if (gamepad1.x) {
-                pose = poses.get(2);
-                driveControl.moveToPose(pose, timeout);
+                navigate.followPath(2);
                 while (gamepad1.x) sleep(10);
             }
 
             if (gamepad1.y) {
-                pose = poses.get(3);
-                driveControl.moveToPose(pose, timeout);
+                navigate.followPath(3);
                 while (gamepad1.y) sleep(10);
             }
 
