@@ -14,11 +14,14 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 public class Limelight {
 
+    public enum Pipeline  {LOCATION, APRIL_TAG, }
     private final Limelight3A limelight;
+
+    private int pipeline = 5;
 
     public Limelight (LinearOpMode opMode) {
         limelight = opMode.hardwareMap.get(Limelight3A.class, "limelight");
-        limelight.pipelineSwitch(3);
+        limelight.pipelineSwitch(pipeline);
         limelight.start();
     }
 
@@ -33,7 +36,7 @@ public class Limelight {
         Pose2D pose = null;
         limelight.updateRobotOrientation(heading);
         LLResult result = limelight.getLatestResult();
-        if (result != null) {
+        if (result.isValid()) {
             if (result.isValid()) {
                 Pose3D robotPose = result.getBotpose_MT2();
                 Position position = robotPose.getPosition();
@@ -47,5 +50,28 @@ public class Limelight {
             }
         }
         return pose;
+    }
+
+    public double GetTx () {
+        LLResult result = limelight.getLatestResult();
+        if (result.isValid()) {
+            return result.getTx();
+        }
+        return 0;
+    }
+
+    public void setPipeline (Pipeline pipeline) {
+
+        switch (pipeline) {
+            case APRIL_TAG:
+                this.pipeline = 5;
+                break;
+
+            case LOCATION:
+                this.pipeline = 3;
+                break;
+        }
+
+        limelight.pipelineSwitch(this.pipeline);
     }
 }

@@ -27,4 +27,11 @@ public class Config {
     public static final String PICKER_YAW          = "pickerYaw";
     public static final String DROPPER_WRIST       = "dropperWrist";
     public static final String DROPPER_FINGERS     = "dropperFingers";
+    public static final String LAUNCHER_LEFT =     "launcherLeft";
+    public static final String LAUNCHER_RIGHT =    "launcherRight";
+    public static final String LINEAR_SERVO =      "linearServo";
+    public static final String TRIGGER =           "trigger";
+    public static final String LOADER =            "loader";
+
+
 }

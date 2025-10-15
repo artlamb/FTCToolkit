@@ -62,18 +62,29 @@ import utils.Waypoint;
 
 public class PathTest extends LinearOpMode {
     public enum Mode { AUTO_PATHS, MANUAL, GAMEPAD }
+    public enum Alliance { BLUE, RED }
 
     public static Mode MODE = Mode.AUTO_PATHS;
+    public static Alliance ALLIANCE = Alliance.BLUE;
     public static boolean READ_POSES = true;
-    public static boolean WRITE_POSES = true;
+    public static boolean WRITE_POSES = false;
     public static boolean DRAW_ONLY = true;
+    public static PoseData waypoint = new PoseData(0, 0, 0, Waypoint.UNKNOWN);
 
-    public static volatile PoseData[] waypoints = {
-            new PoseData(0,  0,  0, Waypoint.START),
-            new PoseData(20, 0,  0, Waypoint.WAYPOINT_1),
-            new PoseData(25, 3,  0, Waypoint.WAYPOINT_2),
-            new PoseData(30, 10, 0, Waypoint.WAYPOINT_2),
-            new PoseData(0,  0,  0, Waypoint.PARK)
+    public static PoseData[] waypoints = {
+            new PoseData(0, 0,  0, Waypoint.START),
+            new PoseData(0, 0,  0, Waypoint.SHOOT_1),
+            /*
+            new PoseData(0, 0,  0, Waypoint.PICKUP_1),
+            new PoseData(0, 0,  0, Waypoint.PICKUP_1),
+            new PoseData(0, 0,  0, Waypoint.SHOOT_2),
+            new PoseData(0, 0,  0, Waypoint.PICKUP_2),
+            new PoseData(0, 0,  0, Waypoint.PICKUP_2),
+            new PoseData(0, 0,  0, Waypoint.SHOOT_3),
+            new PoseData(0, 0,  0, Waypoint.PICKUP_3),
+            new PoseData(0, 0,  0, Waypoint.PICKUP_3),
+             */
+            new PoseData(0, 0,  0, Waypoint.PARK)
     };
 
     private DriveControl driveControl;
@@ -84,26 +95,30 @@ public class PathTest extends LinearOpMode {
     public void runOpMode() {
 
         try {
+            telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
             initialize();
 
             if (READ_POSES)
                 readPoses();
-
             addPaths();
 
             if (MODE == Mode.GAMEPAD) {
                 driveGamepad.start();
             }
 
-            telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
-            telemetry.addLine("Press start");
-            telemetry.update();
-            waitForStart();
+            displayPoses();
+
+            while (opModeInInit()) {
+                displayPose();
+                editWaypoint();
+                sleep(500);
+            }
+
+            //waitForStart();
 
             switch (MODE) {
                 case AUTO_PATHS:
-                    navigate.displayPaths();
                     followPaths();
                     break;
                 case MANUAL:
@@ -117,7 +132,10 @@ public class PathTest extends LinearOpMode {
             if (WRITE_POSES)
                 writePoses();
 
-            while (opModeIsActive()) sleep(10);
+            while (opModeIsActive()) {
+                editWaypoint();
+                sleep(10);
+            }
 
         } catch (Exception e) {
             Logger.error(e, "Exception");
@@ -133,31 +151,38 @@ public class PathTest extends LinearOpMode {
 
     }
 
+    private void editWaypoint () {
+
+        if (waypoint.desc == Waypoint.UNKNOWN) return;
+
+        for (PoseData data: waypoints) {
+            if (data.desc == waypoint.desc) {
+                if (data.x == waypoint.x && data.y == waypoint.y && data.h == waypoint.h) return;
+                data.x = waypoint.x;
+                data.y = waypoint.y;
+                data.h = waypoint.h;
+                displayPoses();
+                Pose pose = createPose(data.x, data.y, data.h);
+                navigate.setPath(data.desc.name(), pose);
+                navigate.drawPaths();
+                return;
+            }
+        }
+    }
+
     private Pose createPose(double x, double y, double heading) {
         return new Pose(x, y, Math.toRadians(heading));
     }
 
     private void addPaths() {
 
-        double x = 0, y = 0, h = 0;
-        int waypoint = 0;
         for (PoseData data: waypoints) {
             Pose pose = createPose(data.x, data.y, data.h);
-            // The first waypoint is the starting position
-            if (waypoint == 0) {
+            if (navigate.pathExists(data.desc.name())) {
+                navigate.appendPose(data.desc.name(), pose);
+            } else {
                 navigate.addPath(data.desc.name(), pose);
-
-            } else if (x != data.x || y != data.y || h != data.h) {   // skip duplicate waypoints
-                if (navigate.pathExists(data.desc.name())) {
-                    navigate.appendPose(data.desc.name(), pose);
-                } else {
-                    navigate.addPath(data.desc.name(), pose);
-                }
             }
-            x = data.x;
-            y = data.y;
-            h = data.h;
-            waypoint++;
         }
     }
 
@@ -229,11 +254,25 @@ public class PathTest extends LinearOpMode {
         Logger.message("pose: %s", str1);
     }
 
+    private void displayPoses () {
+        for (PoseData data: waypoints) {
+            String str1 = String.format("x %5.1f  y %5.1f  heading %5.1f  %s", data.x, data.y, data.h, data.desc.name());
+            Logger.message("pose: %s", str1);
+            telemetry.addLine(str1);
+        }
+        telemetry.update();
+    }
+
+    private String getPosesDirectory () {
+        return String.format("%s/%s", AppUtil.FIRST_FOLDER.getAbsolutePath(), "settings");
+    }
+
     private void writePoses ()  {
 
         try {
-            String filePath = String.format("%s/%s/%s", AppUtil.FIRST_FOLDER.getAbsolutePath(), "settings", "PathTest.txt");
-            String backPath = String.format("%s/%s/%s", AppUtil.FIRST_FOLDER.getAbsolutePath(), "settings", "PathTest_Backup.txt");
+            String dir = getPosesDirectory();
+            String filePath = String.format("%s/%s.txt", dir, "PathTest");
+            String backPath = String.format("%s/%s.txt", dir, "PathTest_Backup");
 
             File file = new File(filePath);
             Logger.message("%s exist is %b", filePath, file.exists());
@@ -257,12 +296,23 @@ public class PathTest extends LinearOpMode {
 
     private void readPoses() {
 
-        String filePath = String.format("%s/%s/%s", AppUtil.FIRST_FOLDER.getAbsolutePath(), "settings", "PathTest.txt");
+        String dir = getPosesDirectory();
+        String filePath = String.format("%s/%s.txt", dir, "PathTest");
 
         try {
             BufferedReader br = new BufferedReader(new FileReader(filePath));
-            //Type listType = new TypeToken<List<PoseData>>(){}.getType(); // For a List
-            waypoints = new Gson().fromJson(br, PoseData[].class);
+            PoseData[] data = new Gson().fromJson(br, PoseData[].class);
+            for (PoseData d : data) {
+                for (PoseData d2 : waypoints) {
+                    if (d.desc == d2.desc) {
+                        d2.x = d.x;
+                        d2.y = d.y;
+                        d2.h = d.h;
+                        Logger.message("%s", d.desc);
+                    }
+                }
+            }
+            //waypoints = new Gson().fromJson(br, PoseData[].class);
         } catch (Exception e) {
             Logger.error(e, "Error reading settings");
         }

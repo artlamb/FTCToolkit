@@ -1,13 +1,14 @@
 package common;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit;
 
-import drivers.GoBildaPinpointDriver;
+//import drivers.GoBildaPinpointDriver;
 import utils.Pose;
 
 
@@ -24,7 +25,9 @@ public class Pinpoint {
         pinpointDrive = opMode.hardwareMap.get(GoBildaPinpointDriver.class,Config.PINPOINT);
 
         // Set encoder directions
-        pinpointDrive.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.FORWARD);
+        pinpointDrive.setEncoderDirections(
+                GoBildaPinpointDriver.EncoderDirection.FORWARD,
+                GoBildaPinpointDriver.EncoderDirection.REVERSED);
 
         // Set tracking point to the center of the robot (in mm)
         pinpointDrive.setOffsets(-84, -168, DistanceUnit.MM);

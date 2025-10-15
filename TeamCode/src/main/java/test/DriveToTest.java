@@ -32,6 +32,7 @@ package test;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 
 import java.util.Locale;
 
@@ -39,7 +40,6 @@ import common.Drive;
 import common.DriveControl;
 import common.DriveGamepad;
 import common.Logger;
-import drivers.GoBildaPinpointDriver;
 import utils.Pose;
 
 @Disabled

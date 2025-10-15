@@ -126,6 +126,22 @@ public class Navigate {
     }
 
     /**
+     * Set the poses of an existing path.
+     * @param name - name of the path
+     * @param poses -
+     */
+    public void setPath(String name, Pose... poses) {
+        for (Path path : paths) {
+            if (path.name.equals(name)) {
+                path.poses = new ArrayList<>();
+                Collections.addAll(path.poses, poses);
+                return;
+            }
+        }
+        Logger.warning("path not found");
+    }
+
+    /**
      * Check if a path with the specified name exist.
      *
      * @param name  name of the path
@@ -144,7 +160,7 @@ public class Navigate {
         return paths.size();
     }
 
-    public void displayPaths() {
+    public void drawPaths() {
         Dashboard dashboard = new Dashboard();
 
         dashboard.drawField();

@@ -13,7 +13,7 @@ import common.Robot;
 import utils.Dashboard;
 import utils.Pose;
 
-//@Disabled
+@Disabled
 @TeleOp(name="Dashboard Test", group="Test")
 @SuppressLint("DefaultLocale")
 

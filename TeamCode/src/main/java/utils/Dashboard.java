@@ -19,7 +19,7 @@ import common.Logger;
 public class Dashboard {
 
     public static boolean enabled = true;
-    public static boolean drawFieldImage = false;
+    public static boolean drawFieldImage = true;
 
     private TelemetryPacket packet;
     Pose robotPose = new Pose(0, 0,0);
@@ -66,22 +66,25 @@ public class Dashboard {
         // Draw the image of the field
         if (drawFieldImage) {
             canvas.setAlpha(0.5);
-            canvas.drawImage("/images/into-the-deep.png", 72, 72, 144, 144, Math.PI / 2, 0, 0, false);
+
+            canvas.drawImage("/images/decode.webp", 72, -72, 144, 144, Math.PI, 0, 0, false);
+            //canvas.drawImage("/images/into-the-deep.png", 72, 72, 144, 144, Math.PI / 2, 0, 0, false);
         }
 
         canvas.setAlpha(1.0);
 
+
         // draw the robot
         if (robotPose != null) {
             double heading = robotPose.getHeading(AngleUnit.RADIANS);
-            double robotWidth = 18;
-            double robotLength = 18;
-            double radius = Math.hypot(robotLength/2, robotWidth/2);
+            double robotWidth = 17;
+            double robotHeight = 17;
+            double radius = Math.hypot(robotHeight/2, robotWidth/2);
             double angle = heading + (2 * Math.PI * (7./8.));
             double offsetX = (robotPose.getX(DistanceUnit.INCH) - Math.cos(angle) * radius) * scale;
             double offsetY = (robotPose.getY(DistanceUnit.INCH) - Math.sin(angle) * radius) * scale;
 
-            canvas.drawImage("/images/robot.png", offsetX, offsetY, robotLength, robotWidth, -heading, 0, 0, false);
+            canvas.drawImage("/images/robot.png", offsetX, offsetY, robotWidth, robotHeight, -heading, 0, 0, false);
         }
 
         drawPosesTrace(canvas);
