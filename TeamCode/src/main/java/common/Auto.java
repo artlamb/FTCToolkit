@@ -12,7 +12,7 @@ public class Auto {
     public static boolean enableWait = false;
 
     public enum PathState {
-        START, WAYPOINT_1, WAYPOINT_2, PARK;
+        START, WAYPOINT_1, PARK;
 
         public static PathState next(int id) {
             return values()[id];
@@ -39,7 +39,6 @@ public class Auto {
 
     public void runAuto() {
 
-        //opMode.telemetry.setMsTransmissionInterval(100);
         opMode.telemetry.addLine("Press start");
         opMode.telemetry.update();
         opMode.waitForStart();
@@ -53,24 +52,16 @@ public class Auto {
 
             switch (pathState) {
                 case START:
-                    //robot.setToStartPosition();
                     followPath();
                     break;
 
                 case WAYPOINT_1:
-                    waitUntilNotMoving();
-                    waitUntilRobotIdIdle();
                     waitForButtonPress();
-                    opMode.sleep(500);
-                    followPath();
-                    break;
-
-                case WAYPOINT_2:
                     waitUntilNotMoving();
+                    robot.lineUpTarget();
                     waitUntilRobotIdIdle();
-                    waitForButtonPress();
-                    waitUntilOkToLift();
-                    opMode.sleep(500);
+                    robot.fireAll();
+                    waitUntilRobotIdIdle();
                     followPath();
                     break;
 
@@ -82,20 +73,6 @@ public class Auto {
             Logger.info("%s ends,  time: %6.2f\n", currentState, elapsedTime.seconds());
         }
         Logger.message("opmode elapsed time %4.1f", elapsedTime.seconds());
-    }
-
-    public void waitUntilNotMoving () {
-        Logger.message("waiting, driveControl is %b", driveControl.isBusy());
-        if (!driveControl.isBusy() )
-            Logger.warning("driveControl is not busy");
-        timer.reset();
-        while (driveControl.isBusy() &&  opMode.opModeIsActive()) {
-            if (timer.milliseconds() > 3000) {
-                Logger.warning("driveControl timed out");
-                break;
-            }
-        }
-        Logger.message("done waiting, time: %5.0f", timer.milliseconds());
     }
 
     public void addPath(PathState pathState, double x, double y, double heading) {
@@ -115,6 +92,20 @@ public class Auto {
         navigate.followPath(getPathName(pathState));
     }
 
+    public void waitUntilNotMoving () {
+        Logger.message("waiting, driveControl is %b", driveControl.isBusy());
+        if (!driveControl.isBusy() )
+            Logger.warning("driveControl is not busy");
+        timer.reset();
+        while (driveControl.isBusy() &&  opMode.opModeIsActive()) {
+            if (timer.milliseconds() > 3000) {
+                Logger.warning("driveControl timed out");
+                break;
+            }
+        }
+        Logger.message("done waiting, time: %5.0f", timer.milliseconds());
+    }
+
     private void waitUntilRobotIdIdle() {
         Logger.message("waiting");
         timer.reset();
@@ -123,9 +114,9 @@ public class Auto {
                 Logger.warning("robot timed out");
                 break;
             }
+            Thread.yield();
         }
         Logger.message("done waiting, time: %5.0f", timer.seconds());
-        Logger.message("done waiting");
     }
 
     private void waitUntilOkToMove() {
@@ -136,23 +127,7 @@ public class Auto {
                 Logger.warning("robot timed out");
                 break;
             }
-        }
-        Logger.message("done waiting, time: %5.0f", timer.seconds());
-    }
-
-    private void waitUntilOkToLift() {
-        Logger.message("waiting");
-        timer.reset();
-        while (opMode.opModeIsActive()) {
-            if (driveControl.nearPose() ) {
-                break;
-            } else {
-                Thread.yield();
-            }
-            if (timer.milliseconds() > 5000) {
-                Logger.warning("robot timed out");
-                break;
-            }
+            Thread.yield();
         }
         Logger.message("done waiting, time: %5.0f", timer.seconds());
     }

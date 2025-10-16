@@ -1,28 +1,22 @@
-package test;
-
-import android.annotation.SuppressLint;
+package competition;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 import common.Auto;
 import common.Logger;
 import utils.PoseData;
 
-
-@TeleOp(name="Auto Test", group="Test")
-@SuppressLint("DefaultLocale")
-@Disabled
+@Autonomous(name="Auto Blue", group="Competition")
 @com.acmerobotics.dashboard.config.Config
 
-public class AutoTest extends LinearOpMode {
+public class AutoBlue extends LinearOpMode {
 
-    public static PoseData START = new PoseData(0, 0, 0);
-    public static PoseData WAYPOINT_1 = new PoseData(20, 0, 0);
-    public static PoseData PARK = new PoseData(0, 0, 0);
+    public static PoseData START =      new PoseData(-15.0, 62.0, 270.0);
+    public static PoseData WAYPOINT_1 = new PoseData(-11.8, 11.8, 315.0);
+    public static PoseData PARK =       new PoseData(  0.0,  0.0,   0.0);
 
     Auto auto;
 

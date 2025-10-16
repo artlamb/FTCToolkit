@@ -21,11 +21,11 @@ public class PoseQueue {
     // Enqueue operation
     public void enqueue(Pose pose) {
 
-        // disguard redundant poses.
+        // disregard redundant poses.
         if (size > 0 &&
                 Math.floor(pose.getX()*100) == Math.floor(queue[front].getX()*100) &&
                 Math.floor(pose.getY()*100) == Math.floor(queue[front].getY()*100)) {
-            Logger.warning("redundant");
+            //Logger.warning("redundant");
         }
 
         rear = (rear + 1) % capacity;

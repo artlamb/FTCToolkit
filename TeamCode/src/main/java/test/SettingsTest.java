@@ -21,8 +21,6 @@ public class SettingsTest extends LinearOpMode {
 
         waitForStart();
 
-
-
         Logger.message("drive factor: %f  strafe factor: %f turn factor: %f",
                 Settings.getDriveFactor(),
                 Settings.getStrafeFactor(),

@@ -48,7 +48,7 @@ public class Launcher extends Thread {
 
     LinearOpMode opMode;
     private double angle;
-    private double speed;
+    private double speed = 0.20;
     private double velocity;
     private double angleAdjustTime;
     private boolean running = false;
@@ -145,7 +145,6 @@ public class Launcher extends Thread {
     }
 
     public void setSpeed(double speed) {
-        Logger.message("launcher speed set to %f", speed);
         synchronized (this) {
             this.speed = speed;
             velocity = MAX_VELOCITY * speed;
@@ -153,7 +152,7 @@ public class Launcher extends Thread {
                 leftMotor.setVelocity(velocity);
                 rightMotor.setVelocity(velocity);
             }
-            Logger.message("launcher velocity set to %f", velocity);
+            Logger.message("launcher speed set to %f  velocity set to %f", speed, velocity);
         }
     }
 
@@ -206,11 +205,13 @@ public class Launcher extends Thread {
 
             double threshold = MAX_VELOCITY * 0.01;
             if (Math.abs(velocity - Math.abs(leftVelocity)) < threshold ||
-                    Math.abs(velocity - Math.abs(rightVelocity)) < threshold)
+                    Math.abs(velocity - Math.abs(rightVelocity)) < threshold) {
+                Logger.message("launcher spin up complete  left: %5.0f  right: %5.0f", leftVelocity, rightVelocity);
                 break;
+            }
 
             if (System.currentTimeMillis() - startTime >= timeout)  {
-                Logger.warning("launcher spin up timeout");
+                Logger.warning("launcher spin up timed out after %d ms", timeout);
                 break;
             }
         }
@@ -233,7 +234,7 @@ public class Launcher extends Thread {
         delay(LOADER_REACT_TIME);
     }
 
-    public boolean launcherIsBusy () {
+    public boolean isBusy() {
         return state != LAUNCHER_STATE.IDLE;
     }
 

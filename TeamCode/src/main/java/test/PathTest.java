@@ -56,7 +56,7 @@ import common.Logger;
 import utils.PoseData;
 import utils.Waypoint;
 
-@TeleOp(name=" Path Test", group="Test")
+@TeleOp(name="Path Test", group="Test")
 @SuppressLint("DefaultLocale")
 @Config
 

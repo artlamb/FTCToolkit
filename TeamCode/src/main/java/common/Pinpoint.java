@@ -27,7 +27,7 @@ public class Pinpoint {
         // Set encoder directions
         pinpointDrive.setEncoderDirections(
                 GoBildaPinpointDriver.EncoderDirection.FORWARD,
-                GoBildaPinpointDriver.EncoderDirection.REVERSED);
+                GoBildaPinpointDriver.EncoderDirection.FORWARD);
 
         // Set tracking point to the center of the robot (in mm)
         pinpointDrive.setOffsets(-84, -168, DistanceUnit.MM);

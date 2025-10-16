@@ -133,7 +133,7 @@ public class DriveControl extends Thread {
         dashboard = new Dashboard();
 
         voltageSensor = opMode.hardwareMap.voltageSensor.iterator().next();
-        initDistanceSensors();
+        //initDistanceSensors();
 
         try {
             localizer = new Pinpoint(opMode);

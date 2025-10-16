@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 
 import androidx.annotation.NonNull;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -37,6 +38,7 @@ import common.Settings;
  * <br>Range: Horizontal distance traveled until the ball returns to its initial launch height or hits the ground.
  */
 @TeleOp(name="SettingsTest", group="Test")
+@Disabled
 
 public class AimTest extends LinearOpMode {
 

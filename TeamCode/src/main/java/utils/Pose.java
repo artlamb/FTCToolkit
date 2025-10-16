@@ -1,8 +1,14 @@
 package utils;
 
+import android.annotation.SuppressLint;
+
+import androidx.annotation.NonNull;
+
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+
+import java.util.Locale;
 
 public class Pose extends Pose2D {
 
@@ -106,5 +112,12 @@ public class Pose extends Pose2D {
         while (angle < 0) angle += 2 * Math.PI;
         while (angle > 2 * Math.PI) angle -= 2 * Math.PI;
         return angle;
+    }
+
+    @Override
+    @NonNull
+    public String toString() {
+        return String.format(Locale.US, "x %5.1f  y %5.1f  heading %5.1f",
+                this.getX(), this.getY(), Math.toDegrees(this.getHeading()));
     }
 }

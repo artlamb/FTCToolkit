@@ -3,8 +3,10 @@ package competition;
 import android.annotation.SuppressLint;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 import common.Drive;
 import common.DriveControl;
@@ -15,11 +17,10 @@ import common.Logger;
 import utils.Increment;
 import utils.Pose;
 
-@com.qualcomm.robotcore.eventloop.opmode.TeleOp(name="TeleOp", group="Competition")
+@TeleOp(name="TeleOpComp", group="Competition")
 @SuppressLint("DefaultLocale")
 
-public class TeleOp extends LinearOpMode {
-
+public class TeleOpComp extends LinearOpMode {
 
     private Drive drive;
     private DriveGamepad driveGamepad;
@@ -92,10 +93,12 @@ public class TeleOp extends LinearOpMode {
         } else if (gamepad1.bWasPressed()) {
             double angle = limelight.GetTx();
             Pose pose = driveControl.getPose();
-            double heading = pose.getHeading() + Math.toRadians(angle);
+            Logger.message("%s", pose.toString());
+
+            double heading = AngleUnit.normalizeRadians(pose.getHeading() - Math.toRadians(angle));
             pose = new Pose(pose.getX(), pose.getY(), heading);
             driveControl.moveToPose(pose,0.2, 1000);
-            Logger.message("angle: %5.2f  heading: %5.2f", angle, Math.toDegrees(heading));
+            Logger.message("angle: %5.2f  pose: %s", angle, pose.toString());
 
         } else if (gamepad1.left_bumper) {
             // increase motor speed
