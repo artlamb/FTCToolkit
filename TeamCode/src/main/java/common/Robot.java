@@ -55,14 +55,15 @@ public class Robot extends Thread {
 
         driveGamepad = new DriveGamepad(opMode, driveControl);
 
-        limelight = new Limelight(opMode);
-
         try {
             launcher = new Launcher(opMode);
             launcher.start();
         } catch (Exception e) {
             Logger.error(e, "hardware not found", 2);
         }
+
+        limelight = new Limelight(opMode);
+        limelight.setPipeline(Limelight.Pipeline.APRIL_TAG);
 
         okToMove = new Semaphore(1);
 

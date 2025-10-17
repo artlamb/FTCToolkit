@@ -379,7 +379,7 @@ public class DriveControl extends Thread {
             }
 
             if (timeout > 0 && timeoutTimer.milliseconds() >= timeout) {
-                Logger.warning("timed out");
+                Logger.warning("timed out after %5.0f ms", timeout);
                 break;
             }
         }

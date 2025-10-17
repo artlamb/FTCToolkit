@@ -18,7 +18,6 @@ import common.Logger;
 
 @TeleOp(name="AprilTagTest", group="Test")
 @SuppressLint("DefaultLocale")
-@Disabled
 
 public class AprilTagTest extends LinearOpMode {
 
@@ -31,6 +30,7 @@ public class AprilTagTest extends LinearOpMode {
         try {
             //robot = new Robot(this);
             limelight = new Limelight(this);
+            limelight.setPipeline(Limelight.Pipeline.APRIL_TAG);
             //pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, Config.PINPOINT);
             //pinpoint.setPosition(new Pose2D(DistanceUnit.INCH,0,0, AngleUnit.RADIANS, 0));
 

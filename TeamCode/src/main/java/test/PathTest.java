@@ -62,18 +62,20 @@ import utils.Waypoint;
 
 public class PathTest extends LinearOpMode {
     public enum Mode { AUTO_PATHS, MANUAL, GAMEPAD }
-    public enum Alliance { BLUE, RED }
+    public enum Routines { BLUE, RED }
 
-    public static Mode MODE = Mode.AUTO_PATHS;
-    public static Alliance ALLIANCE = Alliance.BLUE;
-    public static boolean READ_POSES = true;
-    public static boolean WRITE_POSES = false;
+    public static Routines ROUTINE = Routines.BLUE;
     public static boolean DRAW_ONLY = true;
+    public static boolean READ_POSES = false;
+    public static boolean WRITE_POSES = false;
     public static PoseData waypoint = new PoseData(0, 0, 0, Waypoint.UNKNOWN);
 
-    public static PoseData[] waypoints = {
+    private final PoseData edit = new PoseData(waypoint.x, waypoint.y, waypoint.h, waypoint.desc);
+    private final Mode MODE = Mode.AUTO_PATHS;
+
+    private final PoseData[] waypoints = {
             new PoseData(0, 0,  0, Waypoint.START),
-            new PoseData(0, 0,  0, Waypoint.SHOOT_1),
+            new PoseData(10, 0,  0, Waypoint.SHOOT_1),
             /*
             new PoseData(0, 0,  0, Waypoint.PICKUP_1),
             new PoseData(0, 0,  0, Waypoint.PICKUP_1),
@@ -83,8 +85,8 @@ public class PathTest extends LinearOpMode {
             new PoseData(0, 0,  0, Waypoint.SHOOT_3),
             new PoseData(0, 0,  0, Waypoint.PICKUP_3),
             new PoseData(0, 0,  0, Waypoint.PICKUP_3),
-             */
-            new PoseData(0, 0,  0, Waypoint.PARK)
+            new PoseData(10, 0,  0, Waypoint.PARK)
+                    */
     };
 
     private DriveControl driveControl;
@@ -108,14 +110,13 @@ public class PathTest extends LinearOpMode {
             }
 
             displayPoses();
+            navigate.drawPaths();
 
             while (opModeInInit()) {
                 displayPose();
                 editWaypoint();
                 sleep(500);
             }
-
-            //waitForStart();
 
             switch (MODE) {
                 case AUTO_PATHS:
@@ -155,12 +156,22 @@ public class PathTest extends LinearOpMode {
 
         if (waypoint.desc == Waypoint.UNKNOWN) return;
 
+        if (edit.x == waypoint.x && edit.y == waypoint.y && edit.h == waypoint.h) return;
+
         for (PoseData data: waypoints) {
             if (data.desc == waypoint.desc) {
-                if (data.x == waypoint.x && data.y == waypoint.y && data.h == waypoint.h) return;
-                data.x = waypoint.x;
-                data.y = waypoint.y;
-                data.h = waypoint.h;
+                if (edit.x != waypoint.x) {
+                    data.x = waypoint.x;;
+                    edit.x = waypoint.x;
+                }
+                if (data.y != waypoint.y) {
+                    data.y = waypoint.y;
+                    edit.y = waypoint.y;
+                }
+                if (data.h != waypoint.h) {
+                    data.h = waypoint.h;
+                    edit.h = waypoint.h;
+                }
                 displayPoses();
                 Pose pose = createPose(data.x, data.y, data.h);
                 navigate.setPath(data.desc.name(), pose);

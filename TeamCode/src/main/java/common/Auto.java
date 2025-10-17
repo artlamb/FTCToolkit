@@ -35,6 +35,8 @@ public class Auto {
         robot = new Robot(opMode);
         driveControl = robot.getDriveControl();
         navigate = new Navigate(opMode, driveControl);
+
+        //driveControl.MAX_SPEED = 0.40;  //todo remove
     }
 
     public void runAuto() {
@@ -108,10 +110,11 @@ public class Auto {
 
     private void waitUntilRobotIdIdle() {
         Logger.message("waiting");
+        long timeout = 3000;
         timer.reset();
         while (robot.isBusy() && opMode.opModeIsActive()) {
-            if (timer.milliseconds() > 3000) {
-                Logger.warning("robot timed out");
+            if (timer.milliseconds() > timeout) {
+                Logger.warning("robot timed out after %d ms", timeout);
                 break;
             }
             Thread.yield();

@@ -42,7 +42,6 @@ import common.DriveGamepad;
 import common.Logger;
 import utils.Pose;
 
-@Disabled
 @TeleOp(name="DriveToTest", group="Test")
 
 public class DriveToTest extends LinearOpMode {
@@ -83,6 +82,7 @@ public class DriveToTest extends LinearOpMode {
         double y = 20;
         double startHeading = 90;
         double targetHeading = 90;
+        DriveControl.MAX_SPEED = 0.4;
 
         driveControl.setPose(new Pose(0, 0, Math.toRadians(startHeading)));
 

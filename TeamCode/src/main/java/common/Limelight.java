@@ -1,6 +1,7 @@
 package common;
 
 import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.LLStatus;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
@@ -14,15 +15,16 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 public class Limelight {
 
-    public enum Pipeline  {LOCATION, APRIL_TAG, }
+    public enum Pipeline  {LOCATION, APRIL_TAG }
     private final Limelight3A limelight;
 
-    private int pipeline = 5;
 
     public Limelight (LinearOpMode opMode) {
         limelight = opMode.hardwareMap.get(Limelight3A.class, "limelight");
-        limelight.pipelineSwitch(pipeline);
         limelight.start();
+
+        LLStatus status = limelight.getStatus();
+        Logger.message("%s started", status.getName());
     }
 
     /**
@@ -53,25 +55,40 @@ public class Limelight {
     }
 
     public double GetTx () {
-        LLResult result = limelight.getLatestResult();
-        if (result.isValid()) {
-            return result.getTx();
+        for (int i = 0; i < 3; i++) {
+            LLResult result = limelight.getLatestResult();
+            if (result.isValid()) {
+                double tx = result.getTx();
+                Logger.message("Limelight Tx: %5.2f", tx);
+                return tx;
+            }
+            Logger.warning("Limelight Tx is invalid");
         }
         return 0;
     }
 
     public void setPipeline (Pipeline pipeline) {
 
+        int index = -1;
+        String type = "";
+
         switch (pipeline) {
             case APRIL_TAG:
-                this.pipeline = 5;
+                index = 5;
+                type = "pipe_fiducial";
                 break;
 
             case LOCATION:
-                this.pipeline = 3;
+                index = 3;
+                type = "pipe_location";
                 break;
         }
 
-        limelight.pipelineSwitch(this.pipeline);
+        limelight.pipelineSwitch(index);
+        LLStatus status = limelight.getStatus();
+        Logger.message("pipeline index: %d, type: %s", status.getPipelineIndex(), status.getPipelineType());
+        if (status.getPipelineIndex() != index || !status.getPipelineType().equals(type)) {
+            Logger.warning("%s pipeline not set to type %s", pipeline, type);
+        }
     }
 }

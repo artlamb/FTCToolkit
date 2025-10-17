@@ -65,6 +65,7 @@ public class TeleOpComp extends LinearOpMode {
         launcher.start();
 
         limelight = new Limelight(this);
+        limelight.setPipeline(Limelight.Pipeline.APRIL_TAG);
 
         speedIncrement = new Increment(0.01, 0.02, 0.05);
 
