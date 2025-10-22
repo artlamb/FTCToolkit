@@ -19,12 +19,14 @@ public class Launcher extends Thread {
     public static double pidP = 40.0;
     public static double pidI = 1.0;
 
-    public static double TRIGGER_COCK = 0.50;
-    public static double TRIGGER_FIRE = 0.25;
+    public static double TRIGGER_COCK   = 0.50;
+    public static double TRIGGER_FIRE   = 0.25;
 
-    public static double LOADER_HOLD = 0;
-    public static double LOADER_RELEASE = 0;
+    public static double LOADER_HOLD    = 0.32;
+    public static double LOADER_RELEASE = 0.50;
     public static long   LOADER_REACT_TIME = 100;               // time in millisecond for the loader to open/close
+
+   private boolean loaderOpen = true;
 
     private enum LAUNCHER_STATE {IDLE, FIRE }
     private LAUNCHER_STATE state = LAUNCHER_STATE.IDLE;
@@ -234,8 +236,36 @@ public class Launcher extends Thread {
         delay(LOADER_REACT_TIME);
     }
 
+    public void closeLoader() {
+        loader.setPosition(LOADER_HOLD);
+        loaderOpen = false;
+        delay(LOADER_REACT_TIME);
+    }
+
+    public void openLoader() {
+        loader.setPosition(LOADER_RELEASE);
+        loaderOpen = true;
+        delay(LOADER_REACT_TIME);
+    }
+
+    public boolean loaderIsOpen() {
+        return loaderOpen;
+    }
+
+    public void pullTrigger() {
+        // pull the trigger
+        trigger.setPosition(TRIGGER_FIRE);
+        delay(500);
+        trigger.setPosition(TRIGGER_COCK);
+        delay(100);
+    }
+
     public boolean isBusy() {
         return state != LAUNCHER_STATE.IDLE;
+    }
+
+    public boolean isRunning() {
+        return running;
     }
 
     private void interruptAction () {
