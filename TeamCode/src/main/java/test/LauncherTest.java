@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
+import common.ColorSensor;
 import common.Launcher;
 import common.Logger;
 import utils.Increment;
@@ -20,6 +21,8 @@ import utils.Increment;
 public class LauncherTest extends LinearOpMode {
 
     private Launcher launcher;
+    private ColorSensor colorSensor;
+
     Increment speedIncrement;
     double speed = 0.2;
 
@@ -33,8 +36,10 @@ public class LauncherTest extends LinearOpMode {
             waitForStart();
 
             while (opModeIsActive()) {
+                colorSensor.update();
                 handleGamepad();
             }
+            colorSensor.enable(false);
 
         } catch (Exception e) {
             Logger.error(e, "Error");
@@ -44,7 +49,8 @@ public class LauncherTest extends LinearOpMode {
     private void initialize() {
         launcher = new Launcher(this);
         launcher.start();
-        launcher.openLoader();
+
+        colorSensor = new ColorSensor(this);
 
         speedIncrement = new Increment(0.01, 0.02, 0.05);
 
@@ -56,6 +62,7 @@ public class LauncherTest extends LinearOpMode {
                 "  x - open / close close loader gate\n" +
                 "  y - pull trigger\n" +
                 "  right trigger - fire artifact\n" +
+                "  left trigger - fire all artifacts\n" +
                 "  left bumper - decrease motor speed\n" +
                 "  right bumper - increase motor speed\n" +
                 "\n");
@@ -86,6 +93,12 @@ public class LauncherTest extends LinearOpMode {
         } else if (gamepad.right_trigger > 0) {
             launcher.fireLauncher();
             while (gamepad.right_trigger > 0) {
+                Thread.yield();
+            }
+
+        } else if (gamepad.left_trigger > 0) {
+            launcher.fireAllArtifacts();
+            while (gamepad.left_trigger > 0) {
                 Thread.yield();
             }
 

@@ -22,6 +22,9 @@ public class ColorSensor {
     private float lastHue = 0;
     private float lastSaturation = 0;
 
+    private boolean installed;
+    private boolean enabled;
+
     private NormalizedColorSensor colorSensor;
 
     public ColorSensor(LinearOpMode opMode) {
@@ -31,8 +34,14 @@ public class ColorSensor {
             colorSensor.setGain(COLOR_SENSOR_GAIN);
             greenLED = opMode.hardwareMap.get(LED.class, Config.LED_GREEN);
             redLED = opMode.hardwareMap.get(LED.class, Config.LED_RED);
+            redLED.enableLight(false);
+            greenLED.enableLight(false);
+
+            Logger.message("color sensor installed");
+            installed = true;
 
         } catch (Exception e) {
+            installed = false;
             Logger.error(e, "Color sensor hardware not found");
         }
     }
@@ -43,7 +52,20 @@ public class ColorSensor {
      * @param color the color to look for
      */
     public void SetColor (COLOR color)  {
+
+        if (!installed) return;
         this.color = color;
+    }
+
+    public void enable(boolean enable) {
+        if (!installed) return;
+
+        if (!enable) {
+            redLED.enableLight(false);
+            greenLED.enableLight(false);
+        }
+        enabled = enable;
+        Logger.message("color sensor enabled %b", enabled);
     }
 
     /**
@@ -51,7 +73,7 @@ public class ColorSensor {
      */
     public void update() {
 
-        if (colorSensor == null || redLED == null || greenLED == null) return;
+        if (!installed) return;
 
         boolean found = false;
         float[] hsvValues = new float[3];

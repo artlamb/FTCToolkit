@@ -30,7 +30,7 @@ public class TeleOpComp extends LinearOpMode {
     Limelight limelight;
 
     Increment speedIncrement;
-    double speed = 0.1;
+    double speed = 0.20;
 
     Telemetry.Item speedMsg;
 
@@ -74,9 +74,10 @@ public class TeleOpComp extends LinearOpMode {
 
         telemetry.addData("\nControls", "\n" +
                 "  a - start / stop launcher motors\n" +
-                "  b - open / close close loader gate\n" +
+                "  x - open / close close loader gate\n" +
                 "  y - pull trigger\n" +
                 "  right trigger - fire artifact\n" +
+                "  left trigger - fire all artifacts\n" +
                 "  left bumper - decrease motor speed\n" +
                 "  right bumper - increase motor speed\n" +
                 "\n");
@@ -100,8 +101,8 @@ public class TeleOpComp extends LinearOpMode {
                 launcher.openLoader();
             }
 
-        } else if (gamepad.xWasPressed()) {
-            launcher.fireLauncher();
+        } else if (gamepad.yWasPressed()) {
+            launcher.pullTrigger();
 
         } else if (gamepad.bWasPressed()) {
             double angle = limelight.GetTx();
@@ -116,6 +117,12 @@ public class TeleOpComp extends LinearOpMode {
         } else if (gamepad.right_trigger > 0) {
             launcher.fireLauncher();
             while (gamepad.right_trigger > 0) {
+                Thread.yield();
+            }
+
+        } else if (gamepad.left_trigger > 0) {
+            launcher.fireAllArtifacts();
+            while (gamepad.left_trigger > 0) {
                 Thread.yield();
             }
 

@@ -76,7 +76,7 @@ public class DriveGamepad extends Thread {
                 driveControl.emergencyStop();
                 break;
             }
-
+/*
             if (gamepad.a) {
                 moveToPose(PoseButton.A);
                 while (gamepad.a) Thread.yield();
@@ -123,7 +123,7 @@ public class DriveGamepad extends Thread {
                 driveControl.turnBy(-2, 1000);
                 while (gamepad.right_trigger > 0) Thread.yield();
             }
-
+*/
             // Left stick to go forward, back and strafe. Right stick to rotate.
             double x = gamepad.left_stick_x;
             double y = -gamepad.left_stick_y;

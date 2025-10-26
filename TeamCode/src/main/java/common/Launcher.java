@@ -19,16 +19,16 @@ public class Launcher extends Thread {
     public static double pidP = 40.0;
     public static double pidI = 1.0;
 
-    public static double TRIGGER_COCK   = 0.50;
-    public static double TRIGGER_FIRE   = 0.25;
+    public static double TRIGGER_COCK   = 0.475;
+    public static double TRIGGER_FIRE   = 0.250;
 
     public static double LOADER_HOLD    = 0.32;
     public static double LOADER_RELEASE = 0.50;
-    public static long   LOADER_REACT_TIME = 100;               // time in millisecond for the loader to open/close
+    public static long   LOADER_REACT_TIME = 200;               // time in millisecond for the loader to open/close
 
    private boolean loaderOpen = true;
 
-    private enum LAUNCHER_STATE {IDLE, FIRE }
+    private enum LAUNCHER_STATE {IDLE, FIRE, FIRE_ALL }
     private LAUNCHER_STATE state = LAUNCHER_STATE.IDLE;
 
     private final double MOTOR_RPM = 6000;                      // Gobilda Yellow Jacket Motor 5203-2402-0001
@@ -89,6 +89,9 @@ public class Launcher extends Thread {
         trigger = opMode.hardwareMap.get(Servo.class, Config.TRIGGER);
         loader = opMode.hardwareMap.get(Servo.class, Config.LOADER);
 
+        trigger.setPosition(TRIGGER_COCK);
+        loader.setPosition(LOADER_RELEASE);
+
         this.setName("launcher");
     }
 
@@ -102,14 +105,20 @@ public class Launcher extends Thread {
         while (!opMode.isStarted()) Thread.yield();
 
         while (opMode.opModeIsActive()) {
-            switch (state) {
-                case IDLE:
-                    checkVelocity();
-                    Thread.yield();
-                    continue;
-                case FIRE:
-                    fire();
-                    state = LAUNCHER_STATE.IDLE;
+            synchronized (this) {
+                switch (state) {
+                    case IDLE:
+                        checkVelocity();
+                        Thread.yield();
+                        break;
+                    case FIRE:
+                        fire();
+                        state = LAUNCHER_STATE.IDLE;
+                        break;
+                    case FIRE_ALL:
+                        fireAll();
+                        state = LAUNCHER_STATE.IDLE;
+                }
             }
         }
         Logger.message("launcher control thread stopped");
@@ -120,8 +129,7 @@ public class Launcher extends Thread {
      */
     public void runLauncher() {
         Logger.message("launcher run");
-        running = true;
-        setSpeed(speed);
+        setVelocity(speed);
         startTime = System.currentTimeMillis();
     }
 
@@ -133,8 +141,7 @@ public class Launcher extends Thread {
         if (state != LAUNCHER_STATE.IDLE) {
             interruptAction();
         }
-        running = false;
-        setSpeed(0);
+        setVelocity(0);
     }
 
     public void fireLauncher() {
@@ -146,16 +153,30 @@ public class Launcher extends Thread {
         }
     }
 
+    public void fireAllArtifacts() {
+        Logger.message("launcher fire");
+        synchronized (this) {
+            if (state == LAUNCHER_STATE.IDLE) {
+                state = LAUNCHER_STATE.FIRE_ALL;
+            }
+        }
+    }
+
     public void setSpeed(double speed) {
         synchronized (this) {
             this.speed = speed;
-            velocity = MAX_VELOCITY * speed;
-            if (running || speed == 0) {
-                leftMotor.setVelocity(velocity);
-                rightMotor.setVelocity(velocity);
+            if (running) {
+                setVelocity(speed);
             }
             Logger.message("launcher speed set to %f  velocity set to %f", speed, velocity);
         }
+    }
+
+    private void setVelocity(double speed) {
+        velocity = MAX_VELOCITY * speed;
+        leftMotor.setVelocity(velocity);
+        rightMotor.setVelocity(velocity);
+        running = (velocity != 0);
     }
 
     public void setAngle(double angle) {
@@ -181,7 +202,7 @@ public class Launcher extends Thread {
 
     private void fire() {
 
-        long timeout = 1000;
+        long timeout = 3000;
         long startTime = System.currentTimeMillis();
 
         // hold other artifacts
@@ -191,8 +212,10 @@ public class Launcher extends Thread {
         while (true) {
 
             long time = System.currentTimeMillis();
-            if (time >= angleAdjustTime)
+            if (time >= angleAdjustTime) {
+                Logger.message("launcher angle adjust complete");
                 break;
+            }
 
             if (time - startTime >= timeout)  {
                 Logger.warning("launcher angle adjust timeout");
@@ -205,10 +228,11 @@ public class Launcher extends Thread {
             double leftVelocity = leftMotor.getVelocity();
             double rightVelocity = rightMotor.getVelocity();
 
-            double threshold = MAX_VELOCITY * 0.01;
-            if (Math.abs(velocity - Math.abs(leftVelocity)) < threshold ||
-                    Math.abs(velocity - Math.abs(rightVelocity)) < threshold) {
-                Logger.message("launcher spin up complete  left: %5.0f  right: %5.0f", leftVelocity, rightVelocity);
+            double threshold = MAX_VELOCITY * 0.001;
+            if (Math.abs(velocity - Math.abs(leftVelocity)) <= threshold ||
+                    Math.abs(velocity - Math.abs(rightVelocity)) <= threshold) {
+                Logger.message("launcher spin up complete after %d ms  left: %5.0f  right: %5.0f ",
+                        System.currentTimeMillis() - startTime, leftVelocity, rightVelocity);
                 break;
             }
 
@@ -222,6 +246,7 @@ public class Launcher extends Thread {
         while (true) {
             long time = System.currentTimeMillis();
             if (time - startTime >= LOADER_REACT_TIME) {
+                Logger.message("launcher loader close complete");
                 break;
             }
         }
@@ -234,6 +259,18 @@ public class Launcher extends Thread {
 
         loader.setPosition(LOADER_RELEASE);
         delay(LOADER_REACT_TIME);
+    }
+
+    private void fireAll() {
+        long startTime = System.currentTimeMillis();
+        setVelocity(speed);
+        for (int i = 0; i < 3; i++) {
+            fire();
+            delay(1000);
+        }
+        setVelocity(0);
+        Logger.message("fire all complete after %d ms", System.currentTimeMillis() - startTime);
+
     }
 
     public void closeLoader() {
@@ -270,8 +307,7 @@ public class Launcher extends Thread {
 
     private void interruptAction () {
         if (state != LAUNCHER_STATE.IDLE) {
-            leftMotor.setVelocity(0);
-            rightMotor.setVelocity(0);
+            setVelocity(0);
             state = LAUNCHER_STATE.IDLE;
         }
     }

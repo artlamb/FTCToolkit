@@ -67,6 +67,17 @@ public class Limelight {
         return 0;
     }
 
+    public double GetTargetArea() {
+        LLResult result = limelight.getLatestResult();
+        if (result.isValid()) {
+            double ta = result.getTa();
+            Logger.message("Limelight target Area: %5.2f", ta);
+            return ta;
+        }
+        Logger.warning("Limelight Tx is invalid");
+        return 0;
+    }
+
     public void setPipeline (Pipeline pipeline) {
 
         int index = -1;
