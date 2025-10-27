@@ -21,10 +21,10 @@ import utils.Increment;
 public class LauncherTest extends LinearOpMode {
 
     private Launcher launcher;
-    private ColorSensor colorSensor;
+    //private ColorSensor colorSensor;
 
     Increment speedIncrement;
-    double speed = 0.2;
+    double speed = 28;
 
     Telemetry.Item speedMsg;
 
@@ -36,10 +36,10 @@ public class LauncherTest extends LinearOpMode {
             waitForStart();
 
             while (opModeIsActive()) {
-                colorSensor.update();
+                //colorSensor.update();
                 handleGamepad();
             }
-            colorSensor.enable(false);
+            //colorSensor.enable(false);
 
         } catch (Exception e) {
             Logger.error(e, "Error");
@@ -50,9 +50,10 @@ public class LauncherTest extends LinearOpMode {
         launcher = new Launcher(this);
         launcher.start();
 
-        colorSensor = new ColorSensor(this);
+        //colorSensor = new ColorSensor(this);
 
-        speedIncrement = new Increment(0.01, 0.02, 0.05);
+        //speedIncrement = new Increment(0.01, 0.02, 0.05);
+        speedIncrement = new Increment(1, 2, 3);
 
         speedMsg = telemetry.addData("Motor speed", 0);
         setDisplaySpeed(speedMsg);
@@ -116,7 +117,7 @@ public class LauncherTest extends LinearOpMode {
             // decrease the motor speed
             speedIncrement.reset();
             while (gamepad.right_bumper) {
-                speed = Math.min(speed + speedIncrement.get(), 0.95);
+                speed = Math.min(speed + speedIncrement.get(), 120);
                 setDisplaySpeed(speedMsg);
                 telemetry.update();
             }
@@ -127,4 +128,5 @@ public class LauncherTest extends LinearOpMode {
     private void setDisplaySpeed(Telemetry.Item item) {
         item.setValue("%5.3f", speed);
     }
+
 }

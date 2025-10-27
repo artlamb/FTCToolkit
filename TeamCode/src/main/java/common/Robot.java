@@ -118,13 +118,9 @@ public class Robot extends Thread {
                         break;
 
                     case FIRE_ALL:
-                        launcher.runLauncher();
-                        for (int i = 0; i < 3; i++) {
-                            launcher.fireLauncher();
-                            while (launcher.isBusy())
-                                delay(10);
-                        }
-                        launcher.stopLauncher();
+                        launcher.fireAllArtifacts();
+                        while (launcher.isBusy())
+                            delay(10);
                         setOkToMove(true);
                         break;
 

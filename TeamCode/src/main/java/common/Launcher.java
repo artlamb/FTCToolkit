@@ -34,6 +34,7 @@ public class Launcher extends Thread {
     private final double MOTOR_RPM = 6000;                      // Gobilda Yellow Jacket Motor 5203-2402-0001
     private final double MOTOR_TICKS_PER_REV = 28;              // Gobilda Yellow Jacket Motor 5203-2402-0001
     private final double MAX_VELOCITY = MOTOR_TICKS_PER_REV * MOTOR_RPM / 60;
+    private final double VELOCITY_MULTIPLIER = 20;
 
     // Linear Servo HLS12-5050-6V
     private final double LINEAR_SERVO_SPEED = 30.9;             // mm per second
@@ -50,7 +51,7 @@ public class Launcher extends Thread {
 
     LinearOpMode opMode;
     private double angle;
-    private double speed = 0.20;
+    private double speed = 28;
     private double velocity;
     private double angleAdjustTime;
     private boolean running = false;
@@ -173,7 +174,8 @@ public class Launcher extends Thread {
     }
 
     private void setVelocity(double speed) {
-        velocity = MAX_VELOCITY * speed;
+        //velocity = MAX_VELOCITY * speed;
+        velocity = VELOCITY_MULTIPLIER * speed;
         leftMotor.setVelocity(velocity);
         rightMotor.setVelocity(velocity);
         running = (velocity != 0);

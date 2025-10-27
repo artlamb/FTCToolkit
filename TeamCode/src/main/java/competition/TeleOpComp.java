@@ -23,16 +23,18 @@ import utils.Pose;
 
 public class TeleOpComp extends LinearOpMode {
 
-    private Drive drive;
-    private DriveGamepad driveGamepad;
     private DriveControl driveControl;
     private Launcher launcher;
     Limelight limelight;
 
     Increment speedIncrement;
-    double speed = 0.20;
+    double speed = 28;
 
     Telemetry.Item speedMsg;
+    Telemetry.Item areaMsg;
+
+    long lastUpdate;
+    double lastArea;
 
     @Override
     public void runOpMode() {
@@ -46,6 +48,7 @@ public class TeleOpComp extends LinearOpMode {
 
             while (opModeIsActive()) {
                 handleGamepad();
+                updateTargetArea();
             }
 
         } catch (Exception e) {
@@ -54,12 +57,12 @@ public class TeleOpComp extends LinearOpMode {
     }
 
     private void initialize() {
-        drive = new Drive(this);
+        Drive drive = new Drive(this);
 
         driveControl = new DriveControl(this, drive);
         driveControl.start();
 
-        driveGamepad = new DriveGamepad(this, driveControl);
+        DriveGamepad driveGamepad = new DriveGamepad(this, driveControl);
         driveGamepad.start();
 
         launcher = new Launcher(this);
@@ -68,12 +71,16 @@ public class TeleOpComp extends LinearOpMode {
         limelight = new Limelight(this);
         limelight.setPipeline(Limelight.Pipeline.APRIL_TAG);
 
-        speedIncrement = new Increment(0.01, 0.02, 0.05);
+        speedIncrement = new Increment(1, 2, 3);
 
         speedMsg = telemetry.addData("Motor speed", 0);
+        setDisplaySpeed(speedMsg);
+
+        areaMsg = telemetry.addData("Target Area", 0);
 
         telemetry.addData("\nControls", "\n" +
                 "  a - start / stop launcher motors\n" +
+                "  b - line up with april tag\n" +
                 "  x - open / close close loader gate\n" +
                 "  y - pull trigger\n" +
                 "  right trigger - fire artifact\n" +
@@ -107,12 +114,10 @@ public class TeleOpComp extends LinearOpMode {
         } else if (gamepad.bWasPressed()) {
             double angle = limelight.GetTx();
             Pose pose = driveControl.getPose();
-            Logger.message("%s", pose.toString());
-
             double heading = AngleUnit.normalizeRadians(pose.getHeading() - Math.toRadians(angle));
-            pose = new Pose(pose.getX(), pose.getY(), heading);
-            driveControl.moveToPose(pose,0.2, 1000);
-            Logger.message("angle: %5.2f  pose: %s", angle, pose.toString());
+            Pose newPose = new Pose(pose.getX(), pose.getY(), heading);
+            driveControl.moveToPose(newPose,0.2, 1000);
+            Logger.message("angle: %5.2f  current: %s   new: %s", angle, pose.toString(), newPose.toString());
 
         } else if (gamepad.right_trigger > 0) {
             launcher.fireLauncher();
@@ -140,7 +145,7 @@ public class TeleOpComp extends LinearOpMode {
             // decrease the motor speed
             speedIncrement.reset();
             while (gamepad.right_bumper) {
-                speed = Math.min(speed + speedIncrement.get(), 0.95);
+                speed = Math.min(speed + speedIncrement.get(), 140);
                 setDisplaySpeed(speedMsg);
                 telemetry.update();
             }
@@ -149,6 +154,24 @@ public class TeleOpComp extends LinearOpMode {
     }
 
     private void setDisplaySpeed(Telemetry.Item item) {
-        item.setValue("%5.3f", speed);
+        item.setValue("%4.0f", speed);
+    }
+
+    private void updateTargetArea() {
+        long time = System.currentTimeMillis();
+        if (time - lastUpdate < 500) {
+            return;
+        }
+        lastUpdate = time;
+
+        double area = limelight.GetTargetArea();
+        if (area == lastArea) {
+            return;
+        }
+        lastArea = area;
+
+        areaMsg.setValue("%5.2f", area);
+        Logger.message("Limelight target Area: %5.2f", area);
+        telemetry.update();
     }
 }

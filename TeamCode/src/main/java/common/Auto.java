@@ -60,8 +60,8 @@ public class Auto {
                 case WAYPOINT_1:
                     waitForButtonPress();
                     waitUntilNotMoving();
-                    robot.lineUpTarget();
-                    waitUntilRobotIdIdle();
+                    //robot.lineUpTarget();
+                    //waitUntilRobotIdIdle();
                     robot.fireAll();
                     waitUntilRobotIdIdle();
                     followPath();
@@ -110,7 +110,7 @@ public class Auto {
 
     private void waitUntilRobotIdIdle() {
         Logger.message("waiting");
-        long timeout = 3000;
+        long timeout = 4000;
         timer.reset();
         while (robot.isBusy() && opMode.opModeIsActive()) {
             if (timer.milliseconds() > timeout) {

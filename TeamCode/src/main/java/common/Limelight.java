@@ -71,7 +71,7 @@ public class Limelight {
         LLResult result = limelight.getLatestResult();
         if (result.isValid()) {
             double ta = result.getTa();
-            Logger.message("Limelight target Area: %5.2f", ta);
+            //Logger.message("Limelight target Area: %5.2f", ta);
             return ta;
         }
         Logger.warning("Limelight Tx is invalid");

@@ -18,6 +18,7 @@ import common.Logger;
 
 @TeleOp(name="AprilTagTest", group="Test")
 @SuppressLint("DefaultLocale")
+@Disabled
 
 public class AprilTagTest extends LinearOpMode {
 
