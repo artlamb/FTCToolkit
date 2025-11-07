@@ -15,7 +15,7 @@ import utils.PoseData;
 public class AutoBlue extends LinearOpMode {
 
     public static PoseData START =      new PoseData(-15.0, 62.0,  90.0);
-    public static PoseData WAYPOINT_1 = new PoseData(-23.5, 23.5,  135.0);
+    public static PoseData WAYPOINT_1 = new PoseData(-12, 12,  135.0);
     public static PoseData PARK =       new PoseData(-23.5, -23.5, 0.0);
 
     Auto auto;

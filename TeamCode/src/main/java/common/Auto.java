@@ -39,7 +39,7 @@ public class Auto {
         navigate = new Navigate(opMode, driveControl);
 
         robot.setLauncherSpeed(LAUNCHER_SPEED);
-        driveControl.MAX_SPEED = 0.50;  //todo remove
+        driveControl.MAX_SPEED = 0.40;  //todo remove
     }
 
     public void runAuto() {
