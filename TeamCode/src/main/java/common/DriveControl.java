@@ -303,8 +303,10 @@ public class DriveControl extends Thread {
             double angle = AngleUnit.normalizeRadians(Math.atan2(b, a) - current.getHeading());   // angle is robot relative
             double sin = Math.sin(angle + (Math.PI / 4));
             double cos = Math.cos(angle + (Math.PI / 4));
-            double magnitude  = Math.hypot(localizer.getVelocityX(), localizer.getVelocityY());
-            double velocityAngle = Math.atan2(localizer.getVelocityY(), localizer.getVelocityX());
+            double velocityX = localizer.getVelocityX();
+            double velocityY = localizer.getVelocityY();
+            double magnitude  = Math.hypot(velocityX, velocityY);
+            double velocityAngle = Math.atan2(velocityY, velocityX);
             double deltaAngle = AngleUnit.normalizeRadians(angle - velocityAngle);
             double rotationVelocity = -localizer.getVelocityHeading();
 
@@ -364,6 +366,7 @@ public class DriveControl extends Thread {
                     String.format("a: %5.1f  b: %5.1f  angle: %4.0f  sin: %5.2f  cos: %5.2f  ", a, b, Math.toDegrees(angle), sin, cos) +
                     String.format("power: %4.2f  turn: %5.2f  ", power, turn) +
                     String.format("wheels: %5.2f %5.2f %5.2f %5.2f  ", leftFrontPower, rightFrontPower, leftRearPower, rightRearPower) +
+                    String.format("vx: %5.2f  vy: %5.2f  ", velocityX, velocityY) +
                     String.format("vm: %3.0f  va: %4.0f  vh: %4.0f  ", magnitude, Math.toDegrees(deltaAngle), Math.toDegrees(rotationVelocity)) +
                     //String.format("volts: %4.1f  ", voltageSensor.getVoltage()) +
                     String.format("%s%s%s%s%s  ", (nearPose) ? "n":" ", (inRange) ? "i":" ", (onBearing) ? "o":" " , (stopped) ? "s":" ", (rotated) ? "r":" " )  +
@@ -734,6 +737,11 @@ public class DriveControl extends Thread {
     public void resetIMU() {
         if (localizer != null)
             localizer.resetIMU();
+    }
+
+    public void reset() {
+        if (localizer != null)
+            localizer.resetPinpoint();
     }
 
     /**

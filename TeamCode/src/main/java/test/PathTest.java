@@ -147,6 +147,7 @@ public class PathTest extends LinearOpMode {
     private void initialize() {
         Robot robot = new Robot(this);
         driveControl = robot.getDriveControl();
+        driveControl.reset();
         driveGamepad = new DriveGamepad(this, driveControl);
         navigate = new Navigate(this, driveControl);
 

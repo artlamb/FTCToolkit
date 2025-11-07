@@ -67,6 +67,7 @@ public class Robot extends Thread {
         limelight.setPipeline(Limelight.Pipeline.APRIL_TAG);
 
         colorSensor = new ColorSensor(opMode);
+        colorSensor.enable(true);
 
         okToMove = new Semaphore(1);
 
@@ -133,6 +134,8 @@ public class Robot extends Thread {
 
                 robotState = ROBOT_STATE.IDLE;
             }
+
+            colorSensor.enable(false);
         }
     }
 

@@ -74,7 +74,7 @@ public class TeleOpComp extends LinearOpMode {
         speedIncrement = new Increment(1, 2, 3);
 
         speedMsg = telemetry.addData("Motor speed", 0);
-        setDisplaySpeed(speedMsg);
+        displaySpeed();
 
         areaMsg = telemetry.addData("Target Area", 0);
 
@@ -83,6 +83,7 @@ public class TeleOpComp extends LinearOpMode {
                 "  b - line up with april tag\n" +
                 "  x - open / close close loader gate\n" +
                 "  y - pull trigger\n" +
+                "  dpad up - auto set motor speed\n" +
                 "  right trigger - fire artifact\n" +
                 "  left trigger - fire all artifacts\n" +
                 "  left bumper - decrease motor speed\n" +
@@ -91,9 +92,8 @@ public class TeleOpComp extends LinearOpMode {
     }
 
     private void handleGamepad() {
-        Gamepad gamepad = gamepad1;
 
-        if (gamepad.aWasPressed()) {
+        if (gamepad1.aWasPressed() || gamepad2.aWasPressed()) {
             if (launcher.isRunning()) {
                 launcher.stopLauncher();
             } else {
@@ -101,17 +101,17 @@ public class TeleOpComp extends LinearOpMode {
                 launcher.runLauncher();
             }
 
-        } else if (gamepad.xWasPressed()) {
+        } else if (gamepad1.xWasPressed() || gamepad2.xWasPressed()) {
             if (launcher.loaderIsOpen()) {
                 launcher.closeLoader();
             } else {
                 launcher.openLoader();
             }
 
-        } else if (gamepad.yWasPressed()) {
+        } else if (gamepad1.yWasPressed() || gamepad2.yWasPressed()) {
             launcher.pullTrigger();
 
-        } else if (gamepad.bWasPressed()) {
+        } else if (gamepad1.bWasPressed() || gamepad2.bWasPressed()) {
             double angle = limelight.GetTx();
             Pose pose = driveControl.getPose();
             double heading = AngleUnit.normalizeRadians(pose.getHeading() - Math.toRadians(angle));
@@ -119,42 +119,82 @@ public class TeleOpComp extends LinearOpMode {
             driveControl.moveToPose(newPose,0.2, 1000);
             Logger.message("angle: %5.2f  current: %s   new: %s", angle, pose.toString(), newPose.toString());
 
-        } else if (gamepad.right_trigger > 0) {
+        } else if (gamepad1.dpadUpWasPressed() || gamepad2.dpadUpWasPressed()) {
+            setSpeed();
+            displaySpeed();
+
+        } else if (gamepad1.right_trigger > 0) {
             launcher.fireLauncher();
-            while (gamepad.right_trigger > 0) {
+            while (gamepad1.right_trigger > 0) {
+                Thread.yield();
+            }
+        } else if (gamepad2.right_trigger > 0) {
+            launcher.fireLauncher();
+            while (gamepad2.right_trigger > 0) {
                 Thread.yield();
             }
 
-        } else if (gamepad.left_trigger > 0) {
+        } else if (gamepad1.left_trigger > 0) {
             launcher.fireAllArtifacts();
-            while (gamepad.left_trigger > 0) {
+            while (gamepad1.left_trigger > 0) {
+                Thread.yield();
+            }
+        } else if (gamepad2.left_trigger > 0) {
+            launcher.fireAllArtifacts();
+            while (gamepad2.left_trigger > 0) {
                 Thread.yield();
             }
 
-        } else if (gamepad.left_bumper) {
+        } else if (gamepad1.left_bumper) {
             // increase motor speed
             speedIncrement.reset();
-            while (gamepad.left_bumper) {
+            while (gamepad1.left_bumper) {
                 speed = Math.max(speed - speedIncrement.get(), 0);
-                setDisplaySpeed(speedMsg);
+                displaySpeed();
                 telemetry.update();
-            launcher.setSpeed(speed);
+                launcher.setSpeed(speed);
+            }
+        } else if (gamepad2.left_bumper) {
+            // increase motor speed
+            speedIncrement.reset();
+            while (gamepad2.left_bumper) {
+                speed = Math.max(speed - speedIncrement.get(), 0);
+                displaySpeed();
+                telemetry.update();
+                launcher.setSpeed(speed);
             }
 
-        } else if (gamepad.right_bumper) {
+        } else if (gamepad1.right_bumper) {
             // decrease the motor speed
             speedIncrement.reset();
-            while (gamepad.right_bumper) {
+            while (gamepad1.right_bumper) {
                 speed = Math.min(speed + speedIncrement.get(), 140);
-                setDisplaySpeed(speedMsg);
+                displaySpeed();
+                telemetry.update();
+            }
+            launcher.setSpeed(speed);
+        } else if (gamepad2.right_bumper) {
+            // decrease the motor speed
+            speedIncrement.reset();
+            while (gamepad2.right_bumper) {
+                speed = Math.min(speed + speedIncrement.get(), 140);
+                displaySpeed();
                 telemetry.update();
             }
             launcher.setSpeed(speed);
         }
     }
 
-    private void setDisplaySpeed(Telemetry.Item item) {
-        item.setValue("%4.0f", speed);
+    private void displaySpeed() {
+        speedMsg.setValue("%4.0f", speed);
+    }
+
+    private void setSpeed() {
+        double area = limelight.GetTargetArea();
+        if (area < 0) return;
+
+        speed = Math.round(25.05 * Math.pow(area-0.4, -0.09) + 2);
+        Logger.message("speed: %5.2f", speed);
     }
 
     private void updateTargetArea() {

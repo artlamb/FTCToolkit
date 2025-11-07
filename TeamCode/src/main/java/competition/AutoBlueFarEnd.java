@@ -9,14 +9,14 @@ import common.Auto;
 import common.Logger;
 import utils.PoseData;
 
-@Autonomous(name="Auto Blue", group="Competition")
+@Autonomous(name="Auto Blue Far End", group="Competition")
 @com.acmerobotics.dashboard.config.Config
 
-public class AutoBlue extends LinearOpMode {
+public class AutoBlueFarEnd extends LinearOpMode {
 
     public static PoseData START =      new PoseData(-15.0, 62.0,  90.0);
     public static PoseData WAYPOINT_1 = new PoseData(-23.5, 23.5, 135.0);
-    public static PoseData PARK =       new PoseData(23.5, -23.5,   0.0);
+    public static PoseData PARK =       new PoseData(-23.5, 0,   0.0);
 
     Auto auto;
 

@@ -8,10 +8,11 @@ import com.qualcomm.robotcore.hardware.LED;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 
-@Disabled
+@com.acmerobotics.dashboard.config.Config
+
 public class ColorSensor {
 
-    static final float COLOR_SENSOR_GAIN = 2.2F;
+    public static float COLOR_SENSOR_GAIN = 2.2F;
 
     public enum COLOR {RED, BLUE, WHITE }
 
@@ -34,8 +35,8 @@ public class ColorSensor {
             colorSensor.setGain(COLOR_SENSOR_GAIN);
             greenLED = opMode.hardwareMap.get(LED.class, Config.LED_GREEN);
             redLED = opMode.hardwareMap.get(LED.class, Config.LED_RED);
-            redLED.enableLight(false);
-            greenLED.enableLight(false);
+            redLED.off();
+            greenLED.off();
 
             Logger.message("color sensor installed");
             installed = true;
@@ -61,8 +62,8 @@ public class ColorSensor {
         if (!installed) return;
 
         if (!enable) {
-            redLED.enableLight(false);
-            greenLED.enableLight(false);
+            redLED.off();
+            greenLED.off();
         }
         enabled = enable;
         Logger.message("color sensor enabled %b", enabled);
@@ -108,7 +109,12 @@ public class ColorSensor {
                 found = true;
             }
         }
-        redLED.enableLight(!found);
-        greenLED.enableLight(found);
+        if (found) {
+            redLED.off();
+            greenLED.on();
+        } else {
+            redLED.on();
+            greenLED.off();
+        }
     }
 }

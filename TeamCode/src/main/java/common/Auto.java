@@ -34,9 +34,10 @@ public class Auto {
         this.opMode = opMode;
         robot = new Robot(opMode);
         driveControl = robot.getDriveControl();
+        driveControl.reset();
         navigate = new Navigate(opMode, driveControl);
 
-        //driveControl.MAX_SPEED = 0.40;  //todo remove
+        driveControl.MAX_SPEED = 0.40;  //todo remove
     }
 
     public void runAuto() {
