@@ -10,6 +10,7 @@ import utils.Pose;
 public class Auto {
 
     public static boolean enableWait = false;
+    private static double LAUNCHER_SPEED = 26;
 
     public enum PathState {
         START, WAYPOINT_1, PARK;
@@ -37,7 +38,8 @@ public class Auto {
         driveControl.reset();
         navigate = new Navigate(opMode, driveControl);
 
-        driveControl.MAX_SPEED = 0.40;  //todo remove
+        robot.setLauncherSpeed(LAUNCHER_SPEED);
+        driveControl.MAX_SPEED = 0.50;  //todo remove
     }
 
     public void runAuto() {

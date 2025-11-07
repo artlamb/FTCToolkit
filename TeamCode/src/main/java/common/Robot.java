@@ -185,6 +185,10 @@ public class Robot extends Thread {
         }
     }
 
+    public void setLauncherSpeed(double speed) {
+        launcher.setSpeed(speed);
+    }
+
     private void waitUnitTime(double time) {
         while (System.currentTimeMillis() < time)
             delay(1);
