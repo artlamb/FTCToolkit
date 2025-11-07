@@ -61,7 +61,7 @@ public class DriveControl extends Thread {
 
     public double SLOW_DRIVE = 10;
 
-    public double PID_P_DRIVE_FAST = 0.15;
+    public double PID_P_DRIVE_FAST = 0.1; // todo 0.15;
     public double PID_P_DRIVE_SLOW = 0.1;
     public double PID_P_TURN_FAST = 2;
     public double PID_P_TURN_SLOW = 1.2;

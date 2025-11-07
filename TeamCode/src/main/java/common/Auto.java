@@ -10,7 +10,7 @@ import utils.Pose;
 public class Auto {
 
     public static boolean enableWait = false;
-    private static double LAUNCHER_SPEED = 26;
+    private static double LAUNCHER_SPEED = 28;
 
     public enum PathState {
         START, WAYPOINT_1, PARK;
