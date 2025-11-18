@@ -10,7 +10,7 @@ import utils.Pose;
 public class Auto {
 
     public static boolean enableWait = false;
-    private static double LAUNCHER_SPEED = 28;
+    public static boolean drawPaths = true;
 
     public enum PathState {
         START, WAYPOINT_1, PARK;
@@ -38,7 +38,6 @@ public class Auto {
         driveControl.reset();
         navigate = new Navigate(opMode, driveControl);
 
-        robot.setLauncherSpeed(LAUNCHER_SPEED);
         driveControl.MAX_SPEED = 0.40;  //todo remove
     }
 
@@ -63,8 +62,6 @@ public class Auto {
                 case WAYPOINT_1:
                     waitForButtonPress();
                     waitUntilNotMoving();
-                    //robot.lineUpTarget();
-                    //waitUntilRobotIdIdle();
                     robot.fireAll();
                     waitUntilRobotIdIdle();
                     followPath();
@@ -80,8 +77,22 @@ public class Auto {
         Logger.message("opmode elapsed time %4.1f", elapsedTime.seconds());
     }
 
+    public void setLauncherSpeed(double speed) {
+        robot.setLauncherSpeed(speed);
+    }
+
+    public void drawPaths() {
+        if (drawPaths) {
+            navigate.drawPaths();
+        }
+    }
+
     public void addPath(PathState pathState, double x, double y, double heading) {
         navigate.addPath(getPathName(pathState), createPose(x, y, heading));
+    }
+
+    public void setStartPose (double x, double y, double heading) {
+        navigate.setStartingPose(createPose(x, y, heading));
     }
 
     private String getPathName(PathState pathState) {
@@ -163,8 +174,5 @@ public class Auto {
         return new Pose(x, y, Math.toRadians(heading));
     }
 
-    public void setStartPose (double x, double y, double heading) {
-        navigate.setStartingPose(createPose(x, y, heading));
-    }
 }
 

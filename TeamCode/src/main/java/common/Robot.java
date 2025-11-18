@@ -241,5 +241,13 @@ public class Robot extends Thread {
         return driveControl;
     }
 
+    public Limelight getLimelight() {
+        return limelight;
+    }
+
+    public ColorSensor getColorSensor() {
+        return colorSensor;
+    }
+
 } // end of class
 

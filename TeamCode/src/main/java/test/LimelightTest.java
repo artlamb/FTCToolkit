@@ -13,9 +13,11 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 
 import common.Config;
+import common.DriveControl;
 import common.Limelight;
 import common.Logger;
 import common.Robot;
+import utils.Pose;
 
 @TeleOp(name="LimelightTest", group="Test")
 @SuppressLint("DefaultLocale")
@@ -25,12 +27,18 @@ public class LimelightTest extends LinearOpMode {
     Robot robot;
     GoBildaPinpointDriver pinpoint;
     Limelight limelight;
+    DriveControl driveControl;
 
     @Override
     public void runOpMode() {
         try {
             robot = new Robot(this);
-            limelight = new Limelight(this);
+
+            driveControl = robot.getDriveControl();
+
+            limelight = robot.getLimelight();
+            limelight.setPipeline(Limelight.Pipeline.LOCATION);
+
             pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, Config.PINPOINT);
             pinpoint.setPosition(new Pose2D(DistanceUnit.INCH,0,0, AngleUnit.RADIANS, 0));
 
@@ -50,9 +58,46 @@ public class LimelightTest extends LinearOpMode {
         }
     }
 
+    private void lineUpWithGoal() {
+
+        Pose current = limelight.getPosition();
+        if (current == null) {
+            Logger.message("no apriltag found");
+            return;
+        }
+
+        // aim for the center of the goal
+        int id = limelight.GetAprilTagID();
+        Pose target;
+        double num = 60;
+        if (id == 20) {  // blue
+            target = new Pose(-num, num, 135);
+        } else if (id == 24) {     //red
+            target = new Pose(num, num, 45);
+        } else {
+            Logger.message("apriltag if not found");
+            return;
+        }
+
+        double a = target.getX() - current.getX();
+        double b = target.getY() - current.getY();
+        double angle = Math.atan2(b, a);
+        double rotation = AngleUnit.normalizeRadians(current.getHeading() - angle);
+
+        double distance = Math.hypot(a, b);
+
+        Pose pose = driveControl.getPose();
+        double heading =  AngleUnit.normalizeRadians(current.getHeading() + rotation);
+        Pose newPose = new Pose(current.getX(), current.getY(), heading);
+        //driveControl.moveToPose(newPose, 0.2, 1000);
+        Logger.debug("current: %s  target: %s  pose: %s", current, target, newPose);
+
+        telemetry.addData("April Tag:", "ID: %d  distance: %4.2", id, distance);
+    }
+
     private void displayPose(boolean telemetryOnly) {
 
-        Pose2D pose = limelight.getPosition(0);
+        Pose pose = limelight.getPosition();
         if (pose == null) {
             Logger.message("no apriltag found");
             return;

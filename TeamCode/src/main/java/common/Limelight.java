@@ -1,6 +1,7 @@
 package common;
 
 import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.LLStatus;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -11,6 +12,10 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+
+import java.util.List;
+
+import utils.Pose;
 
 
 public class Limelight {
@@ -28,32 +33,64 @@ public class Limelight {
     }
 
     /**
-     * Get the field relative pose of the robot using Apriltags.
+     * Get the field relative pose of the robot using Apriltags and MagTag2.
      *
      * @param heading heading -180 to 180
      * @return pose - origin is center to the field
      */
-    public Pose2D getPosition (double heading) {
+    public Pose getPosition (double heading) {
 
-        Pose2D pose = null;
-        limelight.updateRobotOrientation(heading);
+        Pose pose = null;
+
+        // convert to FTC field coordinates
+        double ftcHeading = AngleUnit.normalizeRadians(heading - Math.toRadians(90));
+        limelight.updateRobotOrientation(ftcHeading);
+
         LLResult result = limelight.getLatestResult();
         if (result.isValid()) {
-            if (result.isValid()) {
-                Pose3D robotPose = result.getBotpose_MT2();
+            Pose3D robotPose = result.getBotpose_MT2();
+            if (robotPose != null) {
                 Position position = robotPose.getPosition();
-                YawPitchRollAngles orientation = robotPose.getOrientation();
-                assert (position.unit == DistanceUnit.METER);
-                double METERS_TO_INCHES = 39.3701;
-                double x = position.x * METERS_TO_INCHES;
-                double y = position.y * METERS_TO_INCHES;
 
-                pose = new Pose2D(DistanceUnit.INCH, x, y, AngleUnit.DEGREES, orientation.getYaw(AngleUnit.DEGREES));
+                // convert from FTC field coordinates
+                double x = position.unit.toInches(position.y);
+                double y = -position.unit.toInches(position.x);
+
+                YawPitchRollAngles orientation = robotPose.getOrientation();
+                double h = orientation.getYaw(AngleUnit.RADIANS);
+                pose = new Pose(x, y, h);
             }
         }
         return pose;
     }
 
+
+    /**
+     * Get the field relative pose of the robot using Apriltags.
+     *
+     * @return pose - origin is center to the field
+     */
+    public Pose getPosition () {
+
+        Pose pose = null;
+
+        LLResult result = limelight.getLatestResult();
+        if (result.isValid()) {
+            Pose3D robotPose = result.getBotpose();
+            if (robotPose != null) {
+                Position position = robotPose.getPosition();
+
+                // convert from FTC field coordinates
+                double x = position.unit.toInches(position.y);
+                double y = -position.unit.toInches(position.x);
+
+                YawPitchRollAngles orientation = robotPose.getOrientation();
+                double h = orientation.getYaw(AngleUnit.RADIANS);
+                pose = new Pose(x, y, h);
+            }
+        }
+        return pose;
+    }
     public double GetTx () {
         for (int i = 0; i < 3; i++) {
             LLResult result = limelight.getLatestResult();
@@ -70,11 +107,22 @@ public class Limelight {
     public double GetTargetArea() {
         LLResult result = limelight.getLatestResult();
         if (result.isValid()) {
-            double ta = result.getTa();
-            //Logger.message("Limelight target Area: %5.2f", ta);
-            return ta;
+            return result.getTa();
         }
         Logger.warning("Limelight Tx is invalid");
+        return 0;
+    }
+
+    public int GetAprilTagID() {
+        LLResult result = limelight.getLatestResult();
+        if (result.isValid()) {
+            List<LLResultTypes.FiducialResult> fiducialResults = result.getFiducialResults();
+            if (fiducialResults.size() == 1) {
+                return fiducialResults.get(0).getFiducialId();
+            }
+        }
+
+        Logger.warning("No April Tag found");
         return 0;
     }
 

@@ -14,9 +14,11 @@ import utils.PoseData;
 
 public class AutoRedGoal extends LinearOpMode {
 
-    public static PoseData START =      new PoseData(47, 47, 135.0);
-    public static PoseData WAYPOINT_1 = new PoseData(12, 12, 135.0);
-    public static PoseData PARK =       new PoseData(47, 47,   0.0);
+    public static double LAUNCHER_SPEED = 28;
+
+    public static PoseData START =      new PoseData(47.0, 47.0,  45.0);
+    public static PoseData WAYPOINT_1 = new PoseData(12.5,  12.5, 45.0);
+    public static PoseData PARK =       new PoseData(12.5, -12.5, 1800.0);
 
     Auto auto;
 
@@ -39,8 +41,12 @@ public class AutoRedGoal extends LinearOpMode {
     private void initialize() {
         auto = new Auto(this);
 
-        auto.setStartPose(START.x, START.y, START.h);
+        auto.addPath(Auto.PathState.START, START.x, START.y, START.h);
         auto.addPath(Auto.PathState.WAYPOINT_1, WAYPOINT_1.x, WAYPOINT_1.y, WAYPOINT_1.h);
         auto.addPath(Auto.PathState.PARK, PARK.x, PARK.y, PARK.h);
+
+        auto.setStartPose(START.x, START.y, START.h);
+        auto.setLauncherSpeed(LAUNCHER_SPEED);
+        auto.drawPaths();
     }
 }

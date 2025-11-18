@@ -8,6 +8,8 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 
 import common.Drive;
 import common.DriveControl;
@@ -27,8 +29,9 @@ public class TeleOpComp extends LinearOpMode {
     private Launcher launcher;
     Limelight limelight;
 
+    private double DEFAULT_SPEED = 28;
     Increment speedIncrement;
-    double speed = 28;
+    double speed = DEFAULT_SPEED;
 
     Telemetry.Item speedMsg;
     Telemetry.Item areaMsg;
@@ -113,12 +116,7 @@ public class TeleOpComp extends LinearOpMode {
             launcher.pullTrigger();
 
         } else if (gamepad1.bWasPressed() || gamepad2.bWasPressed()) {
-            double angle = limelight.GetTx();
-            Pose pose = driveControl.getPose();
-            double heading = AngleUnit.normalizeRadians(pose.getHeading() - Math.toRadians(angle));
-            Pose newPose = new Pose(pose.getX(), pose.getY(), heading);
-            driveControl.moveToPose(newPose,0.2, 1000);
-            Logger.message("angle: %5.2f  current: %s   new: %s", angle, pose.toString(), newPose.toString());
+            lineUpWithAprilTag();
 
         } else if (gamepad1.dpadUpWasPressed() || gamepad2.dpadUpWasPressed()) {
             setSpeed();
@@ -186,13 +184,54 @@ public class TeleOpComp extends LinearOpMode {
         }
     }
 
+    private void lineUpWithAprilTag() {
+        double angle = limelight.GetTx();
+        Pose pose = driveControl.getPose();
+        double heading = AngleUnit.normalizeRadians(pose.getHeading() - Math.toRadians(angle));
+        Pose newPose = new Pose(pose.getX(), pose.getY(), heading);
+        driveControl.moveToPose(newPose,0.2, 1000);
+        Logger.message("angle: %5.2f  current: %s   new: %s", angle, pose.toString(), newPose.toString());
+    }
+
+    private void lineUpWithGoal() {
+        Pose current = driveControl.getPose();
+
+        // aim for the center of the goal
+        Pose center;
+        if (current.getHeading() > Math.PI / 2) {
+            center = new Pose(-60, 60, 135);
+        } else {
+            center = new Pose(60, 60, 45);
+        }
+        double a = center.getX() - current.getX();
+        double b = center.getY() - current.getY();
+        double angle = Math.atan2(b, a);
+        Pose newPose = new Pose(current.getX(), current.getY(), angle);
+        //driveControl.moveToPose(newPose, 0.2, 1000);
+        Logger.debug("current: %s  corner: %s  pose: %s", current, center, newPose);
+    }
+
+    private void updatePosition() {
+
+        Pose pose = driveControl.getPose();
+        Pose newPose = limelight.getPosition(pose.getHeading());
+        if (newPose != null) {
+            Logger.message("new pose: %s", newPose);
+            //driveControl.setPose(newPose);
+        }
+    }
+
     private void displaySpeed() {
         speedMsg.setValue("%4.0f", speed);
     }
 
     private void setSpeed() {
         double area = limelight.GetTargetArea();
-        if (area < 0) return;
+        if (area <= 0) {
+            speed = DEFAULT_SPEED;
+            Logger.warning("april tag not found, set to defaukt speed: %5.2f", speed);
+            return;
+        }
 
         speed = Math.round(25.05 * Math.pow(area-0.4, -0.09) + 2);
         Logger.message("speed: %5.2f", speed);

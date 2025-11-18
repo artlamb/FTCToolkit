@@ -19,11 +19,11 @@ public class Launcher extends Thread {
     public static double pidP = 40.0;
     public static double pidI = 1.0;
 
-    public static double TRIGGER_COCK   = 0.475;
+    public static double TRIGGER_COCK   = 0.460;
     public static double TRIGGER_FIRE   = 0.250;
 
-    public static double LOADER_HOLD    = 0.32;
-    public static double LOADER_RELEASE = 0.50;
+    public static double LOADER_HOLD    = 0.30;
+    public static double LOADER_RELEASE = 0.40;
     public static long   LOADER_REACT_TIME = 200;               // time in millisecond for the loader to open/close
 
    private boolean loaderOpen = true;
@@ -255,9 +255,9 @@ public class Launcher extends Thread {
 
         // pull the trigger
         trigger.setPosition(TRIGGER_FIRE);
-        delay(500);
+        delay(400);
         trigger.setPosition(TRIGGER_COCK);
-        delay(100);
+        delay(150);
 
         loader.setPosition(LOADER_RELEASE);
         delay(LOADER_REACT_TIME);
@@ -268,7 +268,8 @@ public class Launcher extends Thread {
         setVelocity(speed);
         for (int i = 0; i < 3; i++) {
             fire();
-            delay(1000);
+            if (i < 2)
+                delay(1000);
         }
         setVelocity(0);
         Logger.message("fire all complete after %d ms", System.currentTimeMillis() - startTime);
