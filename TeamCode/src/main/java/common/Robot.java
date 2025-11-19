@@ -28,7 +28,7 @@ public class Robot extends Thread {
     private DriveControl    driveControl;
     private Launcher        launcher;
     private Limelight       limelight;
-    private ColorSensor     colorSensor;
+    //private ColorSensor     colorSensor;
 
     private final LinearOpMode opMode;
 
@@ -66,8 +66,8 @@ public class Robot extends Thread {
         limelight = new Limelight(opMode);
         limelight.setPipeline(Limelight.Pipeline.APRIL_TAG);
 
-        colorSensor = new ColorSensor(opMode);
-        colorSensor.enable(true);
+        //colorSensor = new ColorSensor(opMode);
+        //colorSensor.enable(true);
 
         okToMove = new Semaphore(1);
 
@@ -101,7 +101,7 @@ public class Robot extends Thread {
         while (opMode.opModeIsActive()) {
 
             if (robotState == ROBOT_STATE.IDLE) {
-                colorSensor.update();
+                //colorSensor.update();
                 Thread.yield();
                 continue;
             }
@@ -135,7 +135,7 @@ public class Robot extends Thread {
                 robotState = ROBOT_STATE.IDLE;
             }
 
-            colorSensor.enable(false);
+            //colorSensor.enable(false);
         }
     }
 
@@ -243,10 +243,6 @@ public class Robot extends Thread {
 
     public Limelight getLimelight() {
         return limelight;
-    }
-
-    public ColorSensor getColorSensor() {
-        return colorSensor;
     }
 
 } // end of class

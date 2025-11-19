@@ -15,9 +15,11 @@ public class Config {
     public static final String IMU                 = "imu";
     public static final String IMU_EXPANSION       = "imuExpansion";
     public static final String COLOR_SENSOR        = "colorSensor";
-    public static final String LED_GREEN           = "greenLED";
-    public static final String LED_RED             = "redLED";
-    public static final String DISTANCE_SENSOR     = "distanceSensor";
+    public static final String GREEN_LEFT_LED      = "greenLeftLED";
+    public static final String RED_LEFT_LED        = "redLeftLED";
+    public static final String GREEN_RIGHT_LED     = "greenRightLED";
+    public static final String RED_RIGHT_LED       = "redRightLED";
+    //public static final String DISTANCE_SENSOR     = "distanceSensor";
     public static final String LEFT_FRONT_SENSOR   = "leftFrontSensor";
     public static final String RIGHT_FRONT_SENSOR  = "rightFrontSensor";
 

@@ -2,15 +2,17 @@ package competition;
 
 import android.annotation.SuppressLint;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.Gamepad;
+import com.qualcomm.robotcore.hardware.LED;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 
+import common.Config;
 import common.Drive;
 import common.DriveControl;
 import common.DriveGamepad;
@@ -22,36 +24,49 @@ import utils.Pose;
 
 @TeleOp(name="TeleOpComp", group="Competition")
 @SuppressLint("DefaultLocale")
+@com.acmerobotics.dashboard.config.Config
 
 public class TeleOpComp extends LinearOpMode {
 
+    public static double coefficientV = 1;
+
     private DriveControl driveControl;
     private Launcher launcher;
-    Limelight limelight;
+    private Limelight limelight;
+    private LED redLeftLED;
+    private LED redRightLED;
+    private LED greenLeftLED;
+    private LED greenRightLED;
 
-    private double DEFAULT_SPEED = 28;
+    private final double DEFAULT_SPEED = 28;
     Increment speedIncrement;
     double speed = DEFAULT_SPEED;
 
     Telemetry.Item speedMsg;
-    Telemetry.Item areaMsg;
+    Telemetry.Item aprilTagMsg;
 
     long lastUpdate;
     double lastArea;
+    double distance = 0;
 
+    int aprilTagID = 0;
+
+    enum LEDState { GREEN, RED, NONE }
     @Override
     public void runOpMode() {
         try {
             initialize();
 
-            telemetry.addLine("Press start");
+            telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
             telemetry.update();
+
+            setLED(LEDState.NONE);
 
             waitForStart();
 
             while (opModeIsActive()) {
                 handleGamepad();
-                updateTargetArea();
+                updatePosition();
             }
 
         } catch (Exception e) {
@@ -63,6 +78,7 @@ public class TeleOpComp extends LinearOpMode {
         Drive drive = new Drive(this);
 
         driveControl = new DriveControl(this, drive);
+        driveControl.reset();
         driveControl.start();
 
         DriveGamepad driveGamepad = new DriveGamepad(this, driveControl);
@@ -73,14 +89,19 @@ public class TeleOpComp extends LinearOpMode {
         launcher.setSpeed(speed);
 
         limelight = new Limelight(this);
-        limelight.setPipeline(Limelight.Pipeline.APRIL_TAG);
+        limelight.setPipeline(Limelight.Pipeline.LOCATION);
+
+        greenLeftLED = hardwareMap.get(LED.class, Config.GREEN_LEFT_LED);
+        greenRightLED = hardwareMap.get(LED.class, Config.GREEN_RIGHT_LED);
+        redLeftLED = hardwareMap.get(LED.class, Config.RED_LEFT_LED);
+        redRightLED = hardwareMap.get(LED.class, Config.RED_RIGHT_LED);
 
         speedIncrement = new Increment(1, 2, 3);
 
+        aprilTagMsg = telemetry.addData("April Tag", "");
+
         speedMsg = telemetry.addData("Motor speed", 0);
         displaySpeed();
-
-        areaMsg = telemetry.addData("Target Area", 0);
 
         telemetry.addData("\nControls", "\n" +
                 "  a - start / stop launcher motors\n" +
@@ -116,10 +137,11 @@ public class TeleOpComp extends LinearOpMode {
             launcher.pullTrigger();
 
         } else if (gamepad1.bWasPressed() || gamepad2.bWasPressed()) {
-            lineUpWithAprilTag();
+            lineUpWithGoal(false);
+            setSpeed();
 
         } else if (gamepad1.dpadUpWasPressed() || gamepad2.dpadUpWasPressed()) {
-            setSpeed();
+            setSpeedFromTargetArea();
             displaySpeed();
 
         } else if (gamepad1.right_trigger > 0) {
@@ -184,41 +206,95 @@ public class TeleOpComp extends LinearOpMode {
         }
     }
 
-    private void lineUpWithAprilTag() {
-        double angle = limelight.GetTx();
-        Pose pose = driveControl.getPose();
-        double heading = AngleUnit.normalizeRadians(pose.getHeading() - Math.toRadians(angle));
-        Pose newPose = new Pose(pose.getX(), pose.getY(), heading);
-        driveControl.moveToPose(newPose,0.2, 1000);
-        Logger.message("angle: %5.2f  current: %s   new: %s", angle, pose.toString(), newPose.toString());
-    }
+    private void lineUpWithGoal(boolean displayOnly) {
 
-    private void lineUpWithGoal() {
-        Pose current = driveControl.getPose();
+        distance = 0;
 
         // aim for the center of the goal
-        Pose center;
-        if (current.getHeading() > Math.PI / 2) {
-            center = new Pose(-60, 60, 135);
+        int id = limelight.GetAprilTagID();
+        Pose target;
+        double num = 70.5 - 6;
+        if (id == 20) {  // blue
+            target = new Pose(-num, num, Math.toRadians(135));
+        } else if (id == 24) {     //red
+            target = new Pose(num, num, Math.toRadians(45));
         } else {
-            center = new Pose(60, 60, 45);
+            setLED(LEDState.RED);
+            displayAprilTagInfo("april tag if not found");
+
+            if (! displayOnly)
+                Logger.message("april tag if not found");
+            return;
         }
-        double a = center.getX() - current.getX();
-        double b = center.getY() - current.getY();
+
+        Pose current = limelight.getPosition();
+        if (current == null) {
+            setLED(LEDState.RED);
+            displayAprilTagInfo("april tag if not found");
+            if (! displayOnly)
+                Logger.message("no april tag found");
+            return;
+        }
+
+        setLED(LEDState.GREEN);
+
+        double a = target.getX() - current.getX();
+        double b = target.getY() - current.getY();
         double angle = Math.atan2(b, a);
-        Pose newPose = new Pose(current.getX(), current.getY(), angle);
-        //driveControl.moveToPose(newPose, 0.2, 1000);
-        Logger.debug("current: %s  corner: %s  pose: %s", current, center, newPose);
+        double rotation = AngleUnit.normalizeRadians(current.getHeading() - angle);
+
+        distance = Math.abs(Math.hypot(a, b));
+        speed = getVelocity(distance);
+
+        Pose pose = driveControl.getPose();
+        double heading =  AngleUnit.normalizeRadians(pose.getHeading() - rotation);
+        Pose newPose = new Pose(pose.getX(), pose.getY(), heading);
+
+        if (! displayOnly) {
+            driveControl.moveToPose(newPose, 0.2, 3000);
+        }
+
+        Logger.debug("current: %s   target: %s   pose: %s   new: %s   angle: %5.1f  rotation: %5.1f  ID: %d  distance: %4.1f  speed: %2.0f",
+                current, target, pose, newPose, Math.toDegrees(angle), Math.toDegrees(rotation), id, distance, speed);
+
+        String msg = String.format("ID: %d  rotation: %5.1f  distance: %4.1f", id, Math.toDegrees(rotation), distance);
+        displayAprilTagInfo(msg);
+        telemetry.update();
     }
 
     private void updatePosition() {
-
-        Pose pose = driveControl.getPose();
-        Pose newPose = limelight.getPosition(pose.getHeading());
-        if (newPose != null) {
-            Logger.message("new pose: %s", newPose);
-            //driveControl.setPose(newPose);
+        long time = System.currentTimeMillis();
+        if (time - lastUpdate < 500) {
+            return;
         }
+        lastUpdate = time;
+
+        lineUpWithGoal(true);
+        telemetry.update();
+    }
+
+    private void setLED(LEDState state) {
+
+        if (state == LEDState.GREEN || state == LEDState.NONE) {
+            redLeftLED.off();
+            redRightLED.off();
+        }
+        if (state == LEDState.RED || state == LEDState.NONE) {
+            greenLeftLED.off();
+            greenRightLED.off();
+        }
+        if (state == LEDState.GREEN) {
+            greenLeftLED.on();
+            greenRightLED.on();
+        }
+        if (state == LEDState.RED) {
+            redLeftLED.on();
+            redRightLED.on();
+        }
+    }
+
+    private void displayAprilTagInfo(String msg) {
+        aprilTagMsg.setValue("%s", msg);
     }
 
     private void displaySpeed() {
@@ -226,15 +302,37 @@ public class TeleOpComp extends LinearOpMode {
     }
 
     private void setSpeed() {
+
+        if (distance == 0) {
+            speed = DEFAULT_SPEED;
+            Logger.warning("april tag not found, set to default speed: %5.2f", speed);
+            return;
+        }
+
+        //speed = Math.round(25.05 * Math.pow(area-0.4, -0.09) + 2);
+        Logger.message("speed: %5.2f", speed);
+    }
+
+    private void setSpeedFromTargetArea() {
+
         double area = limelight.GetTargetArea();
         if (area <= 0) {
             speed = DEFAULT_SPEED;
-            Logger.warning("april tag not found, set to defaukt speed: %5.2f", speed);
+            Logger.warning("april tag not found, set to default speed: %5.2f", speed);
             return;
         }
 
         speed = Math.round(25.05 * Math.pow(area-0.4, -0.09) + 2);
         Logger.message("speed: %5.2f", speed);
+    }
+
+    private void lineUpWithAprilTag() {
+        double angle = limelight.GetTx();
+        Pose pose = driveControl.getPose();
+        double heading = AngleUnit.normalizeRadians(pose.getHeading() - Math.toRadians(angle));
+        Pose newPose = new Pose(pose.getX(), pose.getY(), heading);
+        driveControl.moveToPose(newPose,0.2, 1000);
+        Logger.message("angle: %5.2f  current: %s   new: %s", angle, pose.toString(), newPose.toString());
     }
 
     private void updateTargetArea() {
@@ -250,8 +348,37 @@ public class TeleOpComp extends LinearOpMode {
         }
         lastArea = area;
 
-        areaMsg.setValue("%5.2f", area);
+        aprilTagMsg.setValue("%5.2f", area);
         Logger.message("Limelight target Area: %5.2f", area);
         telemetry.update();
+    }
+
+    private void trajectory(double distance) {
+
+        double gravity = 9.80665;
+        double y = DistanceUnit.INCH.toMeters(20) ;
+        double r = DistanceUnit.INCH.toMeters(distance);
+        double angle = Math.toRadians(60);
+
+        double v = r / (Math.sqrt(2 * (r * Math.tan(angle) - y) / gravity) * Math.cos(angle));
+
+        Logger.message("velocity: %5.2f  %5.2f", v, v * coefficientV);
+    }
+
+    private double getVelocity(double distance) {
+
+        double velocity = DEFAULT_SPEED;
+        double minVelocity = 25;
+        double[] distances = { 55, 59, 71, 79, 85 };
+
+        if (distance == 0)
+            return velocity;
+
+        for (int i = 0; i < distances.length; i++) {
+            if (distances[i] <= distance) {
+                velocity = minVelocity + i;
+            }
+        }
+        return velocity;
     }
 }

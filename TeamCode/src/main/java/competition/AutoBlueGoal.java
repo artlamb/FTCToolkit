@@ -14,11 +14,11 @@ import utils.PoseData;
 
 public class AutoBlueGoal extends LinearOpMode {
 
-    public static double LAUNCHER_SPEED = 28;
+    public static double LAUNCHER_SPEED = 27;
 
-    public static PoseData START =      new PoseData(-47.0, 47.0,  135.0);
-    public static PoseData WAYPOINT_1 = new PoseData(-12.5,  12.5, 135.0);
-    public static PoseData PARK =       new PoseData(-12.5, -12.5,   0.0);
+    public static PoseData START =      new PoseData(-50.5, 50.5,  135.0);
+    public static PoseData WAYPOINT_1 = new PoseData(-23.5,  23.5, 135.0);
+    public static PoseData PARK =       new PoseData(-23.5,  -12,    0.0);
 
     Auto auto;
 

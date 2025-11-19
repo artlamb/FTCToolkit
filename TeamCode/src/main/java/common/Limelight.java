@@ -58,6 +58,7 @@ public class Limelight {
 
                 YawPitchRollAngles orientation = robotPose.getOrientation();
                 double h = orientation.getYaw(AngleUnit.RADIANS);
+
                 pose = new Pose(x, y, h);
             }
         }
@@ -86,6 +87,7 @@ public class Limelight {
 
                 YawPitchRollAngles orientation = robotPose.getOrientation();
                 double h = orientation.getYaw(AngleUnit.RADIANS);
+                h = AngleUnit.normalizeRadians(h - Math.toRadians(90));
                 pose = new Pose(x, y, h);
             }
         }
@@ -139,7 +141,7 @@ public class Limelight {
 
             case LOCATION:
                 index = 3;
-                type = "pipe_location";
+                type = "pipe_fiducial";
                 break;
         }
 

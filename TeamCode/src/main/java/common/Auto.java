@@ -124,7 +124,7 @@ public class Auto {
 
     private void waitUntilRobotIdIdle() {
         Logger.message("waiting");
-        long timeout = 4000;
+        long timeout = 5000;
         timer.reset();
         while (robot.isBusy() && opMode.opModeIsActive()) {
             if (timer.milliseconds() > timeout) {

@@ -2,7 +2,6 @@ package common;
 
 import android.graphics.Color;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.LED;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
@@ -33,8 +32,8 @@ public class ColorSensor {
         try {
             colorSensor = opMode.hardwareMap.get(NormalizedColorSensor.class, Config.COLOR_SENSOR);
             colorSensor.setGain(COLOR_SENSOR_GAIN);
-            greenLED = opMode.hardwareMap.get(LED.class, Config.LED_GREEN);
-            redLED = opMode.hardwareMap.get(LED.class, Config.LED_RED);
+            greenLED = opMode.hardwareMap.get(LED.class, Config.GREEN_LEFT_LED);
+            redLED = opMode.hardwareMap.get(LED.class, Config.RED_LEFT_LED);
             redLED.off();
             greenLED.off();
 
