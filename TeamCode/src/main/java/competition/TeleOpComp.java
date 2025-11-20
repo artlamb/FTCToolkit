@@ -378,8 +378,8 @@ public class TeleOpComp extends LinearOpMode {
             return velocity;
 
         velocity = minVelocity;
-        for (int i = 0; i < distances.length; i++) {
-            if (distances[i] <= distance) {
+        for (int i = 1; i < distances.length; i++) {
+            if (distance > distances[i-1] && distance <= distances[i]) {
                 velocity = minVelocity + i;
             }
         }
