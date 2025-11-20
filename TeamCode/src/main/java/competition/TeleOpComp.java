@@ -51,7 +51,8 @@ public class TeleOpComp extends LinearOpMode {
 
     int aprilTagID = 0;
 
-    enum LEDState { GREEN, RED, NONE }
+    enum LEDState { GREEN, RED, YELLOW, NONE }
+
     @Override
     public void runOpMode() {
         try {
@@ -259,6 +260,7 @@ public class TeleOpComp extends LinearOpMode {
 
         String msg = String.format("ID: %d  rotation: %5.1f  distance: %4.1f", id, Math.toDegrees(rotation), distance);
         displayAprilTagInfo(msg);
+        displaySpeed();
         telemetry.update();
     }
 
@@ -306,11 +308,12 @@ public class TeleOpComp extends LinearOpMode {
         if (distance == 0) {
             speed = DEFAULT_SPEED;
             Logger.warning("april tag not found, set to default speed: %5.2f", speed);
-            return;
+        } else {
+            //speed = getVelocity(distance);
+            Logger.message("speed: %5.2f", speed);
         }
 
-        //speed = Math.round(25.05 * Math.pow(area-0.4, -0.09) + 2);
-        Logger.message("speed: %5.2f", speed);
+        launcher.setSpeed(speed);
     }
 
     private void setSpeedFromTargetArea() {
@@ -374,6 +377,7 @@ public class TeleOpComp extends LinearOpMode {
         if (distance == 0)
             return velocity;
 
+        velocity = minVelocity;
         for (int i = 0; i < distances.length; i++) {
             if (distances[i] <= distance) {
                 velocity = minVelocity + i;
