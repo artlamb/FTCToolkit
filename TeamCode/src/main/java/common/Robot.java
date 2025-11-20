@@ -64,7 +64,7 @@ public class Robot extends Thread {
         }
 
         limelight = new Limelight(opMode);
-        limelight.setPipeline(Limelight.Pipeline.APRIL_TAG);
+        //limelight.setPipeline(Limelight.Pipeline.APRIL_TAG);
 
         //colorSensor = new ColorSensor(opMode);
         //colorSensor.enable(true);
