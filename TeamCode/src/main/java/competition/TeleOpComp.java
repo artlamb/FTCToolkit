@@ -252,7 +252,9 @@ public class TeleOpComp extends LinearOpMode {
         Pose newPose = new Pose(pose.getX(), pose.getY(), heading);
 
         if (! displayOnly) {
-            driveControl.moveToPose(newPose, 0.2, 3000);
+            if (! driveControl.isBusy()) {
+                driveControl.moveToPose(newPose, 0.2, 3000);
+            }
         }
 
         Logger.debug("current: %s   target: %s   pose: %s   new: %s   angle: %5.1f  rotation: %5.1f  ID: %d  distance: %4.1f  speed: %2.0f",
