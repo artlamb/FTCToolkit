@@ -16,9 +16,9 @@ public class AutoRedGoal extends LinearOpMode {
 
     public static double LAUNCHER_SPEED = 28;
 
-    public static PoseData START =      new PoseData(47.0, 47.0,  45.0);
-    public static PoseData WAYPOINT_1 = new PoseData(12.5,  12.5, 45.0);
-    public static PoseData PARK =       new PoseData(12.5, -12.5, 1800.0);
+    public static PoseData START =      new PoseData(50.5, 50.5,  45.0);
+    public static PoseData WAYPOINT_1 = new PoseData(23.5, 23.5, 45.0);
+    public static PoseData PARK =       new PoseData(23.5, -12.5, 1800.0);
 
     Auto auto;
 
