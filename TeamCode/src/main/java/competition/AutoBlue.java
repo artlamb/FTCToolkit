@@ -17,7 +17,7 @@ public class AutoBlue extends LinearOpMode {
     public static double LAUNCHER_SPEED = 27;
 
     public static PoseData START =      new PoseData(-12.25, -62,  90.0);
-    public static PoseData WAYPOINT_1 = new PoseData(-12.25, 12,   135.0);
+    public static PoseData WAYPOINT_1 = new PoseData(-12.25, 10,   135.0);
     public static PoseData PARK =       new PoseData(-12.25, -36,  0.0);
 
     Auto auto;
