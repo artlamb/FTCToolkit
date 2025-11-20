@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.LED;
@@ -20,6 +21,7 @@ import utils.Pose;
 
 @TeleOp(name="LimelightTest", group="Test")
 @SuppressLint("DefaultLocale")
+@Disabled
 
 public class LimelightTest extends LinearOpMode {
 

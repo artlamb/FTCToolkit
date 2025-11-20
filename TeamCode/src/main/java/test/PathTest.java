@@ -36,6 +36,7 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -59,6 +60,7 @@ import utils.Waypoint;
 @TeleOp(name="Path Test", group="Test")
 @SuppressLint("DefaultLocale")
 @Config
+@Disabled
 
 public class PathTest extends LinearOpMode {
     public enum Mode { AUTO_PATHS, MANUAL, GAMEPAD }

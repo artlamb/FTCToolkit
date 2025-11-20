@@ -43,6 +43,7 @@ import common.Logger;
 import utils.Pose;
 
 @TeleOp(name="DriveToTest", group="Test")
+@Disabled
 
 public class DriveToTest extends LinearOpMode {
 
