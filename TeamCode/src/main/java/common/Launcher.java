@@ -242,6 +242,9 @@ public class Launcher extends Thread {
                 Logger.warning("launcher spin up timed out after %d ms", timeout);
                 break;
             }
+
+            Logger.verbose("left: %5.0f  right: %5.0f", leftVelocity, rightVelocity);
+            Thread.yield();
         }
 
         // wait for the loader to close if it hasn't already.
