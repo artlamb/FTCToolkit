@@ -78,7 +78,7 @@ public class Launcher extends Thread {
         coefficients.i = pidI;
 
         for (DcMotorEx motor : motors) {
-            motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+            motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             motor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, coefficients);
