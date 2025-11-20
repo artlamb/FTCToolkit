@@ -143,11 +143,24 @@ public class Limelight {
                 break;
         }
 
-        limelight.pipelineSwitch(index);
-        LLStatus status = limelight.getStatus();
-        Logger.message("pipeline index: %d, type: %s", status.getPipelineIndex(), status.getPipelineType());
-        if (status.getPipelineIndex() != index || !status.getPipelineType().equals(type)) {
-            Logger.warning("%s pipeline not set to type %s", pipeline, type);
+        long startTime = System.currentTimeMillis();
+        long timeout = 1000;
+        while (true) {
+            limelight.pipelineSwitch(index);
+            LLStatus status = limelight.getStatus();
+
+            if (status.getPipelineIndex() == index && status.getPipelineType().equals(type)) {
+                Logger.message("%s pipeline set to index: %d, type: %s in %d ms",
+                        pipeline, index, type, System.currentTimeMillis() - startTime);
+                break;
+            }
+
+            if (System.currentTimeMillis() - startTime > timeout) {
+                Logger.warning("pipeline index: %d, type: %s", status.getPipelineIndex(), status.getPipelineType());
+                Logger.warning("%s pipeline not set to index: %d, type %s", pipeline, index, type);
+                Logger.warning("set pipeline timed out after %d ms", timeout);
+                break;
+            }
         }
     }
 }
