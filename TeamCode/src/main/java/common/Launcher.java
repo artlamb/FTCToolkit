@@ -24,7 +24,11 @@ public class Launcher extends Thread {
 
     public static double LOADER_HOLD    = 0.30;
     public static double LOADER_RELEASE = 0.40;
-    public static long   LOADER_REACT_TIME = 200;               // time in millisecond for the loader to open/close
+
+    public static long   GATE_REACT_TIME = 200;               // time in millisecond for the loader to open/close
+    public static long   TRIGGER_FIRE_TIME = 400;               // time in millisecond to pull the trigger
+    public static long   TRIGGER_COCK_TIME = 150;               // time in millisecond to cock the trigger
+    public static long   ARTIFACT_LOAD_TIME = 1000;
 
    private boolean loaderOpen = true;
 
@@ -252,7 +256,7 @@ public class Launcher extends Thread {
         // wait for the loader to close if it hasn't already.
         while (true) {
             long time = System.currentTimeMillis();
-            if (time - startTime >= LOADER_REACT_TIME) {
+            if (time - startTime >= GATE_REACT_TIME) {
                 Logger.message("launcher loader close complete");
                 break;
             }
@@ -260,12 +264,12 @@ public class Launcher extends Thread {
 
         // pull the trigger
         trigger.setPosition(TRIGGER_FIRE);
-        delay(400);
+        delay(TRIGGER_FIRE_TIME);
         trigger.setPosition(TRIGGER_COCK);
-        delay(150);
+        delay(TRIGGER_COCK_TIME);
 
         loader.setPosition(LOADER_RELEASE);
-        delay(LOADER_REACT_TIME);
+        delay(GATE_REACT_TIME);
     }
 
     private void fireAll() {
@@ -274,7 +278,7 @@ public class Launcher extends Thread {
         for (int i = 0; i < 3; i++) {
             fire();
             if (i < 2)
-                delay(1000);
+                delay(ARTIFACT_LOAD_TIME);
         }
         setVelocity(0);
         Logger.message("fire all complete after %d ms", System.currentTimeMillis() - startTime);
@@ -284,13 +288,13 @@ public class Launcher extends Thread {
     public void closeLoader() {
         loader.setPosition(LOADER_HOLD);
         loaderOpen = false;
-        delay(LOADER_REACT_TIME);
+        delay(GATE_REACT_TIME);
     }
 
     public void openLoader() {
         loader.setPosition(LOADER_RELEASE);
         loaderOpen = true;
-        delay(LOADER_REACT_TIME);
+        delay(GATE_REACT_TIME);
     }
 
     public boolean loaderIsOpen() {
@@ -300,9 +304,9 @@ public class Launcher extends Thread {
     public void pullTrigger() {
         // pull the trigger
         trigger.setPosition(TRIGGER_FIRE);
-        delay(500);
+        delay(TRIGGER_FIRE_TIME);
         trigger.setPosition(TRIGGER_COCK);
-        delay(100);
+        delay(TRIGGER_COCK_TIME);
     }
 
     public boolean isBusy() {
