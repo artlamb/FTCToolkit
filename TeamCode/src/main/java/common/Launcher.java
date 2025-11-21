@@ -26,9 +26,9 @@ public class Launcher extends Thread {
     public static double LOADER_RELEASE = 0.40;
 
     public static long   GATE_REACT_TIME = 200;               // time in millisecond for the loader to open/close
-    public static long   TRIGGER_FIRE_TIME = 400;               // time in millisecond to pull the trigger
+    public static long   TRIGGER_FIRE_TIME = 200;               // time in millisecond to pull the trigger
     public static long   TRIGGER_COCK_TIME = 150;               // time in millisecond to cock the trigger
-    public static long   ARTIFACT_LOAD_TIME = 1000;
+    public static long   ARTIFACT_LOAD_TIME = 300;
 
    private boolean loaderOpen = true;
 
