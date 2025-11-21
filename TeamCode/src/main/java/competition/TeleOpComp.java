@@ -150,7 +150,7 @@ public class TeleOpComp extends LinearOpMode {
             setSpeed();
 
         } else if (gamepad1.dpadUpWasPressed() || gamepad2.dpadUpWasPressed()){
-            fastLaunch();
+            //fastLaunch();
 
         } else if (gamepad1.right_trigger > 0) {
             // fire one artifact
