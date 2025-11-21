@@ -226,6 +226,7 @@ public class Launcher extends Thread {
         }
 
         // wait for the motors to spin up to the desired speed.
+        long spinUpStart = System.currentTimeMillis();
         while (true) {
             double leftVelocity = leftMotor.getVelocity();
             double rightVelocity = rightMotor.getVelocity();
@@ -243,7 +244,8 @@ public class Launcher extends Thread {
                 break;
             }
 
-            Logger.verbose("left: %5.0f  right: %5.0f", leftVelocity, rightVelocity);
+            Logger.verbose("time: %6d ms  left: %5.0f  right: %5.0f",
+                    System.currentTimeMillis() - spinUpStart, velocity - leftVelocity, velocity - rightVelocity);
             Thread.yield();
         }
 
