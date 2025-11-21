@@ -149,6 +149,9 @@ public class TeleOpComp extends LinearOpMode {
             lineUpWithGoal(false);
             setSpeed();
 
+        } else if (gamepad1.dpadUpWasPressed() || gamepad2.dpadUpWasPressed()){
+            fastLaunch();
+
         } else if (gamepad1.right_trigger > 0) {
             // fire one artifact
             launcher.fireLauncher();
@@ -442,5 +445,19 @@ public class TeleOpComp extends LinearOpMode {
         aprilTagMsg.setValue("%5.2f", area);
         Logger.message("Limelight target Area: %5.2f", area);
         telemetry.update();
+    }
+
+    private void fastLaunch() {
+
+        long timeout = 3000;
+        long start = System.currentTimeMillis();
+        launcher.setSpeed(20);
+        while (driveControl.isBusy()) {
+            if (System.currentTimeMillis() - start > timeout)
+                return;
+        }
+        lineUpWithGoal(false);
+        setSpeed();
+        launcher.fireAllArtifacts();
     }
 }
