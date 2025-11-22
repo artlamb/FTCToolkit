@@ -9,7 +9,7 @@ import common.Auto;
 import common.Logger;
 import utils.PoseData;
 
-@Autonomous(name="Auto Red", group="Competition")
+@Autonomous(name="Auto Red Delay", group="Competition")
 @com.acmerobotics.dashboard.config.Config
 
 public class AutoRedDelay extends LinearOpMode {
