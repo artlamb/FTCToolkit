@@ -42,10 +42,17 @@ public class Auto {
     }
 
     public void runAuto() {
+        runAuto(0);
+    }
+
+    public void runAuto(long timeout) {
 
         opMode.telemetry.addLine("Press start");
         opMode.telemetry.update();
         opMode.waitForStart();
+
+        if (timeout > 0)
+            opMode.sleep(timeout*1000);
 
         running = true;
         elapsedTime.reset();
