@@ -10,12 +10,12 @@ import com.qualcomm.robotcore.hardware.LED;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 import common.Config;
 import common.Drive;
 import common.DriveControl;
 import common.DriveGamepad;
+import common.Intake;
 import common.Launcher;
 import common.Limelight;
 import common.Logger;
@@ -33,6 +33,7 @@ public class TeleOpComp extends LinearOpMode {
     private DriveControl driveControl;
     private Launcher launcher;
     private Limelight limelight;
+    private Intake intake;
     private LED redLeftLED;
     private LED redRightLED;
     private LED greenLeftLED;
@@ -94,6 +95,8 @@ public class TeleOpComp extends LinearOpMode {
         limelight = new Limelight(this);
         limelight.setPipeline(Limelight.Pipeline.LOCATION);
 
+        intake = new Intake(this);
+
         greenLeftLED = hardwareMap.get(LED.class, Config.GREEN_LEFT_LED);
         greenRightLED = hardwareMap.get(LED.class, Config.GREEN_RIGHT_LED);
         redLeftLED = hardwareMap.get(LED.class, Config.RED_LEFT_LED);
@@ -133,7 +136,7 @@ public class TeleOpComp extends LinearOpMode {
             }
 
         } else if (gamepad1.xWasPressed() || gamepad2.xWasPressed()) {
-            // open or close the loader gate
+            // open /close the loader gate
             if (launcher.loaderIsOpen()) {
                 launcher.closeLoader();
             } else {
@@ -150,7 +153,8 @@ public class TeleOpComp extends LinearOpMode {
             setSpeed();
 
         } else if (gamepad1.dpadUpWasPressed() || gamepad2.dpadUpWasPressed()){
-            //fastLaunch();
+            // turn the intake on or off
+            intake.intakeToggle();
 
         } else if (gamepad1.right_trigger > 0) {
             // fire one artifact

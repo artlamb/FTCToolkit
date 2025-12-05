@@ -134,7 +134,7 @@ public class Launcher extends Thread {
      */
     public void runLauncher() {
         Logger.message("launcher run");
-        setVelocity(speed);
+            setVelocity(speed);
         startTime = System.currentTimeMillis();
     }
 
