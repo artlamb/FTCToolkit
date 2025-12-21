@@ -42,7 +42,7 @@ public class AutoRed extends LinearOpMode {
         auto = new Auto(this);
 
         auto.addPath(Auto.PathState.START, START.x, START.y, START.h);
-        auto.addPath(Auto.PathState.WAYPOINT_1, WAYPOINT_1.x, WAYPOINT_1.y, WAYPOINT_1.h);
+        auto.addPath(Auto.PathState.SHOOT, WAYPOINT_1.x, WAYPOINT_1.y, WAYPOINT_1.h);
         auto.addPath(Auto.PathState.PARK, PARK.x, PARK.y, PARK.h);
 
         auto.setStartPose(START.x, START.y, START.h);

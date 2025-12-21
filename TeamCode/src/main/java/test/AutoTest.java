@@ -46,7 +46,7 @@ public class AutoTest extends LinearOpMode {
         auto = new Auto(this);
 
         auto.setStartPose(START.x, START.y, START.h);
-        auto.addPath(Auto.PathState.WAYPOINT_1, WAYPOINT_1.x, WAYPOINT_1.y, WAYPOINT_1.h);
+        auto.addPath(Auto.PathState.SHOOT, WAYPOINT_1.x, WAYPOINT_1.y, WAYPOINT_1.h);
         auto.addPath(Auto.PathState.PARK, PARK.x, PARK.y, PARK.h);
     }
 }
