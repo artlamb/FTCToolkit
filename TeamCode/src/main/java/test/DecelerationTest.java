@@ -1,10 +1,10 @@
 package test;
 
 import android.annotation.SuppressLint;
+import android.util.Log;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -16,13 +16,15 @@ import utils.Pose;
 
 @TeleOp(name="DecelerationTest", group="Test")
 @SuppressLint("DefaultLocale")
-@Disabled
+//@Disabled
+
+@com.acmerobotics.dashboard.config.Config
 
 public class DecelerationTest extends LinearOpMode {
+    public static boolean turn = false;
 
     Drive drive  = null;
     DriveControl driveControl;
-    DcMotorEx odometer;
 
     @Override
     public void runOpMode() {
@@ -33,38 +35,52 @@ public class DecelerationTest extends LinearOpMode {
             driveControl.resetIMU();
             driveControl.start();
 
-            odometer = drive.leftFrontDrive;
-
             telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
             telemetry.addLine("Press start");
             telemetry.update();
 
             waitForStart();
 
-            decelerationTest();
+            if (turn) {
+                turnDecelerationTest();
+            } else {
+                driveDecelerationTest();
+            }
 
         } catch (Exception e) {
             Logger.error(e, "Error");
         }
-
     }
 
-    private void decelerationTest() {
+    private void driveDecelerationTest() {
 
+        driveControl.reset();
         Pose start = driveControl.getPose();
 
-        boolean turn = true;
-        for (double percent = 0.01; percent <= 0.1; percent += 0.01) {
+        for (double percent = 0.05; percent < 0.75; percent += 0.05) {
 
             driveControl.setPose(new Pose());
-            driveControl.decelerationTest(percent, 0, true);
+            driveControl.decelerationTest(percent, 0, turn);
 
             sleep(2000);
 
-            if (! turn) {
-                driveControl.moveToPose(start, 3000);
-                driveControl.waitUntilNotMoving();
-            }
+            Logger.setErrorLevel(Log.WARN);
+            driveControl.moveToPose(start, 3000);
+            driveControl.waitUntilNotMoving(5000);
+            Logger.setErrorLevel(Log.VERBOSE);
+        }
+    }
+
+    private void turnDecelerationTest() {
+
+        driveControl.reset();
+
+        for (double percent = 0.01; percent <= 0.1; percent += 0.01) {
+
+            driveControl.setPose(new Pose());
+            driveControl.decelerationTest(percent, 0, turn);
+
+            sleep(2000);
         }
     }
 }

@@ -2,6 +2,10 @@ package utils;
 
 import android.annotation.SuppressLint;
 
+import androidx.annotation.NonNull;
+
+import java.util.Locale;
+
 /**
  * This is the PIDFController class. This class handles the running of PIDFs. PIDF stands for
  * proportional, integral, derivative, and feedforward. PIDFs take the error of a system as an input.
@@ -31,6 +35,7 @@ public class PIDFController {
     private double errorDerivative;
     private double errorSteadyState;
     private double feedForwardInput;
+    private double output;
 
     private long previousUpdateTimeNano;
     private long deltaTimeNano;
@@ -53,7 +58,8 @@ public class PIDFController {
      * @return this returns the value of the PIDF from the current error.
      */
     public double runPIDF() {
-        return errorProportional * P() + errorDerivative * D() + errorIntegral * I() + F() + errorSteadyState * S();
+        output = errorProportional * P() + errorDerivative * D() + errorIntegral * I() + F() + errorSteadyState * S();
+        return output;
     }
 
     /**
@@ -318,21 +324,34 @@ public class PIDFController {
      * @param degrees true to convert radians to degrees
      * @return formatted string
      */
-     public String pidToString(boolean degrees) {
+     public String toStringDegrees() {
 
-        double output = runPIDF();
         if (output == 0) return "";
 
-        double error =  (degrees) ? (Math.toDegrees(this.error)) : (this.error);
-        double errorP = (degrees) ? (Math.toDegrees(this.errorProportional)) : (this.errorProportional);
-        double errorD = (degrees) ? (Math.toDegrees(this.errorDerivative)) : (this.errorDerivative);
-        double errorI = (degrees) ? (Math.toDegrees(this.errorIntegral)) : (this.errorIntegral);
+        double error =  Math.toDegrees(this.error);
+        double errorP = Math.toDegrees(this.errorProportional);
+        double errorD = Math.toDegrees(this.errorDerivative);
+        double errorI = Math.toDegrees(this.errorIntegral);
+        double errorS= Math.toDegrees(this.errorSteadyState);
 
         String s = String.format("pid: %+6.3f(%+7.3f %+7.3f) = ", output, error, errorDecelerated);
-        if (P() != 0 && errorProportional != 0)  s+= String.format("P(%+7.3f %7.3f) ", errorProportional * P(), errorP);
-        if (D() != 0 && errorDerivative != 0)    s+= String.format("D(%+6.3f %+6.3f) ", errorDerivative * D(), errorD);
-        if (I() != 0 && errorIntegral != 0)      s+= String.format("I(%+6.3f %+6.3f) ", errorIntegral * I(), errorI);
-        if (S() != 0 && errorSteadyState != 0)   s+= String.format("S(%+.3f %+.3f) ", errorSteadyState * S(), error);
+        if (P() != 0 && errorProportional != 0)  s+= String.format("P(%+7.3f %7.3f) ", errorP * P(), errorP);
+        if (D() != 0 && errorDerivative != 0)    s+= String.format("D(%+6.3f %+6.3f) ", errorD * D(), errorD);
+        if (I() != 0 && errorIntegral != 0)      s+= String.format("I(%+6.3f %+6.3f) ", errorI * I(), errorI);
+        if (S() != 0 && errorSteadyState != 0)   s+= String.format("S(%+.3f %+.3f) ", errorS * S(), errorS);
+        return (s);
+    }
+
+    @Override
+    @NonNull
+    public String toString() {
+        if (output == 0) return "";
+
+        String s = String.format("pid: %+6.3f(%+7.3f %+7.3f) = ", output, error, errorDecelerated);
+        if (P() != 0 && errorProportional != 0)  s+= String.format("P(%+7.3f %+7.3f) ", errorProportional * P(), errorProportional);
+        if (D() != 0 && errorDerivative != 0)    s+= String.format("D(%+6.3f %+6.3f) ", errorDerivative * D(), errorDerivative);
+        if (I() != 0 && errorIntegral != 0)      s+= String.format("I(%+6.3f %+6.3f) ", errorIntegral * I(), errorIntegral);
+        if (S() != 0 && errorSteadyState != 0)   s+= String.format("S(%+6.3f %+6.3f) ", errorSteadyState * S(), errorSteadyState);
         return (s);
     }
 }

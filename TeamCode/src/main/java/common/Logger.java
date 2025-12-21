@@ -38,7 +38,7 @@ public final class Logger {
     public static void debug(String format, Object... args){
         if (errorLevel <= Log.DEBUG) {
             String str = String.format(format, args);
-            Log.v(TAG, str);
+            Log.d(TAG, str);
         }
     }
 
@@ -78,6 +78,10 @@ public final class Logger {
 
     public static void addLine(String msg) {
         Log.d(TAG, msg);
+    }
+
+    public static void setErrorLevel(int level) {
+        errorLevel = level;
     }
 
 }

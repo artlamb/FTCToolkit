@@ -14,6 +14,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
@@ -34,6 +35,10 @@ public class Drive extends Thread {
     final boolean LOG_VERBOSE = false;
 
     public double DRIFT_COEFFICIENT = 0.0015;
+
+    public static double PID_P = 10;
+    public static double PID_I = 3;
+
 
     // Drive train
     private final double MOTOR_TICKS_PER_REV = 384.5;           // Gobilda Yellow Jacket Motor 5203-2402-0014
@@ -136,6 +141,8 @@ public class Drive extends Thread {
 
             motors = Arrays.asList(leftFrontDrive, rightFrontDrive, leftBackDrive, rightBackDrive);
 
+            setPIDFCoefficients(PID_P, PID_I);
+
             setBraking(true);
             setRunWithEncoders(false);
 
@@ -219,6 +226,17 @@ public class Drive extends Thread {
                 Math.max(Math.abs(rightFrontDrive.getVelocity()),
                         Math.max(Math.abs(leftBackDrive.getVelocity()),
                                 Math.abs(rightBackDrive.getVelocity())))));
+    }
+
+    public void setPIDFCoefficients(double p, double i) {
+        for (DcMotorEx motor : motors) {
+            PIDFCoefficients coefficients =  motor.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER);
+            coefficients.p = p;
+            coefficients.i = i;
+            motor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, coefficients);
+            Logger.message("coefficients: %s", coefficients.toString());
+        }
+
     }
 
     public double getCurrent() {

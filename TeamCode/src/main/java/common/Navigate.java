@@ -5,9 +5,9 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 import java.util.ArrayList;
-import java.util.Collections;
 
 import utils.Dashboard;
+import utils.PathSegment;
 import utils.Pose;
 
 /**
@@ -19,7 +19,7 @@ public class Navigate {
 
     private static class Path {
         String          name;
-        ArrayList<Pose> poses;
+        ArrayList<PathSegment> segment;
     }
     private final ArrayList<Path> paths = new ArrayList<>();
 
@@ -31,12 +31,11 @@ public class Navigate {
         this.opMode = opMode;
         this.driveControl = driveControl;
         driveControl.resetIMU();
-
     }
 
     public void setStartingPose(int index) {
         Path path = paths.get(index);
-        setStartingPose(path.poses.get(0));
+        setStartingPose(path.segment.get(0).pose);
     }
 
     public void setStartingPose(Pose pose) {
@@ -53,7 +52,7 @@ public class Navigate {
             return;
         }
 
-        if (path.poses.get(0) == null) {
+        if (path.segment.get(0) == null) {
             Logger.warning("pose for %d missing", index);
         }
 
@@ -70,16 +69,14 @@ public class Navigate {
 
     private void followPath(Path path) {
 
-        for (Pose pose: path.poses) {
+        for (PathSegment segment: path.segment) {
+            Pose pose = segment.pose;
             double x = pose.getX();
             double y = pose.getY();
             double heading = pose.getHeading(AngleUnit.DEGREES);
             Logger.message("path %s (%.1f, %.1f) heading: %.0f", path.name, x, y, heading);
         }
-        if (path.poses.size() > 1)
-            driveControl.followPath(path.poses, 4000);
-        else
-            driveControl.moveToPose(path.poses.get(0), 4000);
+        driveControl.followPath(path.segment, 5000);
     }
 
     /**
@@ -99,13 +96,16 @@ public class Navigate {
      * Add a path with an ending pose and zero or more waypoints (poses)
      *
      * @param name name of the pose
+     * @param speed speed of the path
      * @param poses one or more poses
      */
-    public void addPath(String name, Pose... poses) {
+    public void addPath(String name, double speed, Pose... poses) {
         Path path = new Path();
         path.name = name;
-        path.poses = new ArrayList<>();
-        Collections.addAll(path.poses, poses);
+        path.segment = new ArrayList<>();
+        for (Pose pose: poses) {
+            path.segment.add(new PathSegment(pose, speed));
+        }
         paths.add(path);
     }
 
@@ -115,10 +115,10 @@ public class Navigate {
      * @param name name of the path
      * @param pose pose to append
      */
-    public void appendPose(String name, Pose pose) {
+    public void appendPose(String name, double speed, Pose pose) {
         for (Path path : paths) {
             if (path.name.equals(name)) {
-                path.poses.add(pose);
+                path.segment.add(new PathSegment(pose, speed));
                 return;
             }
         }
@@ -130,11 +130,13 @@ public class Navigate {
      * @param name - name of the path
      * @param poses -
      */
-    public void setPath(String name, Pose... poses) {
+    public void setPath(String name, double speed, Pose... poses) {
         for (Path path : paths) {
             if (path.name.equals(name)) {
-                path.poses = new ArrayList<>();
-                Collections.addAll(path.poses, poses);
+                path.segment = new ArrayList<>();
+                for (Pose pose: poses) {
+                    path.segment.add(new PathSegment(pose, speed));
+                }
                 return;
             }
         }
@@ -156,24 +158,50 @@ public class Navigate {
         return false;
     }
 
+    /**
+     * Return the number paths defined.
+     * @return number of paths
+     */
     public int numberOfPaths() {
         return paths.size();
     }
 
+    /**
+     * Return the name of the specified path.
+     *
+     * @param index of the path
+     * @return name of the path
+     */
+    public String getPathName(int index) {
+        return paths.get(index).name;
+    }
+
+    /**
+     * Draw the paths on the FTC Dashboard field view.
+     */
     public void drawPaths() {
         Dashboard dashboard = new Dashboard();
 
         dashboard.drawField();
 
         for (Path path : paths) {
-            for (Pose pose : path.poses) {
+            for (PathSegment segment: path.segment) {
+                Pose pose = segment.pose;
                 dashboard.addWaypoint(pose);
                 dashboard.setPose(pose);
                 dashboard.drawField();
-                opMode.sleep(1000);
+                opMode.sleep(500);
             }
         }
         dashboard.drawField();
+    }
+
+    public void printPaths() {
+        for (Path path : paths) {
+            for (PathSegment segment: path.segment) {
+                Logger.message("path %-12s %s", path.name, segment.toString());
+            }
+        }
     }
 }
 

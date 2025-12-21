@@ -4,19 +4,26 @@ public class PoseData {
     public double x;
     public double y;
     public double h;
+    public double speed;
     public Waypoint desc;
 
-    public PoseData (double x, double y, double h) {
+    public PoseData (double x, double y, double h, double speed, Waypoint wayPoint) {
         this.x = x;
         this.y = y;
         this.h = h;
-        this.desc = Waypoint.UNKNOWN;
+        this.speed = speed;
+        this.desc = wayPoint;
+    }
+
+    public PoseData (double x, double y, double h) {
+        this(x, y, h, 0, Waypoint.UNKNOWN);
     }
 
     public PoseData (double x, double y, double h, Waypoint wayPoint) {
-        this.x = x;
-        this.y = y;
-        this.h = h;
-        this.desc = wayPoint;
+        this(x, y, h, 0, wayPoint);
+    }
+
+    public PoseData (double x, double y, double h, double speed) {
+        this(x, y, h, speed, Waypoint.UNKNOWN);
     }
 }

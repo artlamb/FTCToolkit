@@ -36,7 +36,6 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -60,24 +59,22 @@ import utils.Waypoint;
 @TeleOp(name="Path Test", group="Test")
 @SuppressLint("DefaultLocale")
 @Config
-@Disabled
 
 public class PathTest extends LinearOpMode {
     public enum Mode { AUTO_PATHS, MANUAL, GAMEPAD }
-    public enum Routines { BLUE, RED }
 
-    public static Routines ROUTINE = Routines.BLUE;
-    public static boolean DRAW_ONLY = true;
+    public static boolean DRAW_ONLY = false;
     public static boolean READ_POSES = false;
     public static boolean WRITE_POSES = false;
+    public static double MAX_SPEED = 0.60;
     public static PoseData waypoint = new PoseData(0, 0, 0, Waypoint.UNKNOWN);
 
     private final PoseData edit = new PoseData(waypoint.x, waypoint.y, waypoint.h, waypoint.desc);
     private final Mode MODE = Mode.AUTO_PATHS;
 
     private final PoseData[] waypoints = {
-            new PoseData(0, 0,  0, Waypoint.START),
-            new PoseData(10, 0,  0, Waypoint.SHOOT_1),
+            new PoseData(-50.5, 50.5,  135, Waypoint.START),
+            new PoseData(-23.5, 23.5,  135, Waypoint.SHOOT_1),
             /*
             new PoseData(0, 0,  0, Waypoint.PICKUP_1),
             new PoseData(0, 0,  0, Waypoint.PICKUP_1),
@@ -164,7 +161,7 @@ public class PathTest extends LinearOpMode {
         for (PoseData data: waypoints) {
             if (data.desc == waypoint.desc) {
                 if (edit.x != waypoint.x) {
-                    data.x = waypoint.x;;
+                    data.x = waypoint.x;
                     edit.x = waypoint.x;
                 }
                 if (data.y != waypoint.y) {
@@ -177,7 +174,7 @@ public class PathTest extends LinearOpMode {
                 }
                 displayPoses();
                 Pose pose = createPose(data.x, data.y, data.h);
-                navigate.setPath(data.desc.name(), pose);
+                navigate.setPath(data.desc.name(), MAX_SPEED,pose);
                 navigate.drawPaths();
                 return;
             }
@@ -193,9 +190,9 @@ public class PathTest extends LinearOpMode {
         for (PoseData data: waypoints) {
             Pose pose = createPose(data.x, data.y, data.h);
             if (navigate.pathExists(data.desc.name())) {
-                navigate.appendPose(data.desc.name(), pose);
+                navigate.appendPose(data.desc.name(), MAX_SPEED, pose);
             } else {
-                navigate.addPath(data.desc.name(), pose);
+                navigate.addPath(data.desc.name(), MAX_SPEED, pose);
             }
         }
     }

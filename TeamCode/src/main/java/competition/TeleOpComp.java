@@ -47,11 +47,11 @@ public class TeleOpComp extends LinearOpMode {
     Telemetry.Item aprilTagMsg;
 
     long lastUpdate;
-    double lastArea;
     double distance = 0;
 
-    int aprilTagID = 0;
     boolean customSpeed = false;
+
+    long odometerSetTime = 0;
 
     enum LEDColor { GREEN, RED, YELLOW, NONE }
 
@@ -156,6 +156,10 @@ public class TeleOpComp extends LinearOpMode {
             // turn the intake on or off
             intake.intakeToggle();
 
+        } else if (gamepad1.dpadDownWasPressed() || gamepad2.dpadDownWasPressed()){
+            // line up with the goal and fire all artifacts
+            fastLaunch();
+
         } else if (gamepad1.right_trigger > 0) {
             // fire one artifact
             launcher.fireLauncher();
@@ -239,12 +243,11 @@ public class TeleOpComp extends LinearOpMode {
         if (id == blueID || id == redID) {
             current = limelight.getPosition();
             if (current != null) {
-                setLED(LEDColor.GREEN);
 
                 // set the odometer's position to the april tag's robot position
                 if (useOdometer) {
-                    aprilTagID = id;
-                    if (!displayOnly) {
+                    if (odometerSetTime == 0 || System.currentTimeMillis() - odometerSetTime > 1000) {
+                        odometerSetTime = System.currentTimeMillis();
                         driveControl.setPose(current);
                         Logger.message("odometer's position set to: %s", current);
                     }
@@ -254,20 +257,19 @@ public class TeleOpComp extends LinearOpMode {
 
         // no april tag found
         if (current == null) {
-            displayAprilTagInfo("april tag if not found");
-            setLED(LEDColor.RED);
-            if (displayOnly)
-                return;
+            // If we can see the april tag and the odometer's position has been set, use it.
+            if (useOdometer && odometerSetTime != 0) {
+                current = driveControl.getPose();
+                Logger.message("no april tag found, using odometer's position: %s", current);
 
-            if (aprilTagID == 0) {
-                Logger.message("no april tag found and no odometer's position set");
+            } else {
+                displayAprilTagInfo("april tag if not found");
+                setLED(LEDColor.RED);
                 return;
             }
-
-            // If we can see the april tag and the odometer's position has been set, use it.
-            current = driveControl.getPose();
-            Logger.message("no april tag found, using odometer's position: %s", current);
         }
+
+        setLED(LEDColor.GREEN);
 
         // aim for the center of the goal
         Pose target;
@@ -411,56 +413,19 @@ public class TeleOpComp extends LinearOpMode {
         customSpeed = true;
     }
 
-    private void setSpeedFromTargetArea() {
-
-        double area = limelight.GetTargetArea();
-        if (area <= 0) {
-            speed = DEFAULT_SPEED;
-            Logger.warning("april tag not found, set to default speed: %5.2f", speed);
-            return;
-        }
-
-        speed = Math.round(25.05 * Math.pow(area-0.4, -0.09) + 2);
-        Logger.message("speed: %5.2f", speed);
-    }
-
-    private void lineUpWithAprilTag() {
-        double angle = limelight.GetTx();
-        Pose pose = driveControl.getPose();
-        double heading = AngleUnit.normalizeRadians(pose.getHeading() - Math.toRadians(angle));
-        Pose newPose = new Pose(pose.getX(), pose.getY(), heading);
-        driveControl.moveToPose(newPose,0.2, 1000);
-        Logger.message("angle: %5.2f  current: %s   new: %s", angle, pose.toString(), newPose.toString());
-    }
-
-    private void updateTargetArea() {
-        long time = System.currentTimeMillis();
-        if (time - lastUpdate < 500) {
-            return;
-        }
-        lastUpdate = time;
-
-        double area = limelight.GetTargetArea();
-        if (area == lastArea) {
-            return;
-        }
-        lastArea = area;
-
-        aprilTagMsg.setValue("%5.2f", area);
-        Logger.message("Limelight target Area: %5.2f", area);
-        telemetry.update();
-    }
-
+    /**
+     * Line up with the goal and fire all artifacts.
+     */
     private void fastLaunch() {
 
         long timeout = 3000;
         long start = System.currentTimeMillis();
         launcher.setSpeed(20);
+        lineUpWithGoal(false);
         while (driveControl.isBusy()) {
             if (System.currentTimeMillis() - start > timeout)
                 return;
         }
-        lineUpWithGoal(false);
         setSpeed();
         launcher.fireAllArtifacts();
     }

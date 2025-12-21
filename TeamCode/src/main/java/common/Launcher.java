@@ -208,6 +208,11 @@ public class Launcher extends Thread {
 
     private void fire() {
 
+        if (! Debug.launcher()) {
+            Logger.message("launcher disabled");
+            return;
+        }
+
         long timeout = 3000;
         long startTime = System.currentTimeMillis();
 

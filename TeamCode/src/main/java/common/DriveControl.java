@@ -15,6 +15,7 @@ import java.util.Locale;
 
 import utils.Dashboard;
 import utils.MathUtil;
+import utils.PathSegment;
 import utils.Pose;
 import utils.PIDFCoefficients;
 import utils.PIDFController;
@@ -48,7 +49,7 @@ public class DriveControl extends Thread {
     public static double TOLERANCE_ROTATION_FAST = 200;             // in degrees per second
     public static double TOLERANCE_ROTATION_SLOW = 12;
 
-    public static double DECELERATION_DRIVE = 0.15;                 // drive deceleration (distance to stop / magnitude)
+    public static double DECELERATION_DRIVE = 0.10;                 // drive deceleration (distance to stop / magnitude)
     public static double DECELERATION_TURN = 0.09;                  // turn deceleration (rotation to stop / heading velocity)
 
     public static double PID_DRIVE_P    = 0.09;
@@ -58,8 +59,6 @@ public class DriveControl extends Thread {
     public static double PID_TURN_S_EXPONENT = 0.34;
     public static double PID_TURN_S_ERROR = 2;
     public static double PID_TURN_S_THRESHOLD = 3;
-
-    public double SLOW_DRIVE = 10;
 
     public double PID_P_DRIVE_FAST = 0.1; // todo 0.15;
     public double PID_P_DRIVE_SLOW = 0.1;
@@ -81,9 +80,9 @@ public class DriveControl extends Thread {
     private final PIDFCoefficients PIDFCoefficientsDrive = new PIDFCoefficients(
             PID_DRIVE_P, PID_DRIVE_P_EXPONENT,0, 0, 0, 0);
 
-    PIDFController drivePID = new PIDFController(PIDFCoefficientsDriveFast);
+    PIDFController oldDrivePID = new PIDFController(PIDFCoefficientsDriveFast);
     PIDFController turnPID = new PIDFController(PIDFCoefficientsTurnFast);
-    PIDFController testPID = new PIDFController(PIDFCoefficientsDrive);
+    PIDFController drivePID = new PIDFController(PIDFCoefficientsDrive);
 
     private double distanceTolerance;
     private double headingTolerance;
@@ -110,7 +109,7 @@ public class DriveControl extends Thread {
 
     private volatile boolean nearPose = false;
 
-    private ArrayList<Pose> poses;
+    private ArrayList<PathSegment> segment;
 
     private enum DRIVE_STATE { IDLE, MOVING, MOVING_TO_POSE, MOVING_TO_OBJECT, TURN_BY, FOLLOW_PATH, STOPPING }
     private volatile DRIVE_STATE driveState;
@@ -162,7 +161,7 @@ public class DriveControl extends Thread {
      */
     public void run() {
 
-        Logger.message("driveControl thread started for %s", this.getName());
+        Logger.debug("driveControl thread started for %s", this.getName());
 
         try {
 
@@ -173,7 +172,7 @@ public class DriveControl extends Thread {
             throw e;
         }
 
-        Logger.message("driveControl thread stopped");
+        Logger.debug("driveControl thread stopped");
     }
 
     /**
@@ -225,24 +224,159 @@ public class DriveControl extends Thread {
 
         if (highSpeed) {
             turnPID.setCoefficients(PIDFCoefficientsTurnFast);
-            drivePID.setCoefficients(PIDFCoefficientsDriveFast);
+            oldDrivePID.setCoefficients(PIDFCoefficientsDriveFast);
 
             distanceTolerance = TOLERANCE_DISTANCE_FAST;
             headingTolerance = TOLERANCE_HEADING_FAST;
             magnitudeTolerance = TOLERANCE_MAGNITUDE_FAST;
             rotationTolerance = TOLERANCE_ROTATION_FAST;
 
-            testPID.reset();
-            turnPID.reset();
             drivePID.reset();
+            turnPID.reset();
+            oldDrivePID.reset();
         } else {
             turnPID.setCoefficients(PIDFCoefficientsTurnSlow);
-            drivePID.setCoefficients(PIDFCoefficientsDriveSlow);
+            oldDrivePID.setCoefficients(PIDFCoefficientsDriveSlow);
 
             distanceTolerance = TOLERANCE_DISTANCE_SLOW;
             headingTolerance = TOLERANCE_HEADING_SLOW;
             magnitudeTolerance = TOLERANCE_MAGNITUDE_SLOW;
             rotationTolerance = TOLERANCE_ROTATION_SLOW;
+        }
+    }
+
+    /**
+     * set the tolerances that determine when the robot has reached the  target pose
+     *
+     * @param factor  factor to scale the tolerances (0 to 1) 0 for most accurate 1 for least accurate
+     */
+    private void setTolerances(double factor) {
+        distanceTolerance = TOLERANCE_DISTANCE_SLOW + ((TOLERANCE_DISTANCE_FAST - TOLERANCE_DISTANCE_SLOW) * factor);
+        headingTolerance = TOLERANCE_HEADING_SLOW + ((TOLERANCE_HEADING_FAST - TOLERANCE_HEADING_SLOW) * factor);
+        magnitudeTolerance = TOLERANCE_MAGNITUDE_SLOW + ((TOLERANCE_MAGNITUDE_FAST - TOLERANCE_MAGNITUDE_SLOW) * factor);
+        rotationTolerance = TOLERANCE_ROTATION_SLOW + ((TOLERANCE_ROTATION_FAST - TOLERANCE_ROTATION_SLOW) * factor);
+    }
+
+    /**
+     * Move to the specified pose.
+     *
+     * @param target target pose
+     */
+    private void moveTo(Pose target) {
+        moveTo(target, MAX_SPEED);
+    }
+
+    /**
+     * Move to the specified pose.
+     *
+     * @param target target pose
+     * @param speed  speed to move
+     */
+    private void moveTo(Pose target, double speed ) {
+
+        Logger.debug("target  %s  %s %s", target.toString(), drivePID.toString(), turnPID.toStringDegrees());
+
+        double maxVelocity = drive.getMaxVelocity();
+
+        // Looping until we move the desired pos
+        while (opMode.opModeIsActive() && !interruptAction) {
+
+            Pose current = getPose();
+            double a = target.getX() - current.getX();
+            double b = target.getY() - current.getY();
+            double distance = Math.hypot(a, b);
+            double rotation = AngleUnit.normalizeRadians(current.getHeading() - target.getHeading());
+            double angle = AngleUnit.normalizeRadians(Math.atan2(b, a) - current.getHeading());   // angle is robot relative
+            double sin = Math.sin(angle + (Math.PI / 4));
+            double cos = Math.cos(angle + (Math.PI / 4));
+            double velocityX = localizer.getVelocityX();
+            double velocityY = localizer.getVelocityY();
+            double rotationVelocity = -localizer.getVelocityHeading();
+            double magnitude  = Math.hypot(velocityX, velocityY);
+            double velocityAngle = AngleUnit.normalizeRadians(Math.atan2(velocityY, velocityX) - current.getHeading());   // angle is robot relative;
+            double deltaAngle = AngleUnit.normalizeRadians(angle - velocityAngle);
+
+            // adjust pid input errors to compensate for deceleration from current velocities
+            //double distanceError = distance;
+            //if ((magnitude > SLOW_DRIVE) && (Math.abs(deltaAngle) < Math.PI/6)) {
+            //    distanceError = Math.max(0, distanceError - ((magnitude) * DECELERATION_DRIVE));
+            //}
+            //oldDrivePID.updateError(distanceError);
+            //double power = oldDrivePID.runPIDF();
+
+            double driveDeceleration = magnitude * DECELERATION_DRIVE;
+            if (Math.abs(deltaAngle) > Math.PI/4 * 3)   // 135 degrees
+                driveDeceleration = -driveDeceleration;
+
+            drivePID.updateError(distance, driveDeceleration);
+            double power = drivePID.runPIDF();
+
+            double turnDeceleration = rotationVelocity * DECELERATION_TURN;
+            if (MathUtil.getSign(rotation) != MathUtil.getSign(rotationVelocity))
+                turnDeceleration = -turnDeceleration;
+
+            turnPID.updateError(rotation, turnDeceleration);
+            double turn = turnPID.runPIDF();
+
+            boolean inRange = Math.abs(a) < distanceTolerance && Math.abs(b) < distanceTolerance;
+            boolean onBearing = Math.abs(rotation) <= Math.toRadians(headingTolerance);
+            boolean stopped = Math.abs(magnitude) <= magnitudeTolerance;
+            boolean rotated = Math.abs(rotationVelocity) <= Math.toRadians(rotationTolerance);
+            nearPose = (distance < 5) && (rotation < Math.PI / 18) && (magnitude <= 10) && (Math.abs(rotationVelocity) <= Math.toRadians(10));
+
+            // Scale the wheel velocity factors such that they don't total more the one.
+            if (power + Math.abs(turn) > speed) {
+                double scale = (power + Math.abs(turn)) / speed;
+                power /= scale;
+                turn /= scale;
+            }
+
+            double max = Math.max(Math.abs(sin), Math.abs(cos));
+            double leftFrontPower  = (power * (cos / max) + turn);
+            double rightFrontPower = (power * (sin / max) - turn);
+            double leftRearPower   = (power * (sin / max) + turn);
+            double rightRearPower  = (power * (cos / max) - turn);
+
+            Logger.debug("%s",
+                    String.format("time: %4.0f   ", timeoutTimer.milliseconds()) +
+                    String.format("x %5.1f  y %5.1f  h %5.1f  ", current.getX(), current.getY(), current.getHeading(AngleUnit.DEGREES)) +
+                    String.format("distance: %5.2f %5.2f  ", distance, driveDeceleration) +
+                    String.format("heading: %6.1f %6.1f  ", Math.toDegrees(rotation), Math.toDegrees(turnDeceleration)) +
+                    String.format("a: %5.1f  b: %5.1f  angle: %4.0f  sin: %5.2f  cos: %5.2f  ", a, b, Math.toDegrees(angle), sin, cos) +
+                    String.format("power: %4.2f  turn: %5.2f  ", power, turn) +
+                    String.format("wheels: %5.2f %5.2f %5.2f %5.2f  ", leftFrontPower, rightFrontPower, leftRearPower, rightRearPower) +
+                    String.format("vx: %3.0f  vy: %3.0f  ", velocityX, velocityY) +
+                    String.format("vm: %3.0f  vh: %3.0f  ", magnitude, Math.toDegrees(rotationVelocity)) +
+                    String.format("va: %4.0f  da: %4.0f  ", Math.toDegrees(velocityAngle), Math.toDegrees(deltaAngle)) +
+                    String.format("%s%s%s%s%s  ", (nearPose) ? "n":" ", (inRange) ? "i":" ", (onBearing) ? "o":" " , (stopped) ? "s":" ", (rotated) ? "r":" " )  +
+                    String.format("drive %-50s", drivePID.toString()) +
+                    String.format("turn %-50s", turnPID.toStringDegrees())
+                    //String.format("volts: %4.1f  ", voltageSensor.getVoltage()) +
+                    //String.format("dr: %6.1f %6.1f  ", oldDrivePID.errorDerivative, Math.toDegrees(turnPID.errorDerivative)) +
+                    //String.format("ss: %6.2f  ", Math.toDegrees(turnPID.error - turnPID.previousError)) +
+                    //String.format("%6.3f  ", Math.toDegrees(turnPID.errorSteadyState)) +
+                    //oldDrivePID.pidToString(false)
+            );
+
+            if (inRange && onBearing && stopped && rotated) {
+                break;
+            }
+
+            if (timeout > 0 && timeoutTimer.milliseconds() >= timeout) {
+                Logger.warning("timed out after %5.0f ms", timeout);
+                break;
+            }
+
+            if (!Debug.drive()) {
+                Logger.debug("drive disabled");
+                break;
+            }
+
+            drive.setVelocity(
+                    leftFrontPower * maxVelocity,
+                    rightFrontPower * maxVelocity,
+                    leftRearPower * maxVelocity,
+                    rightRearPower * maxVelocity);
         }
     }
 
@@ -256,9 +390,9 @@ public class DriveControl extends Thread {
 
         timeoutTimer.reset();
         moveInit(true);
-        moveToPose(target);
+        moveTo(target);
         moveInit(false);
-        moveToPose(target);
+        moveTo(target);
 
         drive.stopRobot();
         Pose pose = getPose();
@@ -278,132 +412,25 @@ public class DriveControl extends Thread {
 
         dashboard.setPose(pose);
         dashboard.drawField();
-    }
-
-    /**
-     * Move to the specified pose.
-     *
-     * @param target target pose
-     */
-    private void moveToPose(Pose target) {
-
-        Logger.message("target  x: %3.0f, y: %3.0f, heading: %4.0f  p: %6.3f %6.3f",
-                target.getX(), target.getY(), target.getHeading(AngleUnit.DEGREES), drivePID.getCoefficients().P, turnPID.getCoefficients().P);
-
-        double maxVelocity = drive.getMaxVelocity();
-
-        // Looping until we move the desired pose
-        while (opMode.opModeIsActive() && !interruptAction) {
-
-            Pose current = getPose();
-            double a = target.getX() - current.getX();
-            double b = target.getY() - current.getY();
-            double distance = Math.hypot(a, b);
-            double rotation = AngleUnit.normalizeRadians(current.getHeading() - target.getHeading());
-            double angle = AngleUnit.normalizeRadians(Math.atan2(b, a) - current.getHeading());   // angle is robot relative
-            double sin = Math.sin(angle + (Math.PI / 4));
-            double cos = Math.cos(angle + (Math.PI / 4));
-            double velocityX = localizer.getVelocityX();
-            double velocityY = localizer.getVelocityY();
-            double magnitude  = Math.hypot(velocityX, velocityY);
-            double velocityAngle = Math.atan2(velocityY, velocityX);
-            double deltaAngle = AngleUnit.normalizeRadians(angle - velocityAngle);
-            double rotationVelocity = -localizer.getVelocityHeading();
-
-            // adjust pid input errors to compensate for deceleration from current velocities
-            double distanceError = distance;
-            if ((magnitude > SLOW_DRIVE) && (Math.abs(deltaAngle) < Math.PI/6)) {
-                distanceError = Math.max(0, distanceError - ((magnitude) * DECELERATION_DRIVE));
-            }
-
-            double driveDeceleration = magnitude * DECELERATION_DRIVE;
-            if (Math.abs(deltaAngle) > Math.PI/4 * 3)   // 135 degrees
-                driveDeceleration = -driveDeceleration;
-
-            double turnDeceleration = rotationVelocity * DECELERATION_TURN;
-            if (MathUtil.getSign(rotation) != MathUtil.getSign(rotationVelocity))
-                turnDeceleration = -turnDeceleration;
-
-            drivePID.updateError(distanceError);
-            //double power = drivePID.runPIDF();
-
-            turnPID.updateError(rotation, turnDeceleration);
-            double turn = turnPID.runPIDF();
-
-            testPID.updateError(distance, driveDeceleration);
-            double power = testPID.runPIDF();
-
-            boolean inRange = Math.abs(a) < distanceTolerance && Math.abs(b) < distanceTolerance;
-            boolean onBearing = Math.abs(rotation) <= Math.toRadians(headingTolerance);
-            boolean stopped = Math.abs(magnitude) <= magnitudeTolerance;
-            boolean rotated = Math.abs(rotationVelocity) <= Math.toRadians(rotationTolerance);
-            nearPose = (distance < 5) && (rotation < Math.PI / 18) && (magnitude <= 10) && (Math.abs(rotationVelocity) <= Math.toRadians(10));
-
-            // Scale the wheel velocity factors such that they don't total more the one.
-            if (power + Math.abs(turn) > maxSpeed) {
-                double scale = (power + Math.abs(turn)) / maxSpeed;
-                power /= scale;
-                turn /= scale;
-            }
-
-            double max = Math.max(Math.abs(sin), Math.abs(cos));
-            double leftFrontPower  = (power * (cos / max) + turn);
-            double rightFrontPower = (power * (sin / max) - turn);
-            double leftRearPower   = (power * (sin / max) + turn);
-            double rightRearPower  = (power * (cos / max) - turn);
-
-            drive.setVelocity(
-                    leftFrontPower * maxVelocity,
-                    rightFrontPower * maxVelocity,
-                    leftRearPower * maxVelocity,
-                    rightRearPower * maxVelocity);
-
-            Logger.debug("%s",
-                    String.format("time: %4.0f   ", timeoutTimer.milliseconds()) +
-                    String.format("x %5.1f  y %5.1f  h %5.1f  ", current.getX(), current.getY(), current.getHeading(AngleUnit.DEGREES)) +
-                    String.format("distance: %5.2f %5.2f  ", distance, driveDeceleration) +
-                    String.format("heading: %6.1f %6.1f  ", Math.toDegrees(rotation), Math.toDegrees(turnDeceleration)) +
-                    String.format("a: %5.1f  b: %5.1f  angle: %4.0f  sin: %5.2f  cos: %5.2f  ", a, b, Math.toDegrees(angle), sin, cos) +
-                    String.format("power: %4.2f  turn: %5.2f  ", power, turn) +
-                    String.format("wheels: %5.2f %5.2f %5.2f %5.2f  ", leftFrontPower, rightFrontPower, leftRearPower, rightRearPower) +
-                    String.format("vx: %5.2f  vy: %5.2f  ", velocityX, velocityY) +
-                    String.format("vm: %3.0f  va: %4.0f  vh: %4.0f  ", magnitude, Math.toDegrees(deltaAngle), Math.toDegrees(rotationVelocity)) +
-                    //String.format("volts: %4.1f  ", voltageSensor.getVoltage()) +
-                    String.format("%s%s%s%s%s  ", (nearPose) ? "n":" ", (inRange) ? "i":" ", (onBearing) ? "o":" " , (stopped) ? "s":" ", (rotated) ? "r":" " )  +
-                    //String.format("dr: %6.1f %6.1f  ", drivePID.errorDerivative, Math.toDegrees(turnPID.errorDerivative)) +
-                    //String.format("ss: %6.2f  ", Math.toDegrees(turnPID.error - turnPID.previousError)) +
-                    //String.format("%6.3f  ", Math.toDegrees(turnPID.errorSteadyState)) +
-                    String.format("test %-50s", testPID.pidToString(false)) +
-                    drivePID.pidToString(false)
-            );
-
-            if (inRange && onBearing && stopped && rotated) {
-                break;
-            }
-
-            if (timeout > 0 && timeoutTimer.milliseconds() >= timeout) {
-                Logger.warning("timed out after %5.0f ms", timeout);
-                break;
-            }
-        }
     }
 
     private void followPath() {
 
         dashboard.drawField();
-        for (Pose pose : poses) {
-            dashboard.addWaypoint(pose);
+        for (PathSegment segment : segment) {
+            dashboard.addWaypoint(segment.pose);
         }
 
         timeoutTimer.reset();
         moveInit(true);
-        for (Pose pose : poses) {
-            moveToPose(pose);
+        setTolerances(1);       // least accurate
+        for (PathSegment segment : segment) {
+            moveTo(segment.pose, segment.speed);
         }
-        int count = poses.size();
-        Pose last = poses.get(count-1);
         moveInit(false);
-        moveToPose(last);
+        setTolerances(0);      // most accurate
+        PathSegment last = segment.get(segment.size()-1);
+        moveTo(last.pose, last.speed);
 
         drive.stopRobot();
         Pose pose = getPose();
@@ -411,56 +438,9 @@ public class DriveControl extends Thread {
         double y =  pose.getY();
         double heading = Math.toDegrees(pose.getHeading());
 
-        double targetX = last.getX();
-        double targetY = last.getY();
-        double targetHeading = Math.toDegrees(last.getHeading());
-
-        Logger.info("%s   %s   %s   %s",
-                String.format("to: x %3.0f y %3.0f heading %4.0f", targetX, targetY, targetHeading),
-                String.format("pose: x %5.1f  y %5.1f  heading %5.1f", x, y, heading),
-                String.format("error: x %5.1f  y %5.1f  heading %5.1f", Math.abs(targetX-x), Math.abs(targetY-y), Math.abs(targetHeading-heading)),
-                String.format("time: %4.2f", timeoutTimer.seconds()));
-
-        dashboard.setPose(pose);
-        dashboard.drawField();
-    }
-
-    /**
-     * Move to the specified coordinate and heading
-     */
-    private void moveToPose(Boolean isPath) {
-
-        dashboard.drawField();
-
-        timeoutTimer.reset();
-        if (isPath) {
-            moveInit(true);
-            for (Pose pose : poses) {
-                dashboard.addWaypoint(pose);
-                moveToPose(pose);
-            }
-            int count = poses.size();
-            Pose last = poses.get(count-1);
-            moveInit(false);
-            moveToPose(last);
-
-        } else {
-            dashboard.addWaypoint(target);
-            moveInit(true);
-            moveToPose(target);
-            moveInit(false);
-            moveToPose(target);
-        }
-
-        drive.stopRobot();
-        Pose pose = getPose();
-        double x = pose.getX();
-        double y =  pose.getY();
-        double heading = Math.toDegrees(pose.getHeading());
-
-        double targetX = target.getX();
-        double targetY = target.getY();
-        double targetHeading = Math.toDegrees(target.getHeading());
+        double targetX = last.pose.getX();
+        double targetY = last.pose.getY();
+        double targetHeading = Math.toDegrees(last.pose.getHeading());
 
         Logger.info("%s   %s   %s   %s",
                 String.format("to: x %3.0f y %3.0f heading %4.0f", targetX, targetY, targetHeading),
@@ -484,12 +464,12 @@ public class DriveControl extends Thread {
         Pose target = new Pose(pose.getX() + distance, pose.getY(), pose.getHeading());
 
         moveInit(true);
-        moveToPose(target);
+        moveTo(target);
 
         moveInit(false);
-        moveToPose(target);
+        moveTo(target);
 
-        Logger.message("time: %4.2f", timeoutTimer.seconds());
+        Logger.debug("time: %4.2f", timeoutTimer.seconds());
         drive.stopRobot();
     }
 
@@ -503,12 +483,12 @@ public class DriveControl extends Thread {
         Pose target = new Pose(pose.getX(), pose.getY(), heading);
 
         moveInit(true);
-        moveToPose(target);
+        moveTo(target);
 
         moveInit(false);
-        moveToPose(target);
+        moveTo(target);
 
-        Logger.message("time: %4.2f", timeoutTimer.seconds());
+        Logger.debug("time: %4.2f", timeoutTimer.seconds());
         drive.stopRobot();
     }
 
@@ -560,7 +540,7 @@ public class DriveControl extends Thread {
                 leftRearPower * maxVelocity,
                 rightRearPower * maxVelocity);
 
-        Logger.message("%s",
+        Logger.debug("%s",
                 String.format("x: %5.2f  y: %5.2f  x2: %5.2f  ", x, y, rightX) +
                         String.format("angle: %5.2f (rad)  %4.0f (deg)  ", angle, Math.toDegrees(angle)) +
                         String.format("power: %4.2f  sin: %5.2f  cos: %5.2f  ", power, sin, cos) +
@@ -621,7 +601,7 @@ public class DriveControl extends Thread {
     }
 
     public void moveToPose(double targetX, double targetY, double targetHeading, double timeout) {
-        moveToPose(new Pose(targetX, targetY, targetHeading), timeout);
+    moveToPose(new Pose(targetX, targetY, targetHeading), MAX_SPEED, timeout);
     }
 
     public void moveToPose(Pose target, double timeout) {
@@ -640,17 +620,24 @@ public class DriveControl extends Thread {
         }
     }
 
-    public void followPath (ArrayList<Pose> poses, double timeout) {
+    public void followPath (ArrayList<PathSegment> segment, double timeout) {
         synchronized (this) {
             interruptAction();
-            this.poses = poses;
+            this.segment = segment;
             this.maxSpeed = MAX_SPEED;
-            this.minSpeed = MIN_SPEED;
+            //this.minSpeed = MIN_SPEED;
             this.timeout = timeout;
             driveState = DRIVE_STATE.FOLLOW_PATH;
         }
     }
 
+    /**
+     * Turn the robot bt the specified number of degrees
+     *
+     * @param degrees degrees to turn (positive is counterclockwise.
+     * @param timeout timeout in milliseconds
+     ** @noinspection unused
+     */
     public void turnBy(double degrees, double timeout) {
 
         synchronized (this) {
@@ -727,6 +714,12 @@ public class DriveControl extends Thread {
 
     }
 
+    /**
+     * Check if the robot is near the target destination
+     *
+     * @return true if near target destination
+     * @noinspection unused
+     */
     public boolean nearPose() {
         if (driveState == DRIVE_STATE.IDLE) {
             return true;
@@ -747,18 +740,18 @@ public class DriveControl extends Thread {
     /**
      * Wait until the robot stops moving
      */
-    public void waitUntilNotMoving () {
-        Logger.message("waiting, driveControl is %b", isBusy());
-        if (!isBusy() )
-            Logger.warning("driveControl is not busy");
+    public void waitUntilNotMoving (double timeout) {
+        Logger.debug("waiting, driveControl is %b", isBusy());
+        //if (!isBusy() )
+        //    Logger.warning("driveControl is not busy");
         timer.reset();
         while (isBusy() &&  opMode.opModeIsActive()) {
-            if (timer.milliseconds() > 3000) {
+            if (timer.milliseconds() > timeout) {
                 Logger.warning("driveControl timed out");
                 break;
             }
         }
-        Logger.message("done waiting, time: %5.0f", timer.milliseconds());
+        Logger.debug("done waiting, time: %5.0f", timer.milliseconds());
     }
 
     public void poseTest(Pose target) {
@@ -779,8 +772,8 @@ public class DriveControl extends Thread {
         turnPID.updateError(headingError);
         double turn = turnPID.runPIDF();
 
-        drivePID.updateError(distance);
-        double power = drivePID.runPIDF();
+        oldDrivePID.updateError(distance);
+        double power = oldDrivePID.runPIDF();
 
         // If the heading error is greater than 45 degrees then give the heading error greater weight
         if (Math.abs(headingError) < Math.toRadians(45))  {
@@ -814,9 +807,10 @@ public class DriveControl extends Thread {
         ElapsedTime timer = new ElapsedTime();
         double maxVelocity = drive.getMaxVelocity();
         double targetVelocity = maxVelocity * percent;
-        Logger.message("percent %5.0f   velocity %5.2f", percent*100, targetVelocity);
+        Logger.debug("percent %5.0f   velocity %5.2f", percent*100, targetVelocity);
 
         double currentVelocity;
+        double lastVelocity = 0;
         double accelerationTime = 0;
         double velocity =  Math.min(maxVelocity, targetVelocity);
 
@@ -853,6 +847,7 @@ public class DriveControl extends Thread {
             currentVelocity = drive.getCurrentVelocity();
             Pose pose = getPose();
             if (accelerate && currentVelocity >= targetVelocity) {
+                // has the target velocity been reached?
                 drive.setVelocity(0);
                 start = pose;
                 accelerationTime = timer.seconds();
@@ -863,8 +858,18 @@ public class DriveControl extends Thread {
                 powerOff = true;
 
             } else if ((! accelerate) && (Math.abs(currentVelocity) <= 10)) {
+                // has the robot stopped, more or less?
                 stop = getPose();
                 done = true;
+            }
+            if ((! accelerate) && currentVelocity > lastVelocity) {
+                // is the robot still accelerating, with the power off?
+                start = pose;
+                accelerationTime = timer.seconds();
+                magnitude  = Math.hypot(localizer.getVelocityX(), localizer.getVelocityY());
+                rotationVelocity = localizer.getVelocityHeading();
+                angle = Math.toDegrees(Math.atan2(localizer.getVelocityY(), localizer.getVelocityX()));
+                lastVelocity = currentVelocity;
             }
             Logger.verbose("%s",
                     String.format("x %5.1f  y %5.1f  h %6.1f  ", pose.getX(), pose.getY(), pose.getHeading(AngleUnit.DEGREES)) +
@@ -874,6 +879,7 @@ public class DriveControl extends Thread {
                     String.format("vx %6.2f  ", localizer.getVelocityX()) +
                     String.format("vy %6.2f  ", localizer.getVelocityY()) +
                     String.format("vh %6.2f  ", Math.toDegrees(localizer.getVelocityHeading())) +
+                    String.format("magnitude %4.0f  ", Math.hypot(localizer.getVelocityX(), localizer.getVelocityY())) +
                     String.format("%s  ", powerOff ? "power off":""));
             powerOff = false;
 

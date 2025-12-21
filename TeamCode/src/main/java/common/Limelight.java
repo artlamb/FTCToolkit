@@ -35,6 +35,7 @@ public class Limelight {
      *
      * @param heading heading -180 to 180
      * @return pose - origin is center to the field
+     * @noinspection unused
      */
     public Pose getPosition (double heading) {
 
@@ -63,7 +64,6 @@ public class Limelight {
         return pose;
     }
 
-
     /**
      * Get the field relative pose of the robot using Apriltags.
      *
@@ -91,6 +91,7 @@ public class Limelight {
         }
         return pose;
     }
+
     public double GetTx () {
         for (int i = 0; i < 3; i++) {
             LLResult result = limelight.getLatestResult();
@@ -104,6 +105,12 @@ public class Limelight {
         return 0;
     }
 
+    /**
+     * Return the percentage the the apriltag represents in the entire field
+     * on vision
+     * @return percentage of field on vision
+     * @noinspection unused
+     */
     public double GetTargetArea() {
         LLResult result = limelight.getLatestResult();
         if (result.isValid()) {
