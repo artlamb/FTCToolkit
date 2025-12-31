@@ -22,15 +22,15 @@ public class Launcher extends Thread {
     public static double TRIGGER_COCK   = 0.460;
     public static double TRIGGER_FIRE   = 0.250;
 
-    public static double LOADER_HOLD    = 0.30;
-    public static double LOADER_RELEASE = 0.40;
+    public static double GATE_CLOSED = 0.30;
+    public static double GATE_OPENED = 0.40;
 
     public static long   GATE_REACT_TIME = 200;               // time in millisecond for the loader to open/close
     public static long   TRIGGER_FIRE_TIME = 200;               // time in millisecond to pull the trigger
     public static long   TRIGGER_COCK_TIME = 150;               // time in millisecond to cock the trigger
     public static long   ARTIFACT_LOAD_TIME = 300;
 
-   private boolean loaderOpen = true;
+   private boolean gateOpen = true;
 
     private enum LAUNCHER_STATE {IDLE, FIRE, FIRE_ALL }
     private LAUNCHER_STATE state = LAUNCHER_STATE.IDLE;
@@ -95,7 +95,7 @@ public class Launcher extends Thread {
         loader = opMode.hardwareMap.get(Servo.class, Config.LOADER);
 
         trigger.setPosition(TRIGGER_COCK);
-        loader.setPosition(LOADER_RELEASE);
+        loader.setPosition(GATE_OPENED);
 
         this.setName("launcher");
     }
@@ -217,7 +217,7 @@ public class Launcher extends Thread {
         long startTime = System.currentTimeMillis();
 
         // hold other artifacts
-        loader.setPosition(LOADER_HOLD);
+        loader.setPosition(GATE_CLOSED);
 
         // wait for the launcher to reach the desired launch angle.
         while (true) {
@@ -273,7 +273,7 @@ public class Launcher extends Thread {
         trigger.setPosition(TRIGGER_COCK);
         delay(TRIGGER_COCK_TIME);
 
-        loader.setPosition(LOADER_RELEASE);
+        loader.setPosition(GATE_OPENED);
         delay(GATE_REACT_TIME);
     }
 
@@ -290,20 +290,20 @@ public class Launcher extends Thread {
 
     }
 
-    public void closeLoader() {
-        loader.setPosition(LOADER_HOLD);
-        loaderOpen = false;
+    public void closeGate() {
+        loader.setPosition(GATE_CLOSED);
+        gateOpen = false;
         delay(GATE_REACT_TIME);
     }
 
-    public void openLoader() {
-        loader.setPosition(LOADER_RELEASE);
-        loaderOpen = true;
+    public void openGate() {
+        loader.setPosition(GATE_OPENED);
+        gateOpen = true;
         delay(GATE_REACT_TIME);
     }
 
-    public boolean loaderIsOpen() {
-        return loaderOpen;
+    public boolean isGateOpen() {
+        return gateOpen;
     }
 
     public void pullTrigger() {

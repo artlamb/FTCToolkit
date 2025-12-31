@@ -180,6 +180,10 @@ public class Navigate {
      * Draw the paths on the FTC Dashboard field view.
      */
     public void drawPaths() {
+
+        if (! Debug.drawPaths())
+            return;
+
         Dashboard dashboard = new Dashboard();
 
         dashboard.drawField();

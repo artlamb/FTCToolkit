@@ -11,29 +11,36 @@ import utils.PoseData;
 public class Auto {
 
     public static double MAX_SPEED = 0.60;
-    public static double LOW_SPEED = 0.30;
+    public static double LOW_SPEED = 0.20;
 
-    public static PoseData START_AUDIENCE = new PoseData(12.25, -62,   90.0);
-    public static PoseData START_GOAL =     new PoseData(50.5,  50.5,  45.0);
-    public static PoseData SHOOT =          new PoseData(23.5,  23.5,  45.0);
-    public static PoseData ARTIFACT =       new PoseData(27.5,  11.75, 0);
-    public static PoseData PARK_AUDIENCE =  new PoseData(12.25, -36,   0.0);
-    public static PoseData PARK_GOAL =      new PoseData(23.5,  -12,   0.0);
+    public static PoseData START_AUDIENCE = new PoseData(12.25, -62,    90);
+    public static PoseData START_GOAL =     new PoseData(50.50, 50.50,  45);
+    public static PoseData START_OBELISK =  new PoseData(23.50, 62,     90);
+    public static PoseData SHOOT =          new PoseData(23.50, 23.50,  45);
+    public static PoseData ARTIFACT =       new PoseData(23.50, 11.75,  0);
+    public static PoseData PARK_AUDIENCE =  new PoseData(12.25, -36,    0);
+    public static PoseData PARK_GOAL =      new PoseData(23.50, -12,    0);
 
-    public enum Alliance { BLUE, RED }
+    public enum Alliance {BLUE, RED}
+
     public Alliance alliance;
 
-    public enum StartPosition { GOAL, AUDIENCE }
+    public enum StartPosition {GOAL, AUDIENCE, OBELISK}
+
     public StartPosition startPosition;
 
-    public enum Order { TOP, MIDDLE, BOTTOM }
+    public enum Order {TOP, MIDDLE, BOTTOM}
+
     public Order[] order;
 
-    public enum PathState { START, SHOOT, ARTIFACT_1, ARTIFACT_2, ARTIFACT_3, PARK, UNKNOWN ;
+    public enum PathState {
+        START, SHOOT, ARTIFACT_1, ARTIFACT_2, ARTIFACT_3, PARK, UNKNOWN;
+
         public static PathState get(int index) {
             return values()[index];
         }
     }
+
     private int pathIndex = 0;
 
     private double launcherSpeed = 28;
@@ -46,23 +53,34 @@ public class Auto {
     private final LinearOpMode opMode;
     private final Robot robot;
     private final DriveControl driveControl;
+    private final Limelight limelight;
     private final Navigate navigate;
+    private final Intake intake;
+    private final Hopper hopper;
+
 
     public Auto(LinearOpMode opMode) {
 
         this.opMode = opMode;
         robot = new Robot(opMode);
+
+        intake = new Intake(opMode);
+        hopper = new Hopper(opMode);
+
         driveControl = robot.getDriveControl();
         driveControl.reset();
         navigate = new Navigate(opMode, driveControl);
+
+        limelight = robot.getLimelight();
+        limelight.setPipeline(Limelight.Pipeline.LOCATION);
     }
 
-    public Auto( LinearOpMode opMode,
-                 Alliance alliance,
-                 StartPosition startPosition,
-                 Order[] order,
-                 double launcherSpeed,
-                 long delay) {
+    public Auto(LinearOpMode opMode,
+                Alliance alliance,
+                StartPosition startPosition,
+                Order[] order,
+                double launcherSpeed,
+                long delay) {
 
         this(opMode);
         this.alliance = alliance;
@@ -96,7 +114,7 @@ public class Auto {
         opMode.waitForStart();
 
         if (delay > 0)
-            opMode.sleep(delay*1000);
+            opMode.sleep(delay * 1000);
 
         running = true;
         elapsedTime.reset();
@@ -115,14 +133,19 @@ public class Auto {
                     waitUntilNotMoving();
                     robot.fireAll();
                     waitUntilRobotIdIdle();
+                    setOdometer();
                     followPath();
                     break;
 
                 case ARTIFACT_1:
                 case ARTIFACT_2:
                 case ARTIFACT_3:
+                    hopper.leverDown();
+                    intake.on();
                     waitForButtonPress();
                     waitUntilNotMoving();
+                    intake.off();
+                    hopper.leverUp();
                     followPath();
                     break;
 
@@ -144,11 +167,13 @@ public class Auto {
         double xSign = (alliance == Alliance.RED) ? 1 : -1;
 
         // Create the pose for a starting position at the goal or by the audience.
-        Pose start;
+        Pose start = null;
         if (startPosition == StartPosition.GOAL) {
             heading = (alliance == Alliance.RED) ? START_GOAL.h : START_GOAL.h + 90;
             start = createPose(START_GOAL.x * xSign, START_GOAL.y, heading);
-        } else  {
+        } else if (startPosition == StartPosition.OBELISK) {
+             start = createPose(START_OBELISK.x * xSign, START_OBELISK.y, START_OBELISK.h);
+        } else if (startPosition == StartPosition.AUDIENCE) {
             start = createPose(START_AUDIENCE.x * xSign, START_AUDIENCE.y, START_AUDIENCE.h);
         }
         navigate.addPath(getPathName(PathState.START), MAX_SPEED, start);
@@ -183,7 +208,7 @@ public class Auto {
                     return;
             }
             Pose artifactStart = createPose(x1 * xSign, y2, heading);
-            Pose artifactEnd   = createPose(x2 * xSign, y2, heading);
+            Pose artifactEnd = createPose(x2 * xSign, y2, heading);
             navigate.addPath(getPathName(pathState), MAX_SPEED, artifactStart);
             navigate.appendPose(pathState.name(), LOW_SPEED, artifactEnd);
             navigate.addPath(getPathName(PathState.SHOOT), MAX_SPEED, shoot);
@@ -193,7 +218,7 @@ public class Auto {
         Pose park;
         if (startPosition == StartPosition.GOAL) {
             park = createPose(PARK_GOAL.x * xSign, PARK_GOAL.y, PARK_GOAL.h);
-        } else  {
+        } else {
             park = createPose(PARK_AUDIENCE.x * xSign, PARK_AUDIENCE.y, PARK_AUDIENCE.h);
         }
         navigate.addPath(getPathName(PathState.PARK), MAX_SPEED, park);
@@ -213,7 +238,7 @@ public class Auto {
         navigate.addPath(getPathName(pathState), MAX_SPEED, createPose(x, y, heading));
     }
 
-    public void setStartPose (double x, double y, double heading) {
+    public void setStartPose(double x, double y, double heading) {
         navigate.setStartingPose(createPose(x, y, heading));
     }
 
@@ -221,7 +246,7 @@ public class Auto {
         return String.format("%s", pathState);
     }
 
-    private PathState getPathState (String pathName) {
+    private PathState getPathState(String pathName) {
         for (PathState state : PathState.values()) {
             if (state.name().equals(pathName)) {
                 return state;
@@ -240,7 +265,7 @@ public class Auto {
         robot.setLauncherSpeed(speed);
     }
 
-    public void waitUntilNotMoving () {
+    public void waitUntilNotMoving() {
         driveControl.waitUntilNotMoving(5000);
     }
 
@@ -273,7 +298,7 @@ public class Auto {
 
     private void waitForButtonPress() {
 
-        if (! Debug.waitForButtonPress()) return;
+        if (!Debug.waitForButtonPress()) return;
 
         Logger.message("waiting for button press");
 
@@ -282,7 +307,7 @@ public class Auto {
             navigate.displayPose();
 
             if (pressed) {
-                if (! opMode.gamepad1.x) {
+                if (!opMode.gamepad1.x) {
                     break;
                 }
             } else if (opMode.gamepad1.x) {
@@ -292,5 +317,20 @@ public class Auto {
         Logger.message("done waiting for button press");
     }
 
-}
+    private void setOdometer() {
 
+        int blueID = 20;
+        int redID = 24;
+        Pose current;
+
+        int id = limelight.GetAprilTagID();
+        if ((id == blueID && alliance == Alliance.BLUE) || (id == redID) && alliance == Alliance.RED) {
+            Logger.message("april tag found with id: %d", id);
+            current = limelight.getPosition();
+            if (current != null) {
+                Logger.message("odometer's position set from: %s to: %s", driveControl.getPose(), current);
+                driveControl.setPose(current);
+            }
+        }
+    }
+}

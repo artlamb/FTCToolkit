@@ -137,10 +137,10 @@ public class TeleOpComp extends LinearOpMode {
 
         } else if (gamepad1.xWasPressed() || gamepad2.xWasPressed()) {
             // open /close the loader gate
-            if (launcher.loaderIsOpen()) {
-                launcher.closeLoader();
+            if (launcher.isGateOpen()) {
+                launcher.closeGate();
             } else {
-                launcher.openLoader();
+                launcher.openGate();
             }
 
         } else if (gamepad1.yWasPressed() || gamepad2.yWasPressed()) {

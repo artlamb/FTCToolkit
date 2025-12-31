@@ -64,7 +64,6 @@ public class Robot extends Thread {
         }
 
         limelight = new Limelight(opMode);
-        //limelight.setPipeline(Limelight.Pipeline.APRIL_TAG);
 
         //colorSensor = new ColorSensor(opMode);
         //colorSensor.enable(true);
@@ -216,13 +215,17 @@ public class Robot extends Thread {
         return okToMove.availablePermits() == 1;
     }
 
-    public void waitUntilOkToMove () {
-        if (okToMove.availablePermits() != 1) {
-            Logger.message("wait until ok to move");
-            while (okToMove.availablePermits() != 1)
-                delay(1);                       // ToDo this a better why
-            Logger.message("ok to move, continue");
+    private void waitUntilOkToMove() {
+        Logger.message("waiting");
+        long start = System.currentTimeMillis();
+        while (!okToMove() && opMode.opModeIsActive()) {
+            if (System.currentTimeMillis() - start > 5000) {
+                Logger.warning("wait until ok to move timed out");
+                break;
+            }
+            Thread.yield();
         }
+        Logger.message("done waiting, time: %5d", System.currentTimeMillis()-start);
     }
 
     public boolean emergencyStop() {

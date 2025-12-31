@@ -46,6 +46,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 
+import common.Limelight;
 import common.Navigate;
 import common.Robot;
 import utils.Pose;
@@ -67,30 +68,27 @@ public class PathTest extends LinearOpMode {
     public static boolean READ_POSES = false;
     public static boolean WRITE_POSES = false;
     public static double MAX_SPEED = 0.60;
+    public static double LOW_SPEED = 0.20;
+
     public static PoseData waypoint = new PoseData(0, 0, 0, Waypoint.UNKNOWN);
 
     private final PoseData edit = new PoseData(waypoint.x, waypoint.y, waypoint.h, waypoint.desc);
     private final Mode MODE = Mode.AUTO_PATHS;
 
     private final PoseData[] waypoints = {
-            new PoseData(-50.5, 50.5,  135, Waypoint.START),
-            new PoseData(-23.5, 23.5,  135, Waypoint.SHOOT_1),
-            /*
-            new PoseData(0, 0,  0, Waypoint.PICKUP_1),
-            new PoseData(0, 0,  0, Waypoint.PICKUP_1),
-            new PoseData(0, 0,  0, Waypoint.SHOOT_2),
-            new PoseData(0, 0,  0, Waypoint.PICKUP_2),
-            new PoseData(0, 0,  0, Waypoint.PICKUP_2),
-            new PoseData(0, 0,  0, Waypoint.SHOOT_3),
-            new PoseData(0, 0,  0, Waypoint.PICKUP_3),
-            new PoseData(0, 0,  0, Waypoint.PICKUP_3),
-            new PoseData(10, 0,  0, Waypoint.PARK)
-                    */
+            //new PoseData(-50.5, 50.5,   135, MAX_SPEED, Waypoint.START),
+            new PoseData(-23.5, 62.0, 90, MAX_SPEED, Waypoint.START),
+            new PoseData(-23.5, 23.5, 135, MAX_SPEED, Waypoint.SHOOT_1),
+            new PoseData(-30.5, 11.75,  0,   MAX_SPEED, Waypoint.PICKUP_1),
+            //new PoseData(-23.5, -11.75,  0,   MAX_SPEED, Waypoint.PICKUP_1),
+            //new PoseData(-47,   11.75,  0,   LOW_SPEED, Waypoint.PICKUP_END_1),
     };
 
     private DriveControl driveControl;
     private DriveGamepad driveGamepad;
     private Navigate navigate;
+    private Limelight limelight;
+
 
     @Override
     public void runOpMode() {
@@ -150,6 +148,9 @@ public class PathTest extends LinearOpMode {
         driveGamepad = new DriveGamepad(this, driveControl);
         navigate = new Navigate(this, driveControl);
 
+        limelight = new Limelight(this);
+        limelight.setPipeline(Limelight.Pipeline.LOCATION);
+
     }
 
     private void editWaypoint () {
@@ -174,7 +175,7 @@ public class PathTest extends LinearOpMode {
                 }
                 displayPoses();
                 Pose pose = createPose(data.x, data.y, data.h);
-                navigate.setPath(data.desc.name(), MAX_SPEED,pose);
+                navigate.setPath(data.desc.name(), MAX_SPEED, pose);
                 navigate.drawPaths();
                 return;
             }
@@ -190,9 +191,9 @@ public class PathTest extends LinearOpMode {
         for (PoseData data: waypoints) {
             Pose pose = createPose(data.x, data.y, data.h);
             if (navigate.pathExists(data.desc.name())) {
-                navigate.appendPose(data.desc.name(), MAX_SPEED, pose);
+                navigate.appendPose(data.desc.name(), data.speed, pose);
             } else {
-                navigate.addPath(data.desc.name(), MAX_SPEED, pose);
+                navigate.addPath(data.desc.name(), data.speed, pose);
             }
         }
     }
@@ -206,6 +207,7 @@ public class PathTest extends LinearOpMode {
         for (int index = 1; index < navigate.numberOfPaths(); index++) {
             navigate.followPath(index);
             waitUntilNotMoving();
+            displayPose();
         }
     }
 
@@ -256,13 +258,17 @@ public class PathTest extends LinearOpMode {
     private void displayPose() {
 
         Pose pose = driveControl.getPose();
+        Pose current = limelight.getPosition();
 
-        String str1 = String.format("x %5.1f  y %5.1f  heading %5.1f", pose.getX(), pose.getY(), Math.toDegrees(pose.getHeading()));
+        String str1 = String.format("odometer: %s", pose.toString());
+        String str2 = String.format("limelight: %s",
+                (current == null) ? "april tab not visible" : current.toString());
 
         telemetry.addData("pose", str1);
+        telemetry.addData("pose", str2);
         telemetry.update();
 
-        Logger.message("pose: %s", str1);
+        Logger.info("%s %s", str1, str2);
     }
 
     private void displayPoses () {

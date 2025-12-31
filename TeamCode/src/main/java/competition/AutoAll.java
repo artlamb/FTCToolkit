@@ -15,7 +15,7 @@ public class AutoAll extends LinearOpMode {
     public static long delay = 0;
     public static double launcherSpeed = 28;
     public static Auto.Alliance alliance = Auto.Alliance.BLUE;
-    public static Auto.StartPosition startPosition = Auto.StartPosition.GOAL;
+    public static Auto.StartPosition startPosition = Auto.StartPosition.OBELISK;
     public Auto.Order[] order = { Auto.Order.TOP, Auto.Order.MIDDLE, Auto.Order.BOTTOM };
 
     @Override

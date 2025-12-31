@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 public class Intake {
 
     private final DcMotorEx intake;
-    private double speed = 0.9;
+    private double speed = 0.8;
     private boolean running = false;
 
     public Intake(LinearOpMode opMode) {
@@ -39,5 +39,15 @@ public class Intake {
 
     public void setSpeed(double speed) {
         this.speed = speed;
+    }
+
+    public void off() {
+        intake.setPower(0);
+        running = false;
+    }
+
+    public void on() {
+        intake.setPower(speed);
+        running = true;
     }
 }

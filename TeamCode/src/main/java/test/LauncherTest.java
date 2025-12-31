@@ -2,8 +2,6 @@ package test;
 
 import android.annotation.SuppressLint;
 
-import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -11,7 +9,6 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
-import common.ColorSensor;
 import common.Launcher;
 import common.Logger;
 import utils.Increment;
@@ -84,10 +81,10 @@ public class LauncherTest extends LinearOpMode {
             }
 
         } else if (gamepad.xWasPressed()) {
-            if (launcher.loaderIsOpen()) {
-                launcher.closeLoader();
+            if (launcher.isGateOpen()) {
+                launcher.closeGate();
             } else {
-                launcher.openLoader();
+                launcher.openGate();
             }
 
         } else if (gamepad.yWasPressed()) {

@@ -12,7 +12,7 @@ public class Hopper {
 
     public Hopper(LinearOpMode opMode) {
         lever = opMode.hardwareMap.get(Servo.class, Config.LEVER);
-        leverUp();
+        leverDown();
     }
 
     public void leverDown() {

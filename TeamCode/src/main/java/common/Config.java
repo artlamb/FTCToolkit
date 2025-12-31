@@ -22,20 +22,14 @@ public class Config {
     //public static final String DISTANCE_SENSOR     = "distanceSensor";
     public static final String LEFT_FRONT_SENSOR   = "leftFrontSensor";
     public static final String RIGHT_FRONT_SENSOR  = "rightFrontSensor";
-
-    public static final String LIFTER_LEFT         = "lifterLeft";
-    public static final String LIFTER_RIGHT        = "lifterRight";
     public static final String INTAKE              = "intake";
-    public static final String ARM                 = "arm";
-    public static final String PICKER_WRIST        = "pickerWrist";
-    public static final String PICKER_FINGERS      = "pickerFingers";
-    public static final String PICKER_YAW          = "pickerYaw";
-    public static final String DROPPER_WRIST       = "dropperWrist";
-    public static final String DROPPER_FINGERS     = "dropperFingers";
-    public static final String LAUNCHER_LEFT       = "launcherLeft";
-    public static final String LAUNCHER_RIGHT      = "launcherRight";
-    public static final String LINEAR_SERVO        = "linearServo";
+    public static final String LEVER               = "lever";
     public static final String TRIGGER             = "trigger";
     public static final String LOADER              = "loader";
 
+    public static final String LIFTER_LEFT         = "lifterLeft";
+    public static final String LIFTER_RIGHT        = "lifterRight";
+    public static final String LAUNCHER_LEFT       = "launcherLeft";
+    public static final String LAUNCHER_RIGHT      = "launcherRight";
+    public static final String LINEAR_SERVO        = "linearServo";
 }

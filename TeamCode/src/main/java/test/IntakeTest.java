@@ -9,7 +9,12 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
-import common.Config;
+import common.Drive;
+import common.DriveControl;
+import common.DriveGamepad;
+import common.Floodgate;
+import common.Hopper;
+import common.Intake;
 import common.Logger;
 import utils.Increment;
 
@@ -18,9 +23,14 @@ import utils.Increment;
 
 public class IntakeTest extends LinearOpMode {
 
-    private DcMotorEx intake;
+    private Drive drive;
+    private DriveControl driveControl;
+    private Intake intake;
+    private Hopper hopper;
     Increment speedIncrement;
     double speed = 0.9;
+    Floodgate floodgate;
+    long time;
 
     Telemetry.Item speedMsg;
 
@@ -42,7 +52,19 @@ public class IntakeTest extends LinearOpMode {
 
     private void initialize() {
 
-        intake = hardwareMap.get(DcMotorEx.class, Config.INTAKE);
+        intake = new Intake(this);
+        hopper = new Hopper(this);
+        floodgate = new Floodgate(this);
+
+        Drive drive = new Drive(this);
+
+        DriveControl driveControl = new DriveControl(this, drive);
+        driveControl.reset();
+        driveControl.start();
+
+        DriveGamepad driveGamepad = new DriveGamepad(this, driveControl);
+        driveGamepad.start();
+
         speedIncrement = new Increment(0.01, 0.02, 0.05);
 
         speedMsg = telemetry.addData("Motor speed", 0);
@@ -59,12 +81,17 @@ public class IntakeTest extends LinearOpMode {
     private void handleGamepad() {
         Gamepad gamepad = gamepad1;
 
+        if (System.currentTimeMillis() - this.time > 1000) {
+            time = System.currentTimeMillis();
+            //Logger.message("current %f", floodgate.getCurrent());
+            //floodgate.getCurrent();
+        }
+
         if (gamepad.aWasPressed()) {
-            if (intake.getPower() > 0)  {
-                intake.setPower(0);
-            } else {
-                intake.setPower(speed);
-            }
+            intake.intakeToggle();
+
+        } else if (gamepad.bWasPressed()) {
+            hopper.leverToggle();
 
         } else if (gamepad.left_bumper) {
             // increase motor speed
@@ -73,7 +100,7 @@ public class IntakeTest extends LinearOpMode {
                 speed = Math.max(speed - speedIncrement.get(), 0);
                 setDisplaySpeed();
                 telemetry.update();
-                intake.setPower(speed);
+                intake.setSpeed(speed);
             }
 
         } else if (gamepad.right_bumper) {
@@ -84,7 +111,7 @@ public class IntakeTest extends LinearOpMode {
                 setDisplaySpeed();
                 telemetry.update();
             }
-            intake.setPower(speed);
+            intake.setSpeed(speed);
         }
     }
 

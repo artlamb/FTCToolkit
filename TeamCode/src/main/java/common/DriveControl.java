@@ -37,7 +37,7 @@ public class DriveControl extends Thread {
     public static double MIN_SPEED       = 0.05;
     public static double MIN_TURN_SPEED  = 0.10;
 
-    public static double TOLERANCE_DISTANCE_FAST = 10;              // in inches
+    public static double TOLERANCE_DISTANCE_FAST = 1;              // in inches
     public static double TOLERANCE_DISTANCE_SLOW = 0.5;
 
     public static double TOLERANCE_HEADING_FAST = 20;               // in degrees

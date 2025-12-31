@@ -15,7 +15,7 @@ public final class Debug {
     public static boolean drive = true;
     public static boolean launcher = true;
     public static boolean dashboard = true;
-    public static boolean drawPaths = true;
+    public static boolean drawPaths = false;
     public static boolean waitForButtonPress = false;
 
 
