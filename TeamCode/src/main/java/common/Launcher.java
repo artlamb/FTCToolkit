@@ -22,8 +22,8 @@ public class Launcher extends Thread {
     public static double TRIGGER_COCK   = 0.460;
     public static double TRIGGER_FIRE   = 0.250;
 
-    public static double GATE_CLOSED = 0.30;
-    public static double GATE_OPENED = 0.40;
+    public static double GATE_OPENED = 0.135;
+    public static double GATE_CLOSED = 0.425;
 
     public static long   GATE_REACT_TIME = 200;               // time in millisecond for the loader to open/close
     public static long   TRIGGER_FIRE_TIME = 200;               // time in millisecond to pull the trigger
@@ -304,6 +304,14 @@ public class Launcher extends Thread {
 
     public boolean isGateOpen() {
         return gateOpen;
+    }
+
+    public void gateToggle() {
+        if (gateOpen) {
+            closeGate();
+        } else {
+            openGate();
+        }
     }
 
     public void pullTrigger() {

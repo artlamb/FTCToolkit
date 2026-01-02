@@ -53,19 +53,20 @@ public class Auto {
     private final LinearOpMode opMode;
     private final Robot robot;
     private final DriveControl driveControl;
-    private final Limelight limelight;
     private final Navigate navigate;
     private final Intake intake;
     private final Hopper hopper;
-
+    private final Launcher launcher;
+    private final Limelight limelight;
 
     public Auto(LinearOpMode opMode) {
 
         this.opMode = opMode;
         robot = new Robot(opMode);
 
-        intake = new Intake(opMode);
-        hopper = new Hopper(opMode);
+        intake = robot.getIntake();
+        hopper = robot.getHopper();
+        launcher = robot.getLauncher();
 
         driveControl = robot.getDriveControl();
         driveControl.reset();
@@ -141,11 +142,13 @@ public class Auto {
                 case ARTIFACT_2:
                 case ARTIFACT_3:
                     hopper.leverDown();
+                    launcher.closeGate();
                     intake.on();
                     waitForButtonPress();
                     waitUntilNotMoving();
                     intake.off();
                     hopper.leverUp();
+                    launcher.openGate();
                     followPath();
                     break;
 

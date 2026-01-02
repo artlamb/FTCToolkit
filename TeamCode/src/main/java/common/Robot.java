@@ -27,7 +27,10 @@ public class Robot extends Thread {
     private DriveGamepad    driveGamepad;
     private DriveControl    driveControl;
     private Launcher        launcher;
+    private Intake          intake;
+    private Hopper          hopper;
     private Limelight       limelight;
+
     //private ColorSensor     colorSensor;
 
     private final LinearOpMode opMode;
@@ -57,13 +60,16 @@ public class Robot extends Thread {
         driveGamepad = new DriveGamepad(opMode, driveControl);
 
         try {
+            limelight = new Limelight(opMode);
+            intake = new Intake(opMode);
+            hopper = new Hopper(opMode);
+
             launcher = new Launcher(opMode);
             launcher.start();
+
         } catch (Exception e) {
             Logger.error(e, "hardware not found", 2);
         }
-
-        limelight = new Limelight(opMode);
 
         //colorSensor = new ColorSensor(opMode);
         //colorSensor.enable(true);
@@ -246,6 +252,18 @@ public class Robot extends Thread {
 
     public Limelight getLimelight() {
         return limelight;
+    }
+
+    public Intake getIntake() {
+        return intake;
+    }
+
+    public Hopper getHopper() {
+        return hopper;
+    }
+
+    public Launcher getLauncher() {
+        return launcher;
     }
 
 } // end of class

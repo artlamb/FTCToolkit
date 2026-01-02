@@ -3,13 +3,15 @@ package competition;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import common.Auto;
 import common.Logger;
 import utils.PoseData;
 
-@Autonomous(name="Auto Blue Delay", group="Competition")
+@Disabled
+@Autonomous(name="Auto Blue Audience", group="Competition")
 @com.acmerobotics.dashboard.config.Config
 
 public class AutoBlueDelay extends LinearOpMode {

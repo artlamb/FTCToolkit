@@ -7,8 +7,8 @@ public class Hopper {
 
     private final Servo lever;
     private boolean open = false;
-    protected final double leverUpPosition = 0.7;
-    protected double levelDownPosition = 0.345;
+    protected final double leverUpPosition = 0.74;
+    protected double levelDownPosition = 0.30;
 
     public Hopper(LinearOpMode opMode) {
         lever = opMode.hardwareMap.get(Servo.class, Config.LEVER);

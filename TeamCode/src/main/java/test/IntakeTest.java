@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -15,6 +14,7 @@ import common.DriveGamepad;
 import common.Floodgate;
 import common.Hopper;
 import common.Intake;
+import common.Launcher;
 import common.Logger;
 import utils.Increment;
 
@@ -23,10 +23,10 @@ import utils.Increment;
 
 public class IntakeTest extends LinearOpMode {
 
-    private Drive drive;
-    private DriveControl driveControl;
     private Intake intake;
     private Hopper hopper;
+    private Launcher launcher;
+
     Increment speedIncrement;
     double speed = 0.9;
     Floodgate floodgate;
@@ -54,6 +54,8 @@ public class IntakeTest extends LinearOpMode {
 
         intake = new Intake(this);
         hopper = new Hopper(this);
+        launcher = new Launcher(this);
+
         floodgate = new Floodgate(this);
 
         Drive drive = new Drive(this);
@@ -92,6 +94,9 @@ public class IntakeTest extends LinearOpMode {
 
         } else if (gamepad.bWasPressed()) {
             hopper.leverToggle();
+
+        } else if (gamepad.yWasPressed()) {
+            launcher.gateToggle();
 
         } else if (gamepad.left_bumper) {
             // increase motor speed
