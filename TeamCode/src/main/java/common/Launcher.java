@@ -19,14 +19,14 @@ public class Launcher extends Thread {
     public static double pidP = 40.0;
     public static double pidI = 1.0;
 
-    public static double TRIGGER_COCK   = 0.460;
-    public static double TRIGGER_FIRE   = 0.250;
+    public static double TRIGGER_COCK   = 0.380;
+    public static double TRIGGER_FIRE   = 0.660;
 
     public static double GATE_OPENED = 0.135;
     public static double GATE_CLOSED = 0.425;
 
     public static long   GATE_REACT_TIME = 200;               // time in millisecond for the loader to open/close
-    public static long   TRIGGER_FIRE_TIME = 200;               // time in millisecond to pull the trigger
+    public static long   TRIGGER_FIRE_TIME = 350;               // time in millisecond to pull the trigger
     public static long   TRIGGER_COCK_TIME = 150;               // time in millisecond to cock the trigger
     public static long   ARTIFACT_LOAD_TIME = 300;
 
@@ -35,15 +35,15 @@ public class Launcher extends Thread {
     private enum LAUNCHER_STATE {IDLE, FIRE, FIRE_ALL }
     private LAUNCHER_STATE state = LAUNCHER_STATE.IDLE;
 
-    private final double MOTOR_RPM = 6000;                      // Gobilda Yellow Jacket Motor 5203-2402-0001
-    private final double MOTOR_TICKS_PER_REV = 28;              // Gobilda Yellow Jacket Motor 5203-2402-0001
-    private final double MAX_VELOCITY = MOTOR_TICKS_PER_REV * MOTOR_RPM / 60;
-    private final double VELOCITY_MULTIPLIER = 20;
+    protected final double MOTOR_RPM = 6000;                      // Gobilda Yellow Jacket Motor 5203-2402-0001
+    protected final double MOTOR_TICKS_PER_REV = 28;              // Gobilda Yellow Jacket Motor 5203-2402-0001
+    protected final double MAX_VELOCITY = MOTOR_TICKS_PER_REV * MOTOR_RPM / 60;
+    protected final double VELOCITY_MULTIPLIER = 20;
 
     // Linear Servo HLS12-5050-6V
-    private final double LINEAR_SERVO_SPEED = 30.9;             // mm per second
-    private final double LINEAR_SERVO_STROKE = 50;              // in mm
-    private final double LINEAR_SERVO_RADIUS = 100;             // mm from center of launcher rotation to servo base
+    protected final double LINEAR_SERVO_SPEED = 30.9;             // mm per second
+    protected final double LINEAR_SERVO_STROKE = 50;              // in mm
+    protected final double LINEAR_SERVO_RADIUS = 100;             // mm from center of launcher rotation to servo base
 
     private final Servo linearServo;
     private final Servo trigger;
@@ -54,7 +54,7 @@ public class Launcher extends Thread {
     public List<DcMotorEx> motors;
 
     LinearOpMode opMode;
-    private double angle;
+    private double angle = 0;
     private double speed = 28;
     private double velocity;
     private double angleAdjustTime;
@@ -71,8 +71,8 @@ public class Launcher extends Thread {
         rightMotor = opMode.hardwareMap.get(DcMotorEx.class, Config.LAUNCHER_RIGHT);
         motors = Arrays.asList(leftMotor, rightMotor);
 
-        leftMotor.setDirection(DcMotorSimple.Direction.FORWARD);
-        rightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        rightMotor.setDirection(DcMotorSimple.Direction.FORWARD);
 
         // adjust the PID coefficients of the launcher motors so the the motors spin at the desired speed faster
         // and more accurately.
@@ -193,6 +193,7 @@ public class Launcher extends Thread {
         double extension = 2 * LINEAR_SERVO_RADIUS * Math.sin(Math.toRadians(this.angle / 2));
         double newExtension = 2 * LINEAR_SERVO_RADIUS * Math.sin(Math.toRadians(angle / 2));
         double delta = (newExtension - extension) / LINEAR_SERVO_STROKE;
+        this.angle = angle;
 
         // get the current position of the linear servo
         double position = linearServo.getPosition();
@@ -359,10 +360,6 @@ public class Launcher extends Thread {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private boolean emergencyStop() {
-        return opMode.gamepad1.back;
     }
 }
 

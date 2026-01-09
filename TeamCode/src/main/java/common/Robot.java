@@ -31,8 +31,6 @@ public class Robot extends Thread {
     private Hopper          hopper;
     private Limelight       limelight;
 
-    //private ColorSensor     colorSensor;
-
     private final LinearOpMode opMode;
 
     private enum ROBOT_STATE { IDLE, FIRE, FIRE_ALL, LINE_UP_TARGET }
@@ -51,37 +49,29 @@ public class Robot extends Thread {
      * Initialize the Robot
      */
     public void init() {
+
         this.setName("robot");
-        drive = new Drive(opMode);
-
-        driveControl = new DriveControl(opMode, drive);
-        driveControl.start();
-
-        driveGamepad = new DriveGamepad(opMode, driveControl);
 
         try {
+            drive = new Drive(opMode);
+            driveControl = new DriveControl(opMode, drive);
+            driveGamepad = new DriveGamepad(opMode, driveControl);
+            launcher = new Launcher(opMode);
             limelight = new Limelight(opMode);
             intake = new Intake(opMode);
             hopper = new Hopper(opMode);
 
-            launcher = new Launcher(opMode);
+            driveControl.start();
             launcher.start();
 
         } catch (Exception e) {
             Logger.error(e, "hardware not found", 2);
         }
 
-        //colorSensor = new ColorSensor(opMode);
-        //colorSensor.enable(true);
-
         okToMove = new Semaphore(1);
 
         if (! testRobot)
             start();
-    }
-
-    public void startDriveGamepad() {
-        driveGamepad.start();
     }
 
     public void run() {
@@ -106,7 +96,6 @@ public class Robot extends Thread {
         while (opMode.opModeIsActive()) {
 
             if (robotState == ROBOT_STATE.IDLE) {
-                //colorSensor.update();
                 Thread.yield();
                 continue;
             }
@@ -139,8 +128,6 @@ public class Robot extends Thread {
 
                 robotState = ROBOT_STATE.IDLE;
             }
-
-            //colorSensor.enable(false);
         }
     }
 
@@ -151,6 +138,11 @@ public class Robot extends Thread {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private void waitUntilTime(double time) {
+        while (System.currentTimeMillis() < time)
+            delay(1);
     }
 
     private void lineUp () {
@@ -164,39 +156,6 @@ public class Robot extends Thread {
         while (driveControl.isBusy())
             delay(10);
         Logger.message("angle: %5.2f  pose: %s  new pose: %s", angle, pose.toString(), newPose.toString());
-    }
-
-    public boolean isBusy () {
-        return robotState != ROBOT_STATE.IDLE  || launcher.isBusy();
-    }
-
-    public void fire() {
-        synchronized (this) {
-            setOkToMove(false);
-            robotState = ROBOT_STATE.FIRE;
-        }
-    }
-
-    public void fireAll() {
-        synchronized (this) {
-            setOkToMove(false);
-            robotState = ROBOT_STATE.FIRE_ALL;
-        }
-    }
-
-    public void lineUpTarget() {
-        synchronized (this) {
-            robotState = ROBOT_STATE.LINE_UP_TARGET;
-        }
-    }
-
-    public void setLauncherSpeed(double speed) {
-        launcher.setSpeed(speed);
-    }
-
-    private void waitUnitTime(double time) {
-        while (System.currentTimeMillis() < time)
-            delay(1);
     }
 
     private void setOkToMove(boolean ok)  {
@@ -221,7 +180,7 @@ public class Robot extends Thread {
         return okToMove.availablePermits() == 1;
     }
 
-    private void waitUntilOkToMove() {
+    public void waitUntilOkToMove() {
         Logger.message("waiting");
         long start = System.currentTimeMillis();
         while (!okToMove() && opMode.opModeIsActive()) {
@@ -234,16 +193,12 @@ public class Robot extends Thread {
         Logger.message("done waiting, time: %5d", System.currentTimeMillis()-start);
     }
 
-    public boolean emergencyStop() {
-        return opMode.gamepad1.back;
+    public void startDriveGamepad() {
+        driveGamepad.start();
     }
 
-    public void moveToCoordinate(double targetX, double targetY, double targetHeading, double timeout) {
-        driveControl.moveToPose(targetX, targetY, targetHeading, timeout);
-    }
-
-    public boolean driveIsBusy() {
-        return driveControl.isBusy();
+    public boolean isBusy () {
+        return robotState != ROBOT_STATE.IDLE  || launcher.isBusy();
     }
 
     public DriveControl getDriveControl () {
@@ -264,6 +219,26 @@ public class Robot extends Thread {
 
     public Launcher getLauncher() {
         return launcher;
+    }
+
+    public void fire() {
+        synchronized (this) {
+            setOkToMove(false);
+            robotState = ROBOT_STATE.FIRE;
+        }
+    }
+
+    public void fireAll() {
+        synchronized (this) {
+            setOkToMove(false);
+            robotState = ROBOT_STATE.FIRE_ALL;
+        }
+    }
+
+    public void lineUpTarget() {
+        synchronized (this) {
+            robotState = ROBOT_STATE.LINE_UP_TARGET;
+        }
     }
 
 } // end of class

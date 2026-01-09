@@ -130,11 +130,10 @@ public class Auto {
                     break;
 
                 case SHOOT:
-                    waitForButtonPress();
                     waitUntilNotMoving();
-                    robot.fireAll();
+                    launcher.fireAllArtifacts();
                     waitUntilRobotIdIdle();
-                    setOdometer();
+                    //setOdometer();
                     followPath();
                     break;
 
@@ -144,7 +143,6 @@ public class Auto {
                     hopper.leverDown();
                     launcher.closeGate();
                     intake.on();
-                    waitForButtonPress();
                     waitUntilNotMoving();
                     intake.off();
                     hopper.leverUp();
@@ -169,7 +167,7 @@ public class Auto {
         // The coordinates are the same for both alliances except the x coordinate are negative for the blue alliance.
         double xSign = (alliance == Alliance.RED) ? 1 : -1;
 
-        // Create the pose for a starting position at the goal or by the audience.
+        // Create the pose for a starting position at the goal, near the obelisk or by the audience.
         Pose start = null;
         if (startPosition == StartPosition.GOAL) {
             heading = (alliance == Alliance.RED) ? START_GOAL.h : START_GOAL.h + 90;
@@ -259,13 +257,14 @@ public class Auto {
     }
 
     private void followPath() {
+        waitForButtonPress();
         waitUntilOkToMove();
         pathIndex++;
         navigate.followPath(pathIndex);
     }
 
     public void setLauncherSpeed(double speed) {
-        robot.setLauncherSpeed(speed);
+        launcher.setSpeed(speed);
     }
 
     public void waitUntilNotMoving() {
@@ -287,16 +286,7 @@ public class Auto {
     }
 
     private void waitUntilOkToMove() {
-        Logger.message("waiting");
-        timer.reset();
-        while (!robot.okToMove() && opMode.opModeIsActive()) {
-            if (timer.milliseconds() > 5000) {
-                Logger.warning("robot timed out");
-                break;
-            }
-            Thread.yield();
-        }
-        Logger.message("done waiting, time: %5.0f", timer.seconds());
+        robot.waitUntilOkToMove();
     }
 
     private void waitForButtonPress() {

@@ -6,9 +6,9 @@ import com.qualcomm.robotcore.hardware.Servo;
 public class Hopper {
 
     private final Servo lever;
-    private boolean open = false;
-    protected final double leverUpPosition = 0.74;
-    protected double levelDownPosition = 0.30;
+    private boolean leverOpen = false;
+    protected double leverUpPosition = 0.430;
+    protected final double levelDownPosition = 0.830;
 
     public Hopper(LinearOpMode opMode) {
         lever = opMode.hardwareMap.get(Servo.class, Config.LEVER);
@@ -17,19 +17,19 @@ public class Hopper {
 
     public void leverDown() {
         lever.setPosition(levelDownPosition);
-        open = true;
+        leverOpen = true;
     }
 
     public void leverUp() {
         lever.setPosition(leverUpPosition);
-        open = false;
+        leverOpen = false;
     }
 
     /**
      * Open the lever if it is closed, otherwise close it.
      */
     public void leverToggle() {
-        if (open) {
+        if (leverOpen) {
             leverUp();
         } else {
             leverDown();

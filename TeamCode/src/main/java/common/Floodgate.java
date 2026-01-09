@@ -2,7 +2,6 @@ package common;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.AnalogInput;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 public class Floodgate {
 

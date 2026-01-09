@@ -12,13 +12,13 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 import common.Config;
-import common.Drive;
 import common.DriveControl;
-import common.DriveGamepad;
+import common.Hopper;
 import common.Intake;
 import common.Launcher;
 import common.Limelight;
 import common.Logger;
+import common.Robot;
 import utils.Increment;
 import utils.Pose;
 
@@ -34,6 +34,7 @@ public class TeleOpComp extends LinearOpMode {
     private Launcher launcher;
     private Limelight limelight;
     private Intake intake;
+    private Hopper hopper;
     private LED redLeftLED;
     private LED redRightLED;
     private LED greenLeftLED;
@@ -79,23 +80,21 @@ public class TeleOpComp extends LinearOpMode {
     }
 
     private void initialize() {
-        Drive drive = new Drive(this);
 
-        driveControl = new DriveControl(this, drive);
+        Robot robot = new Robot(this);
+        robot.startDriveGamepad();
+
+        driveControl = robot.getDriveControl();
         driveControl.reset();
-        driveControl.start();
 
-        DriveGamepad driveGamepad = new DriveGamepad(this, driveControl);
-        driveGamepad.start();
-
-        launcher = new Launcher(this);
-        launcher.start();
+        launcher = robot.getLauncher();
         launcher.setSpeed(speed);
 
-        limelight = new Limelight(this);
+        limelight = robot.getLimelight();
         limelight.setPipeline(Limelight.Pipeline.LOCATION);
 
-        intake = new Intake(this);
+        intake = robot.getIntake();
+        hopper = robot.getHopper();
 
         greenLeftLED = hardwareMap.get(LED.class, Config.GREEN_LEFT_LED);
         greenRightLED = hardwareMap.get(LED.class, Config.GREEN_RIGHT_LED);
@@ -113,7 +112,7 @@ public class TeleOpComp extends LinearOpMode {
                 "  a - start / stop launcher motors\n" +
                 "  b - line up with april tag\n" +
                 "  x - open / close close loader gate\n" +
-                "  y - pull trigger\n" +
+                "  y - start / stop intake\n" +
                 "  right trigger - fire artifact\n" +
                 "  left trigger - fire all artifacts\n" +
                 "  left bumper - decrease motor speed\n" +
@@ -144,8 +143,13 @@ public class TeleOpComp extends LinearOpMode {
             }
 
         } else if (gamepad1.yWasPressed() || gamepad2.yWasPressed()) {
-            // pull the trigger
-            launcher.pullTrigger();
+            // turn the intake on or off and open or close the lever
+            if (intake.isRunning()) {
+                hopper.leverDown();
+            } else {
+                hopper.leverUp();
+            }
+            intake.intakeToggle();
 
         } else if (gamepad1.bWasPressed() || gamepad2.bWasPressed()) {
             // line up with the goal
@@ -153,8 +157,8 @@ public class TeleOpComp extends LinearOpMode {
             setSpeed();
 
         } else if (gamepad1.dpadUpWasPressed() || gamepad2.dpadUpWasPressed()){
-            // turn the intake on or off
-            intake.intakeToggle();
+            // pull the trigger
+            launcher.pullTrigger();
 
         } else if (gamepad1.dpadDownWasPressed() || gamepad2.dpadDownWasPressed()){
             // line up with the goal and fire all artifacts
@@ -244,9 +248,9 @@ public class TeleOpComp extends LinearOpMode {
             current = limelight.getPosition();
             if (current != null) {
 
-                // set the odometer's position to the april tag's robot position
+                // set the odometer's position to the april tag's robot position every 20 seconds
                 if (useOdometer) {
-                    if (odometerSetTime == 0 || System.currentTimeMillis() - odometerSetTime > 1000) {
+                    if (odometerSetTime == 0 || System.currentTimeMillis() - odometerSetTime > 10000) {
                         odometerSetTime = System.currentTimeMillis();
                         driveControl.setPose(current);
                         Logger.message("odometer's position set to: %s", current);

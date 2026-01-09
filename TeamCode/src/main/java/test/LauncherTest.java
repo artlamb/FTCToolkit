@@ -15,7 +15,7 @@ import utils.Increment;
 
 @TeleOp(name="Launcher Test", group="Test")
 @SuppressLint("DefaultLocale")
-@Disabled
+//@Disabled
 
 public class LauncherTest extends LinearOpMode {
 
