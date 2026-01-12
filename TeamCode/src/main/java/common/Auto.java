@@ -141,12 +141,12 @@ public class Auto {
                 case ARTIFACT_2:
                 case ARTIFACT_3:
                     hopper.leverDown();
-                    launcher.closeGate();
+                    launcher.gateClose();
                     intake.on();
                     waitUntilNotMoving();
                     intake.off();
                     hopper.leverUp();
-                    launcher.openGate();
+                    launcher.gateOpen();
                     followPath();
                     break;
 

@@ -136,18 +136,18 @@ public class TeleOpComp extends LinearOpMode {
 
         } else if (gamepad1.xWasPressed() || gamepad2.xWasPressed()) {
             // open /close the loader gate
-            if (launcher.isGateOpen()) {
-                launcher.closeGate();
+            if (launcher.gateIsOpen()) {
+                launcher.gateClose();
             } else {
-                launcher.openGate();
+                launcher.gateOpen();
             }
 
         } else if (gamepad1.yWasPressed() || gamepad2.yWasPressed()) {
             // turn the intake on or off and open or close the lever
             if (intake.isRunning()) {
-                hopper.leverDown();
-            } else {
                 hopper.leverUp();
+            } else {
+                hopper.leverDown();
             }
             intake.intakeToggle();
 
@@ -162,30 +162,30 @@ public class TeleOpComp extends LinearOpMode {
 
         } else if (gamepad1.dpadDownWasPressed() || gamepad2.dpadDownWasPressed()){
             // line up with the goal and fire all artifacts
-            fastLaunch();
+            hopper.leverToggle();
 
         } else if (gamepad1.right_trigger > 0) {
             // fire one artifact
-            launcher.fireLauncher();
+            fire();
             while (gamepad1.right_trigger > 0) {
                 Thread.yield();
             }
         } else if (gamepad2.right_trigger > 0) {
             // fire one artifact
-            launcher.fireLauncher();
+            fire();
             while (gamepad2.right_trigger > 0) {
                 Thread.yield();
             }
 
         } else if (gamepad1.left_trigger > 0) {
             // fire all artifacts
-            launcher.fireAllArtifacts();
+            fireAll();
             while (gamepad1.left_trigger > 0) {
                 Thread.yield();
             }
         } else if (gamepad2.left_trigger > 0) {
             // fire all artifacts
-            launcher.fireAllArtifacts();
+            fireAll();
             while (gamepad2.left_trigger > 0) {
                 Thread.yield();
             }
@@ -415,6 +415,22 @@ public class TeleOpComp extends LinearOpMode {
     private void setCustomSpeed() {
         launcher.setSpeed(speed);
         customSpeed = true;
+    }
+
+    /**
+     * Fire one artifact
+     */
+    private void fire() {
+        hopper.leverUp();
+        launcher.fireLauncher();
+    }
+
+    /**
+     * Fire all artifacts
+     */
+    private void fireAll() {
+        hopper.leverUp();
+        launcher.fireAllArtifacts();
     }
 
     /**

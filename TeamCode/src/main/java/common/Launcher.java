@@ -20,7 +20,7 @@ public class Launcher extends Thread {
     public static double pidI = 1.0;
 
     public static double TRIGGER_COCK   = 0.380;
-    public static double TRIGGER_FIRE   = 0.660;
+    public static double TRIGGER_FIRE   = 0.670;
 
     public static double GATE_OPENED = 0.135;
     public static double GATE_CLOSED = 0.425;
@@ -218,7 +218,7 @@ public class Launcher extends Thread {
         long startTime = System.currentTimeMillis();
 
         // hold other artifacts
-        loader.setPosition(GATE_CLOSED);
+        gateClose(0);
 
         // wait for the launcher to reach the desired launch angle.
         while (true) {
@@ -254,7 +254,7 @@ public class Launcher extends Thread {
                 break;
             }
 
-            Logger.verbose("time: %6d ms  left: %5.0f  right: %5.0f",
+            Logger.verbose("time: %6d ms  delta velocity  left: %5.0f  right: %5.0f",
                     System.currentTimeMillis() - spinUpStart, velocity - leftVelocity, velocity - rightVelocity);
             Thread.yield();
         }
@@ -274,8 +274,7 @@ public class Launcher extends Thread {
         trigger.setPosition(TRIGGER_COCK);
         delay(TRIGGER_COCK_TIME);
 
-        loader.setPosition(GATE_OPENED);
-        delay(GATE_REACT_TIME);
+        gateOpen(GATE_REACT_TIME);
     }
 
     private void fireAll() {
@@ -291,27 +290,37 @@ public class Launcher extends Thread {
 
     }
 
-    public void closeGate() {
+    public void gateClose() {
+        gateClose(GATE_REACT_TIME);
+    }
+
+    public void gateOpen() {
+        gateOpen(GATE_REACT_TIME);
+    }
+
+    public void gateClose(long delay) {
+        Logger.debug("loader gate close");
         loader.setPosition(GATE_CLOSED);
         gateOpen = false;
-        delay(GATE_REACT_TIME);
+        delay(delay);
     }
 
-    public void openGate() {
+    public void gateOpen(long delay) {
+        Logger.debug("loader gate open");
         loader.setPosition(GATE_OPENED);
         gateOpen = true;
-        delay(GATE_REACT_TIME);
+        delay(delay);
     }
 
-    public boolean isGateOpen() {
+    public boolean gateIsOpen() {
         return gateOpen;
     }
 
     public void gateToggle() {
         if (gateOpen) {
-            closeGate();
+            gateClose();
         } else {
-            openGate();
+            gateOpen();
         }
     }
 

@@ -16,11 +16,13 @@ public class Hopper {
     }
 
     public void leverDown() {
+        Logger.debug("lever down");
         lever.setPosition(levelDownPosition);
         leverOpen = true;
     }
 
     public void leverUp() {
+        Logger.debug("lever up");
         lever.setPosition(leverUpPosition);
         leverOpen = false;
     }

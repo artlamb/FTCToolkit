@@ -19,11 +19,9 @@ public class Intake {
      */
     public void intakeToggle() {
         if (running) {
-            intake.setPower(0);
-            running = false;
+            off();
         } else {
-            intake.setPower(speed);
-            running = true;
+            on();
         }
     }
 
@@ -42,11 +40,13 @@ public class Intake {
     }
 
     public void off() {
+        Logger.debug("intake off");
         intake.setPower(0);
         running = false;
     }
 
     public void on() {
+        Logger.debug("intake on");
         intake.setPower(speed);
         running = true;
     }

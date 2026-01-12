@@ -2,7 +2,6 @@ package test;
 
 import android.annotation.SuppressLint;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
@@ -81,10 +80,10 @@ public class LauncherTest extends LinearOpMode {
             }
 
         } else if (gamepad.xWasPressed()) {
-            if (launcher.isGateOpen()) {
-                launcher.closeGate();
+            if (launcher.gateIsOpen()) {
+                launcher.gateClose();
             } else {
-                launcher.openGate();
+                launcher.gateOpen();
             }
 
         } else if (gamepad.yWasPressed()) {
