@@ -4,10 +4,12 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 import java.util.Arrays;
 import java.util.List;
@@ -19,16 +21,20 @@ public class Launcher extends Thread {
     public static double pidP = 40.0;
     public static double pidI = 1.0;
 
-    public static double TRIGGER_COCK   = 0.380;
+    public static double TRIGGER_COCK   = 0.360;
     public static double TRIGGER_FIRE   = 0.670;
 
-    public static double GATE_OPENED = 0.135;
-    public static double GATE_CLOSED = 0.425;
+    public static double GATE_RIGHT_OPENED = 0.500;
+    public static double GATE_RIGHT_CLOSED = 0.760;
+    public static double GATE_LEFT_OPENED = 0.500;
+    public static double GATE_LEFT_CLOSED = 0.240;
 
-    public static long   GATE_REACT_TIME = 200;               // time in millisecond for the loader to open/close
-    public static long   TRIGGER_FIRE_TIME = 350;               // time in millisecond to pull the trigger
-    public static long   TRIGGER_COCK_TIME = 150;               // time in millisecond to cock the trigger
-    public static long   ARTIFACT_LOAD_TIME = 300;
+    public static long   GATE_REACT_TIME =    100;               // time in millisecond for the loader to open/close
+    public static long   TRIGGER_FIRE_TIME =  300;               // time in millisecond to pull the trigger
+    public static long   TRIGGER_COCK_TIME =  250;               // time in millisecond to cock the trigger
+    public static long   ARTIFACT_LOAD_TIME = 500;
+
+    public static double IDLE_SPEED = 20;
 
    private boolean gateOpen = true;
 
@@ -47,11 +53,15 @@ public class Launcher extends Thread {
 
     private final Servo linearServo;
     private final Servo trigger;
-    private final Servo loader;
+    private final Servo gateRight;
+    private final Servo gateLeft;
 
     private final DcMotorEx leftMotor;
     private final DcMotorEx rightMotor;
     public List<DcMotorEx> motors;
+
+    DistanceSensor artifactSensor;
+    private long artifactCheckTime;
 
     LinearOpMode opMode;
     private double angle = 0;
@@ -92,10 +102,13 @@ public class Launcher extends Thread {
         linearServo = opMode.hardwareMap.get(Servo.class, Config.LINEAR_SERVO);
 
         trigger = opMode.hardwareMap.get(Servo.class, Config.TRIGGER);
-        loader = opMode.hardwareMap.get(Servo.class, Config.LOADER);
-
         trigger.setPosition(TRIGGER_COCK);
-        loader.setPosition(GATE_OPENED);
+
+        gateRight = opMode.hardwareMap.get(Servo.class, Config.GATE_RIGHT);
+        gateLeft = opMode.hardwareMap.get(Servo.class, Config.GATE_LEFT);
+        gateOpen();
+
+        artifactSensor = opMode.hardwareMap.get(DistanceSensor.class, Config.ARTIFACT_SENSOR);
 
         this.setName("launcher");
     }
@@ -113,7 +126,7 @@ public class Launcher extends Thread {
             synchronized (this) {
                 switch (state) {
                     case IDLE:
-                        checkVelocity();
+                        //checkForArtifact();
                         Thread.yield();
                         break;
                     case FIRE:
@@ -185,6 +198,12 @@ public class Launcher extends Thread {
         running = (velocity != 0);
     }
 
+    /**
+     * Set the angle for the launcher, currently not used.
+     *
+     * @param angle angle in degrees
+     * @noinspection unused
+     */
     public void setAngle(double angle) {
 
         // Determine the distance to extend or retract the the linear servo.
@@ -216,6 +235,9 @@ public class Launcher extends Thread {
 
         long timeout = 3000;
         long startTime = System.currentTimeMillis();
+
+        // wait for an artifact to load
+        senseArtifact(ARTIFACT_LOAD_TIME);
 
         // hold other artifacts
         gateClose(0);
@@ -254,8 +276,9 @@ public class Launcher extends Thread {
                 break;
             }
 
-            Logger.verbose("time: %6d ms  delta velocity  left: %5.0f  right: %5.0f",
-                    System.currentTimeMillis() - spinUpStart, velocity - leftVelocity, velocity - rightVelocity);
+            Logger.verbose("time: %6d ms  delta velocity  left: %5.0f  right: %5.0f    current  left: %5.2f  right: %5.2f",
+                    System.currentTimeMillis() - spinUpStart, velocity - leftVelocity, velocity - rightVelocity,
+                    leftMotor.getCurrent(CurrentUnit.AMPS), rightMotor.getCurrent(CurrentUnit.AMPS));
             Thread.yield();
         }
 
@@ -275,6 +298,8 @@ public class Launcher extends Thread {
         delay(TRIGGER_COCK_TIME);
 
         gateOpen(GATE_REACT_TIME);
+
+        Logger.info("fire complete after %d ms", System.currentTimeMillis() - startTime);
     }
 
     private void fireAll() {
@@ -282,12 +307,34 @@ public class Launcher extends Thread {
         setVelocity(speed);
         for (int i = 0; i < 3; i++) {
             fire();
-            if (i < 2)
+            /*
+            if (i < 2) {
+                senseArtifact(ARTIFACT_LOAD_TIME);
                 delay(ARTIFACT_LOAD_TIME);
+            }
+             */
         }
-        setVelocity(0);
-        Logger.message("fire all complete after %d ms", System.currentTimeMillis() - startTime);
+        setVelocity(IDLE_SPEED);   // todo determine current draw
+        Logger.info("fire all complete after %d ms", System.currentTimeMillis() - startTime);
+    }
 
+    private void senseArtifact(long timeout) {
+        long startTime = System.currentTimeMillis();
+        while (true) {
+            double distance = artifactSensor.getDistance(DistanceUnit.INCH);
+            long time = System.currentTimeMillis();
+
+            if (distance < 5) {
+                Logger.debug("artifact detected after %d ms, distance: %5.1f", time - startTime, distance);
+                break;
+            }
+
+            if (time - startTime >= timeout) {
+                Logger.warning("artifact detection timed out after %d ms", timeout);
+                break;
+            }
+            Thread.yield();
+        }
     }
 
     public void gateClose() {
@@ -300,14 +347,16 @@ public class Launcher extends Thread {
 
     public void gateClose(long delay) {
         Logger.debug("loader gate close");
-        loader.setPosition(GATE_CLOSED);
+        gateRight.setPosition(GATE_RIGHT_CLOSED);
+        gateLeft.setPosition(GATE_LEFT_CLOSED);
         gateOpen = false;
         delay(delay);
     }
 
     public void gateOpen(long delay) {
         Logger.debug("loader gate open");
-        loader.setPosition(GATE_OPENED);
+        gateRight.setPosition(GATE_RIGHT_OPENED);
+        gateLeft.setPosition(GATE_LEFT_OPENED);
         gateOpen = true;
         delay(delay);
     }
@@ -347,6 +396,11 @@ public class Launcher extends Thread {
         }
     }
 
+    /**
+     * Check the velocity of the launcher motors every 0.5 seconds
+     *
+     * @noinspection unused
+     */
     private void checkVelocity () {
         if (running) {
             // check the velocity of the launcher motors every 0.5 seconds
@@ -360,6 +414,20 @@ public class Launcher extends Thread {
                         leftVelocity, rightVelocity, leftCurrent, rightCurrent,
                         System.currentTimeMillis() - startTime);
             }
+        }
+    }
+
+    /**
+     * Check for the presence of artifacts every 0.5 seconds
+     *
+     * @noinspection unused
+     */
+    private void checkForArtifact () {
+        // check for the presence of artifacts every 0.5 seconds
+        long time = System.currentTimeMillis();
+        if (time - artifactCheckTime >= 500) {
+            artifactCheckTime = time;
+            Logger.message("artifact distance: %5.0f", artifactSensor.getDistance(DistanceUnit.INCH));
         }
     }
 

@@ -7,7 +7,7 @@ public class Hopper {
 
     private final Servo lever;
     private boolean leverOpen = false;
-    protected double leverUpPosition = 0.430;
+    protected double leverUpPosition = 0.400;
     protected final double levelDownPosition = 0.830;
 
     public Hopper(LinearOpMode opMode) {

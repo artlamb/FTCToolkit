@@ -131,7 +131,7 @@ public class Robot extends Thread {
         }
     }
 
-    private void delay (long milliseconds) {
+    public void delay (long milliseconds) {
         try {
             if (opMode.isStopRequested()) return;
             Thread.sleep(milliseconds);
@@ -221,18 +221,58 @@ public class Robot extends Thread {
         return launcher;
     }
 
-    public void fire() {
-        synchronized (this) {
-            setOkToMove(false);
-            robotState = ROBOT_STATE.FIRE;
+    /**
+     * Start or stop the launcher motors. If the launcher is being powered on
+     * set the speed of the launcher motors and also power off the intake
+     *
+     * @param on true to power the launcher on, false to power the launcher off
+     */
+    public void powerLauncher(boolean on, double speed) {
+
+        if (on) {
+            powerIntake(false);
+            launcher.setSpeed(speed);
+            launcher.runLauncher();
+        } else {
+            launcher.stopLauncher();
         }
     }
 
-    public void fireAll() {
-        synchronized (this) {
-            setOkToMove(false);
-            robotState = ROBOT_STATE.FIRE_ALL;
+    /**
+     * Start or stop the intake motor. Ii the intake is being powered on, stop the launcher
+     * motors,
+     *
+     * @param on true to power the intake on, false to power the intake off
+     */
+    public void powerIntake(boolean on) {
+
+        if (on) {
+            //powerLauncher(false, 0);
+            launcher.gateClose();
+            hopper.leverDown();
+            intake.on();
+        } else {
+            intake.off();
+            hopper.leverUp();
+            launcher.gateOpen();
         }
+    }
+
+    /**
+     * Fire one artifact
+     */
+    public void fire() {
+        hopper.leverUp();
+        launcher.fireLauncher();
+
+    }
+
+    /**
+     * Fire all artifacts
+     */
+    public void fireAllArtifacts() {
+        hopper.leverUp();
+        launcher.fireAllArtifacts();
     }
 
     public void lineUpTarget() {

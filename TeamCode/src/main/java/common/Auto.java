@@ -54,8 +54,6 @@ public class Auto {
     private final Robot robot;
     private final DriveControl driveControl;
     private final Navigate navigate;
-    private final Intake intake;
-    private final Hopper hopper;
     private final Launcher launcher;
     private final Limelight limelight;
 
@@ -64,8 +62,6 @@ public class Auto {
         this.opMode = opMode;
         robot = new Robot(opMode);
 
-        intake = robot.getIntake();
-        hopper = robot.getHopper();
         launcher = robot.getLauncher();
 
         driveControl = robot.getDriveControl();
@@ -106,9 +102,11 @@ public class Auto {
 
         opMode.telemetry.addData("Alliance", alliance);
         opMode.telemetry.addData("Start Position", startPosition);
-        opMode.telemetry.addData("Order", order);
         opMode.telemetry.addData("Launcher Speed", launcherSpeed);
         opMode.telemetry.addData("Delay", delay);
+        for (Order value : order) {
+            opMode.telemetry.addData("Order", value);
+        }
         opMode.telemetry.addLine("Press start");
         opMode.telemetry.update();
 
@@ -130,24 +128,23 @@ public class Auto {
                     break;
 
                 case SHOOT:
+                    waitUntilNearPose();
+                    robot.powerLauncher(true, launcherSpeed);
                     waitUntilNotMoving();
-                    launcher.fireAllArtifacts();
+                    robot.fireAllArtifacts();
                     waitUntilRobotIdIdle();
-                    //setOdometer();
+                    setOdometer();
                     followPath();
                     break;
 
                 case ARTIFACT_1:
                 case ARTIFACT_2:
                 case ARTIFACT_3:
-                    hopper.leverDown();
-                    launcher.gateClose();
-                    intake.on();
+                    robot.powerIntake(true);
                     waitUntilNotMoving();
-                    intake.off();
-                    hopper.leverUp();
-                    launcher.gateOpen();
                     followPath();
+                    robot.delay(1000);
+                    robot.powerIntake(false);
                     break;
 
                 case PARK:
@@ -268,12 +265,16 @@ public class Auto {
     }
 
     public void waitUntilNotMoving() {
+        Logger.debug("waiting");
+        long start = System.currentTimeMillis();
         driveControl.waitUntilNotMoving(5000);
+        Logger.debug("done waiting, time: %5d", System.currentTimeMillis() - start);
+
     }
 
     private void waitUntilRobotIdIdle() {
-        Logger.message("waiting");
-        long timeout = 5000;
+        Logger.debug("waiting");
+        long timeout = 6000;
         timer.reset();
         while (robot.isBusy() && opMode.opModeIsActive()) {
             if (timer.milliseconds() > timeout) {
@@ -282,18 +283,36 @@ public class Auto {
             }
             Thread.yield();
         }
-        Logger.message("done waiting, time: %5.0f", timer.seconds());
+        Logger.debug("done waiting, time: %5.0f", timer.seconds());
     }
 
     private void waitUntilOkToMove() {
         robot.waitUntilOkToMove();
     }
 
+    private void waitUntilNearPose() {
+        Logger.debug("waiting");
+        long timeout = 5000;
+        timer.reset();
+        while (opMode.opModeIsActive()) {
+            if (driveControl.nearPose() ) {
+                break;
+            } else {
+                Thread.yield();
+            }
+            if (timer.milliseconds() > timeout) {
+                Logger.warning("robot timed out");
+                break;
+            }
+        }
+        Logger.debug("done waiting, time: %5.0f", timer.milliseconds());
+    }
+
     private void waitForButtonPress() {
 
         if (!Debug.waitForButtonPress()) return;
 
-        Logger.message("waiting for button press");
+        Logger.debug("waiting for button press");
 
         boolean pressed = false;
         while (opMode.opModeIsActive()) {
@@ -307,7 +326,7 @@ public class Auto {
                 pressed = true;
             }
         }
-        Logger.message("done waiting for button press");
+        Logger.debug("done waiting for button press");
     }
 
     private void setOdometer() {
@@ -318,11 +337,11 @@ public class Auto {
 
         int id = limelight.GetAprilTagID();
         if ((id == blueID && alliance == Alliance.BLUE) || (id == redID) && alliance == Alliance.RED) {
-            Logger.message("april tag found with id: %d", id);
+            Logger.debug("april tag found with id: %d", id);
             current = limelight.getPosition();
             if (current != null) {
-                Logger.message("odometer's position set from: %s to: %s", driveControl.getPose(), current);
-                driveControl.setPose(current);
+                Logger.debug("odometer's position set from: %s to: %s", driveControl.getPose(), current);
+                // todo should we do this? driveControl.setPose(current);
             }
         }
     }

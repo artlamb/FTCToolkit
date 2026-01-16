@@ -30,7 +30,6 @@ public class IntakeTest extends LinearOpMode {
     Increment speedIncrement;
     double speed = 0.9;
     Floodgate floodgate;
-    long time;
 
     Telemetry.Item speedMsg;
 
@@ -83,11 +82,7 @@ public class IntakeTest extends LinearOpMode {
     private void handleGamepad() {
         Gamepad gamepad = gamepad1;
 
-        if (System.currentTimeMillis() - this.time > 1000) {
-            time = System.currentTimeMillis();
-            //Logger.message("current %f", floodgate.getCurrent());
-            //floodgate.getCurrent();
-        }
+        floodgate.display(1000);
 
         if (gamepad.aWasPressed()) {
             intake.intakeToggle();

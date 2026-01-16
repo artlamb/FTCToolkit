@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
+import common.Floodgate;
 import common.Launcher;
 import common.Logger;
 import utils.Increment;
@@ -19,8 +20,7 @@ import utils.Increment;
 public class LauncherTest extends LinearOpMode {
 
     private Launcher launcher;
-    //private ColorSensor colorSensor;
-
+    Floodgate floodgate;
     Increment speedIncrement;
     double speed = 28;
 
@@ -34,10 +34,9 @@ public class LauncherTest extends LinearOpMode {
             waitForStart();
 
             while (opModeIsActive()) {
-                //colorSensor.update();
+                floodgate.display(1000);
                 handleGamepad();
             }
-            //colorSensor.enable(false);
 
         } catch (Exception e) {
             Logger.error(e, "Error");
@@ -48,9 +47,8 @@ public class LauncherTest extends LinearOpMode {
         launcher = new Launcher(this);
         launcher.start();
 
-        //colorSensor = new ColorSensor(this);
+        floodgate = new Floodgate(this);
 
-        //speedIncrement = new Increment(0.01, 0.02, 0.05);
         speedIncrement = new Increment(1, 2, 3);
 
         speedMsg = telemetry.addData("Motor speed", 0);

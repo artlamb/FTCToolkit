@@ -14,15 +14,8 @@ public class Intake {
 
     }
 
-    /**
-     * Turn the intake motor on set to the saved speed, if it off, otherwise turn it off.
-     */
-    public void intakeToggle() {
-        if (running) {
-            off();
-        } else {
-            on();
-        }
+    public void setSpeed(double speed) {
+        this.speed = speed;
     }
 
     /**
@@ -35,16 +28,31 @@ public class Intake {
         return running;
     }
 
-    public void setSpeed(double speed) {
-        this.speed = speed;
+    /**
+     * Turn the intake motor on set to the saved speed, if it off, otherwise turn it off.
+     *
+     * @noinspection unused
+     */
+    public void intakeToggle() {
+        if (running) {
+            off();
+        } else {
+            on();
+        }
     }
 
+    /**
+     * Turn the intake motor off
+     */
     public void off() {
         Logger.debug("intake off");
         intake.setPower(0);
         running = false;
     }
 
+    /**
+     * Turn the intake motor on
+     */
     public void on() {
         Logger.debug("intake on");
         intake.setPower(speed);

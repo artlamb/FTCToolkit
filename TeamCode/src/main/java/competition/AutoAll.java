@@ -13,17 +13,17 @@ import common.Logger;
 public class AutoAll extends LinearOpMode {
 
     public static long delay = 0;
-    public static double launcherSpeed = 28;
+    public static double launcherSpeed = 27;
     public static Auto.Alliance alliance = Auto.Alliance.BLUE;
     public static Auto.StartPosition startPosition = Auto.StartPosition.OBELISK;
-    public Auto.Order[] order = { Auto.Order.TOP, Auto.Order.MIDDLE, Auto.Order.BOTTOM };
+    public Auto.Order[] order = { Auto.Order.TOP, Auto.Order.MIDDLE };
 
     @Override
     public void runOpMode() {
 
         try {
             Debug.setDrive(true);
-            Debug.setLauncher(false);
+            Debug.setLauncher(true);
             Debug.setDashboard(true);
             Debug.setDrawPaths(false);
 

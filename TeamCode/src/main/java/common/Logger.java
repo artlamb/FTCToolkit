@@ -37,7 +37,7 @@ public final class Logger {
 
     public static void debug(String format, Object... args){
         if (errorLevel <= Log.DEBUG) {
-            String str = String.format(format, args);
+            String str = format(String.format(format, args));
             Log.d(TAG, str);
         }
     }

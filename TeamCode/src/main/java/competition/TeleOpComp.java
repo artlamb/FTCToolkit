@@ -29,6 +29,7 @@ import utils.Pose;
 public class TeleOpComp extends LinearOpMode {
 
     public static boolean useOdometer = false;
+    public static double DEFAULT_SPEED = 28;
 
     private DriveControl driveControl;
     private Launcher launcher;
@@ -40,7 +41,6 @@ public class TeleOpComp extends LinearOpMode {
     private LED greenLeftLED;
     private LED greenRightLED;
 
-    private final double DEFAULT_SPEED = 28;
     Increment speedIncrement;
     double speed = DEFAULT_SPEED;
 
@@ -127,34 +127,20 @@ public class TeleOpComp extends LinearOpMode {
 
         if (gamepad1.aWasPressed() || gamepad2.aWasPressed()) {
             // start or stop the launcher motors
-            if (launcher.isRunning()) {
-                launcher.stopLauncher();
-            } else {
-                launcher.setSpeed(speed);
-                launcher.runLauncher();
-            }
-
-        } else if (gamepad1.xWasPressed() || gamepad2.xWasPressed()) {
-            // open /close the loader gate
-            if (launcher.gateIsOpen()) {
-                launcher.gateClose();
-            } else {
-                launcher.gateOpen();
-            }
+            powerLauncher(! launcher.isRunning());
 
         } else if (gamepad1.yWasPressed() || gamepad2.yWasPressed()) {
-            // turn the intake on or off and open or close the lever
-            if (intake.isRunning()) {
-                hopper.leverUp();
-            } else {
-                hopper.leverDown();
-            }
-            intake.intakeToggle();
+            // turn the intake on or off and open, close the lever
+            powerIntake(! intake.isRunning());
 
         } else if (gamepad1.bWasPressed() || gamepad2.bWasPressed()) {
             // line up with the goal
             lineUpWithGoal(false);
             setSpeed();
+
+        } else if (gamepad1.xWasPressed() || gamepad2.xWasPressed()) {
+            // open /close the loader gate
+            launcher.gateToggle();
 
         } else if (gamepad1.dpadUpWasPressed() || gamepad2.dpadUpWasPressed()){
             // pull the trigger
@@ -434,7 +420,46 @@ public class TeleOpComp extends LinearOpMode {
     }
 
     /**
+     * Start or stop the launcher motors. If the launcher is being powered on
+     * set the speed of the launcher motors and also power off the intake
+     *
+     * @param on true to power the launcher on, false to power the launcher off
+     */
+    private void powerLauncher(boolean on) {
+
+        if (on) {
+            powerIntake(false);
+            launcher.setSpeed(speed);
+            launcher.runLauncher();
+        } else {
+            launcher.stopLauncher();
+        }
+    }
+
+    /**
+     * Start or stop the intake motor. Ii the intake is being powered on, stop the launcher
+     * motors,
+     *
+     * @param on true to power the intake on, false to power the intake off
+     */
+    private void powerIntake(boolean on) {
+
+        if (on) {
+            powerLauncher(false);
+            launcher.gateClose();
+            hopper.leverDown();
+            intake.on();
+        } else {
+            intake.off();
+            hopper.leverUp();
+            launcher.gateOpen();
+        }
+    }
+
+    /**
      * Line up with the goal and fire all artifacts.
+     *
+     * @noinspection unused
      */
     private void fastLaunch() {
 

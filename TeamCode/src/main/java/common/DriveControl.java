@@ -337,7 +337,7 @@ public class DriveControl extends Thread {
             double leftRearPower   = (power * (sin / max) + turn);
             double rightRearPower  = (power * (cos / max) - turn);
 
-            Logger.debug("%s",
+            Logger.verbose("%s",
                     String.format("time: %4.0f   ", timeoutTimer.milliseconds()) +
                     String.format("x %5.1f  y %5.1f  h %5.1f  ", current.getX(), current.getY(), current.getHeading(AngleUnit.DEGREES)) +
                     String.format("distance: %5.2f %5.2f  ", distance, driveDeceleration) +
@@ -742,8 +742,8 @@ public class DriveControl extends Thread {
      */
     public void waitUntilNotMoving (double timeout) {
         Logger.debug("waiting, driveControl is %b", isBusy());
-        //if (!isBusy() )
-        //    Logger.warning("driveControl is not busy");
+        if (!isBusy() )
+            Logger.warning("driveControl is not busy");
         timer.reset();
         while (isBusy() &&  opMode.opModeIsActive()) {
             if (timer.milliseconds() > timeout) {
