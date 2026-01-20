@@ -253,7 +253,7 @@ public class Robot extends Thread {
             hopper.leverDown();
             if (!leverDown) {
                 Logger.message("delaying");
-                delay(1000);
+                delay(500);
                 Logger.message("done delaying");
 
             }
