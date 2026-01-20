@@ -1,23 +1,35 @@
 package competition;
 
-import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import common.Auto;
 import common.Logger;
-import utils.PoseData;
 
-@Disabled
-@Autonomous(name="Auto Red Goal", group="Competition")
-@com.acmerobotics.dashboard.config.Config
+@Autonomous(name="Red Goal", group="Competition")
 
 public class AutoRedGoal extends LinearOpMode {
 
     @Override
     public void runOpMode() {
 
+        try {
+            long delay = 0;
+            double launcherSpeed = 27;
+            Auto.Order[] order = { Auto.Order.TOP, Auto.Order.MIDDLE };
+
+            Auto auto = new common.Auto(this,
+                    Auto.Alliance.RED,
+                    Auto.StartPosition.GOAL,
+                    order,
+                    launcherSpeed,
+                    delay);
+
+            auto.runAuto();
+
+        } catch (Exception e) {
+            Logger.error(e, "Exception");
+            throw e;
+        }
     }
 }

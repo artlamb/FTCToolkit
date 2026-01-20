@@ -9,21 +9,24 @@ import common.Logger;
 
 @Disabled
 @Autonomous(name="Blue Audience Delay", group="Competition")
-@com.acmerobotics.dashboard.config.Config
 
 public class AutoBlueAudienceDelay extends LinearOpMode {
-
-    public static long delay = 10;
-    public static double launcherSpeed = 27;
-    public static Auto.Alliance alliance = Auto.Alliance.BLUE;
-    public static Auto.StartPosition startPosition = Auto.StartPosition.AUDIENCE;
-    public Auto.Order[] order = { Auto.Order.TOP, Auto.Order.MIDDLE, Auto.Order.BOTTOM };
 
     @Override
     public void runOpMode() {
 
         try {
-            Auto auto = new common.Auto(this, alliance, startPosition, order, launcherSpeed, delay);
+            long delay = 10;
+            double launcherSpeed = 27;
+            Auto.Order[] order = { Auto.Order.TOP, Auto.Order.MIDDLE };
+
+            Auto auto = new common.Auto(this,
+                    Auto.Alliance.BLUE,
+                    Auto.StartPosition.AUDIENCE,
+                    order,
+                    launcherSpeed,
+                    delay);
+
             auto.runAuto();
 
         } catch (Exception e) {

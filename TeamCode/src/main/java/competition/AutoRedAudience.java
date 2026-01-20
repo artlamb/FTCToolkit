@@ -6,9 +6,9 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import common.Auto;
 import common.Logger;
 
-@Autonomous(name="Blue Goal", group="Competition")
+@Autonomous(name="Red Audience", group="Competition")
 
-public class AutoBlueGoal extends LinearOpMode {
+public class AutoRedAudience extends LinearOpMode {
 
     @Override
     public void runOpMode() {
@@ -19,8 +19,8 @@ public class AutoBlueGoal extends LinearOpMode {
             Auto.Order[] order = { Auto.Order.TOP, Auto.Order.MIDDLE };
 
             Auto auto = new common.Auto(this,
-                    Auto.Alliance.BLUE,
-                    Auto.StartPosition.GOAL,
+                    Auto.Alliance.RED,
+                    Auto.StartPosition.AUDIENCE,
                     order,
                     launcherSpeed,
                     delay);
