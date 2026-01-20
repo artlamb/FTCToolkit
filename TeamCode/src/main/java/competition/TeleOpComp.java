@@ -6,6 +6,7 @@ import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.LED;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -30,6 +31,7 @@ public class TeleOpComp extends LinearOpMode {
 
     public static boolean useOdometer = true;
     public static double DEFAULT_SPEED = 28;
+    public static boolean DUAL_DRIVERS = true;
 
     private Robot robot;
     private DriveControl driveControl;
@@ -127,93 +129,71 @@ public class TeleOpComp extends LinearOpMode {
      */
     private void handleGamepad() {
 
-        if (gamepad1.aWasPressed() || gamepad2.aWasPressed()) {
+        Gamepad drive2;
+
+        if (DUAL_DRIVERS) {
+            drive2 = gamepad2;
+        } else {
+            drive2 = gamepad1;
+        }
+
+        if (drive2.aWasPressed()) {
             // start or stop the launcher motors
             robot.powerLauncher(! launcher.isRunning(), speed);
 
-        } else if (gamepad1.yWasPressed() || gamepad2.yWasPressed()) {
+        } else if (drive2.yWasPressed()) {
             // turn the intake on or off and open, close the lever
             robot.powerIntake(! intake.isRunning());
 
-        } else if (gamepad1.bWasPressed() || gamepad2.bWasPressed()) {
+        } else if (drive2.bWasPressed()) {
             // line up with the goal
             lineUpWithGoal(false);
             setSpeed();
 
-        } else if (gamepad1.xWasPressed() || gamepad2.xWasPressed()) {
+        } else if (drive2.xWasPressed()) {
             // open /close the loader gate
             launcher.gateToggle();
 
-        } else if (gamepad1.dpadUpWasPressed() || gamepad2.dpadUpWasPressed()){
+        } else if (drive2.dpadUpWasPressed()){
             // pull the trigger
             launcher.pullTrigger();
 
-        } else if (gamepad1.dpadDownWasPressed() || gamepad2.dpadDownWasPressed()) {
+        } else if (drive2.dpadDownWasPressed()) {
             // line up with the goal and fire all artifacts
             hopper.leverToggle();
 
-        } else if (gamepad1.dpadLeftWasPressed() || gamepad2.dpadLeftWasPressed()) {
+        } else if (drive2.dpadLeftWasPressed()) {
             // reverse the intake
             intake.toggleReverse();
 
-        } else if (gamepad1.right_trigger > 0) {
+        } else if (drive2.right_trigger > 0) {
             // fire one artifact
             fire();
-            while (gamepad1.right_trigger > 0) {
-                Thread.yield();
-            }
-        } else if (gamepad2.right_trigger > 0) {
-            // fire one artifact
-            fire();
-            while (gamepad2.right_trigger > 0) {
+            while (drive2.right_trigger > 0) {
                 Thread.yield();
             }
 
-        } else if (gamepad1.left_trigger > 0) {
+        } else if (drive2.left_trigger > 0) {
             // fire all artifacts
             fireAll();
-            while (gamepad1.left_trigger > 0) {
-                Thread.yield();
-            }
-        } else if (gamepad2.left_trigger > 0) {
-            // fire all artifacts
-            fireAll();
-            while (gamepad2.left_trigger > 0) {
+            while (drive2.left_trigger > 0) {
                 Thread.yield();
             }
 
-        } else if (gamepad1.left_bumper) {
+        } else if (drive2.left_bumper) {
             // increase motor speed
             speedIncrement.reset();
-            while (gamepad1.left_bumper) {
-                speed = Math.max(speed - speedIncrement.get(), 0);
-                displaySpeed();
-                telemetry.update();
-            }
-            setCustomSpeed();
-        } else if (gamepad2.left_bumper) {
-            // increase motor speed
-            speedIncrement.reset();
-            while (gamepad2.left_bumper) {
+            while (drive2.left_bumper) {
                 speed = Math.max(speed - speedIncrement.get(), 0);
                 displaySpeed();
                 telemetry.update();
             }
             setCustomSpeed();
 
-        } else if (gamepad1.right_bumper) {
+        } else if (drive2.right_bumper) {
             // decrease the motor speed
             speedIncrement.reset();
-            while (gamepad1.right_bumper) {
-                speed = Math.min(speed + speedIncrement.get(), 140);
-                displaySpeed();
-                telemetry.update();
-            }
-            setCustomSpeed();
-        } else if (gamepad2.right_bumper) {
-            // decrease the motor speed
-            speedIncrement.reset();
-            while (gamepad2.right_bumper) {
+            while (drive2.right_bumper) {
                 speed = Math.min(speed + speedIncrement.get(), 140);
                 displaySpeed();
                 telemetry.update();
