@@ -2,6 +2,7 @@ package test;
 
 import android.annotation.SuppressLint;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
@@ -15,7 +16,7 @@ import utils.Increment;
 
 @TeleOp(name="Launcher Test", group="Test")
 @SuppressLint("DefaultLocale")
-//@Disabled
+@Disabled
 
 public class LauncherTest extends LinearOpMode {
 
