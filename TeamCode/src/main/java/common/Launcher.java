@@ -21,7 +21,7 @@ public class Launcher extends Thread {
     public static double pidP = 40.0;
     public static double pidI = 1.0;
 
-    public static double TRIGGER_COCK   = 0.360;
+    public static double TRIGGER_COCK   = 0.375;
     public static double TRIGGER_FIRE   = 0.670;
 
     public static double GATE_RIGHT_OPENED = 0.500;
@@ -29,9 +29,9 @@ public class Launcher extends Thread {
     public static double GATE_LEFT_OPENED = 0.500;
     public static double GATE_LEFT_CLOSED = 0.240;
 
-    public static long   GATE_REACT_TIME =    100;               // time in millisecond for the loader to open/close
+    public static long   GATE_REACT_TIME =    0;                 // time in millisecond for the loader to open/close
     public static long   TRIGGER_FIRE_TIME =  300;               // time in millisecond to pull the trigger
-    public static long   TRIGGER_COCK_TIME =  250;               // time in millisecond to cock the trigger
+    public static long   TRIGGER_COCK_TIME =  300;               // time in millisecond to cock the trigger
     public static long   ARTIFACT_LOAD_TIME = 500;
 
     public static double IDLE_SPEED = 20;
@@ -66,6 +66,7 @@ public class Launcher extends Thread {
     LinearOpMode opMode;
     private double angle = 0;
     private double speed = 28;
+    private double idleSpeed = 20;
     private double velocity;
     private double angleAdjustTime;
     private boolean running = false;
@@ -126,7 +127,6 @@ public class Launcher extends Thread {
             synchronized (this) {
                 switch (state) {
                     case IDLE:
-                        //checkForArtifact();
                         Thread.yield();
                         break;
                     case FIRE:
@@ -188,6 +188,19 @@ public class Launcher extends Thread {
             }
             Logger.message("launcher speed set to %f  velocity set to %f", speed, velocity);
         }
+    }
+
+    public void idle() {
+        synchronized (this) {
+
+            if (running) {
+                setVelocity(idleSpeed);
+            }
+        }
+    }
+
+    public void setIdleSpeed(double speed) {
+        this.idleSpeed = speed;
     }
 
     private void setVelocity(double speed) {
@@ -307,12 +320,6 @@ public class Launcher extends Thread {
         setVelocity(speed);
         for (int i = 0; i < 3; i++) {
             fire();
-            /*
-            if (i < 2) {
-                senseArtifact(ARTIFACT_LOAD_TIME);
-                delay(ARTIFACT_LOAD_TIME);
-            }
-             */
         }
         setVelocity(IDLE_SPEED);   // todo determine current draw
         Logger.info("fire all complete after %d ms", System.currentTimeMillis() - startTime);

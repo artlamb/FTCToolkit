@@ -247,9 +247,16 @@ public class Robot extends Thread {
     public void powerIntake(boolean on) {
 
         if (on) {
-            //powerLauncher(false, 0);
+            launcher.idle();
             launcher.gateClose();
+            boolean leverDown = hopper.isLeverDown();
             hopper.leverDown();
+            if (!leverDown) {
+                Logger.message("delaying");
+                delay(1000);
+                Logger.message("done delaying");
+
+            }
             intake.on();
         } else {
             intake.off();

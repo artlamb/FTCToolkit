@@ -28,9 +28,10 @@ import utils.Pose;
 
 public class TeleOpComp extends LinearOpMode {
 
-    public static boolean useOdometer = false;
+    public static boolean useOdometer = true;
     public static double DEFAULT_SPEED = 28;
 
+    private Robot robot;
     private DriveControl driveControl;
     private Launcher launcher;
     private Limelight limelight;
@@ -53,6 +54,7 @@ public class TeleOpComp extends LinearOpMode {
     boolean customSpeed = false;
 
     long odometerSetTime = 0;
+    int aprilTagID = 0;
 
     enum LEDColor { GREEN, RED, YELLOW, NONE }
 
@@ -81,7 +83,7 @@ public class TeleOpComp extends LinearOpMode {
 
     private void initialize() {
 
-        Robot robot = new Robot(this);
+        robot = new Robot(this);
         robot.startDriveGamepad();
 
         driveControl = robot.getDriveControl();
@@ -127,11 +129,11 @@ public class TeleOpComp extends LinearOpMode {
 
         if (gamepad1.aWasPressed() || gamepad2.aWasPressed()) {
             // start or stop the launcher motors
-            powerLauncher(! launcher.isRunning());
+            robot.powerLauncher(! launcher.isRunning(), speed);
 
         } else if (gamepad1.yWasPressed() || gamepad2.yWasPressed()) {
             // turn the intake on or off and open, close the lever
-            powerIntake(! intake.isRunning());
+            robot.powerIntake(! intake.isRunning());
 
         } else if (gamepad1.bWasPressed() || gamepad2.bWasPressed()) {
             // line up with the goal
@@ -146,9 +148,13 @@ public class TeleOpComp extends LinearOpMode {
             // pull the trigger
             launcher.pullTrigger();
 
-        } else if (gamepad1.dpadDownWasPressed() || gamepad2.dpadDownWasPressed()){
+        } else if (gamepad1.dpadDownWasPressed() || gamepad2.dpadDownWasPressed()) {
             // line up with the goal and fire all artifacts
             hopper.leverToggle();
+
+        } else if (gamepad1.dpadLeftWasPressed() || gamepad2.dpadLeftWasPressed()) {
+            // reverse the intake
+            intake.toggleReverse();
 
         } else if (gamepad1.right_trigger > 0) {
             // fire one artifact
@@ -236,12 +242,15 @@ public class TeleOpComp extends LinearOpMode {
 
                 // set the odometer's position to the april tag's robot position every 20 seconds
                 if (useOdometer) {
-                    if (odometerSetTime == 0 || System.currentTimeMillis() - odometerSetTime > 10000) {
-                        odometerSetTime = System.currentTimeMillis();
+                    long time = System.currentTimeMillis();
+                    if (odometerSetTime == 0 || time - odometerSetTime > 20000) {
+                        odometerSetTime = time;
+                        aprilTagID = id;
                         driveControl.setPose(current);
                         Logger.message("odometer's position set to: %s", current);
                     }
                 }
+                setLED(LEDColor.GREEN);
             }
         }
 
@@ -250,7 +259,9 @@ public class TeleOpComp extends LinearOpMode {
             // If we can see the april tag and the odometer's position has been set, use it.
             if (useOdometer && odometerSetTime != 0) {
                 current = driveControl.getPose();
+                id = aprilTagID;
                 Logger.message("no april tag found, using odometer's position: %s", current);
+                setLEDs(LEDColor.GREEN, LEDColor.YELLOW);
 
             } else {
                 displayAprilTagInfo("april tag if not found");
@@ -259,7 +270,6 @@ public class TeleOpComp extends LinearOpMode {
             }
         }
 
-        setLED(LEDColor.GREEN);
 
         // aim for the center of the goal
         Pose target;
@@ -344,6 +354,32 @@ public class TeleOpComp extends LinearOpMode {
             redRightLED.on();
         }
     }
+
+    private void setLEDs (LEDColor leftColor, LEDColor rightColor) {
+        setLED(redLeftLED, greenLeftLED, leftColor);
+        setLED(redRightLED, greenRightLED, rightColor);
+    }
+
+    private void setLEDs(LEDColor color) {
+        setLED(redLeftLED, greenLeftLED, color);
+        setLED(redRightLED, greenRightLED, color);
+    }
+
+    private void setLED (LED redLED , LED greenLED, LEDColor color) {
+        if (color == LEDColor.GREEN || color == LEDColor.NONE) {
+            redLED.off();
+        }
+        if (color == LEDColor.RED || color == LEDColor.NONE) {
+            greenLED.off();
+        }
+        if (color == LEDColor.GREEN || color == LEDColor.YELLOW ) {
+            greenLED.on();
+        }
+        if (color == LEDColor.RED || color == LEDColor.YELLOW) {
+            redLED.on();
+        }
+    }
+
 
     private void displayAprilTagInfo(String msg) {
         aprilTagMsg.setValue("%s", msg);
@@ -445,7 +481,7 @@ public class TeleOpComp extends LinearOpMode {
     private void powerIntake(boolean on) {
 
         if (on) {
-            powerLauncher(false);
+            //powerLauncher(false);
             launcher.gateClose();
             hopper.leverDown();
             intake.on();

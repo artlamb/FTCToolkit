@@ -1,22 +1,23 @@
 package competition;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import common.Auto;
-import common.Debug;
 import common.Logger;
 
-@Autonomous(name="Auto All", group="Competition")
+@Disabled
+@Autonomous(name="Blue Audience Delay", group="Competition")
 @com.acmerobotics.dashboard.config.Config
 
-public class AutoAll extends LinearOpMode {
+public class AutoBlueAudienceDelay extends LinearOpMode {
 
-    public static long delay = 0;
+    public static long delay = 10;
     public static double launcherSpeed = 27;
     public static Auto.Alliance alliance = Auto.Alliance.BLUE;
-    public static Auto.StartPosition startPosition = Auto.StartPosition.OBELISK;
-    public Auto.Order[] order = { Auto.Order.TOP, Auto.Order.MIDDLE };
+    public static Auto.StartPosition startPosition = Auto.StartPosition.AUDIENCE;
+    public Auto.Order[] order = { Auto.Order.TOP, Auto.Order.MIDDLE, Auto.Order.BOTTOM };
 
     @Override
     public void runOpMode() {

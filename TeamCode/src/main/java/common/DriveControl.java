@@ -540,7 +540,7 @@ public class DriveControl extends Thread {
                 leftRearPower * maxVelocity,
                 rightRearPower * maxVelocity);
 
-        Logger.debug("%s",
+        Logger.verbose("%s",
                 String.format("x: %5.2f  y: %5.2f  x2: %5.2f  ", x, y, rightX) +
                         String.format("angle: %5.2f (rad)  %4.0f (deg)  ", angle, Math.toDegrees(angle)) +
                         String.format("power: %4.2f  sin: %5.2f  cos: %5.2f  ", power, sin, cos) +

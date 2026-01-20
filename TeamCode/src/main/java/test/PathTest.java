@@ -191,9 +191,9 @@ public class PathTest extends LinearOpMode {
         for (PoseData data: waypoints) {
             Pose pose = createPose(data.x, data.y, data.h);
             if (navigate.pathExists(data.desc.name())) {
-                navigate.appendPose(data.desc.name(), data.speed, pose);
+                navigate.appendPose(data.desc.name(), data.speed, 0, pose);
             } else {
-                navigate.addPath(data.desc.name(), data.speed, pose);
+                navigate.addPath(data.desc.name(), data.speed, 0, pose);
             }
         }
     }

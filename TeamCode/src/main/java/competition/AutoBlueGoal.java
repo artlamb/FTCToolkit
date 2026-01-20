@@ -16,39 +16,9 @@ import utils.PoseData;
 
 public class AutoBlueGoal extends LinearOpMode {
 
-    public static double LAUNCHER_SPEED = 27;
-
-    public static PoseData START =      new PoseData(-50.5, 50.5,  135.0);
-    public static PoseData WAYPOINT_1 = new PoseData(-23.5,  23.5, 135.0);
-    public static PoseData PARK =       new PoseData(-23.5,  -12,    0.0);
-
-    Auto auto;
-
     @Override
     public void runOpMode() {
 
-        try {
-            initialize();
-
-            telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
-
-            auto.runAuto();
-
-        } catch (Exception e) {
-            Logger.error(e, "Exception");
-            throw e;
-        }
     }
 
-    private void initialize() {
-        auto = new Auto(this);
-
-        auto.addPath(Auto.PathState.START, START.x, START.y, START.h);
-        auto.addPath(Auto.PathState.SHOOT, WAYPOINT_1.x, WAYPOINT_1.y, WAYPOINT_1.h);
-        auto.addPath(Auto.PathState.PARK, PARK.x, PARK.y, PARK.h);
-
-        auto.setStartPose(START.x, START.y, START.h);
-        auto.setLauncherSpeed(LAUNCHER_SPEED);
-        auto.drawPaths();
-    }
 }

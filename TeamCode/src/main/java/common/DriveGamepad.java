@@ -72,6 +72,10 @@ public class DriveGamepad extends Thread {
                 Thread.yield();
             }
 
+            if (!Debug.drive) {
+                break;
+            }
+
             if (gamepad.back) {
                 driveControl.emergencyStop();
                 break;

@@ -4,10 +4,6 @@
 
 package common;
 
-import android.util.Log;
-
-import java.util.Objects;
-
 @com.acmerobotics.dashboard.config.Config
 
 public final class Debug {

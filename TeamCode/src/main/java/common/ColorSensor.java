@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.hardware.LED;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 
-@com.acmerobotics.dashboard.config.Config
+//@com.acmerobotics.dashboard.config.Config
 
 public class ColorSensor {
 

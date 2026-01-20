@@ -33,7 +33,7 @@ public class Intake {
      *
      * @noinspection unused
      */
-    public void intakeToggle() {
+    public void toggle() {
         if (running) {
             off();
         } else {
@@ -57,5 +57,25 @@ public class Intake {
         Logger.debug("intake on");
         intake.setPower(speed);
         running = true;
+    }
+
+    /**
+     * Turn the intake motor on in reverse
+     */
+    public void reverse() {
+        Logger.debug("intake reverse");
+        intake.setPower(-speed);
+        running = true;
+    }
+
+    /**
+     * Turn the intake motor on in reverse, set to the saved speed, if it off, otherwise turn it off.
+     */
+    public void toggleReverse() {
+        if (running) {
+            off();
+        } else {
+            reverse();
+        }
     }
 }

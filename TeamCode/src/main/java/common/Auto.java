@@ -12,6 +12,9 @@ public class Auto {
 
     public static double MAX_SPEED = 0.60;
     public static double LOW_SPEED = 0.20;
+    public static double MIN_TOLERANCE = 0;
+    public static double LOW_TOLERANCE = 0.30;
+    public static double HIGH_TOLERANCE = 0.60;
 
     public static PoseData START_AUDIENCE = new PoseData(12.25, -62,    90);
     public static PoseData START_GOAL =     new PoseData(50.50, 50.50,  45);
@@ -94,10 +97,6 @@ public class Auto {
         navigate.setStartingPose(pathIndex);
     }
 
-    public void runAuto(long timeout) {
-        delay = timeout;
-    }
-
     public void runAuto() {
 
         opMode.telemetry.addData("Alliance", alliance);
@@ -174,12 +173,12 @@ public class Auto {
         } else if (startPosition == StartPosition.AUDIENCE) {
             start = createPose(START_AUDIENCE.x * xSign, START_AUDIENCE.y, START_AUDIENCE.h);
         }
-        navigate.addPath(getPathName(PathState.START), MAX_SPEED, start);
+        navigate.addPath(getPathName(PathState.START), MAX_SPEED, MIN_TOLERANCE, start);
 
         // Create a path to the shooting position.
         heading = (alliance == Alliance.RED) ? SHOOT.h : SHOOT.h + 90;
         Pose shoot = createPose(SHOOT.x * xSign, SHOOT.y, heading);
-        navigate.addPath(getPathName(PathState.SHOOT), MAX_SPEED, shoot);
+        navigate.addPath(getPathName(PathState.SHOOT), MAX_SPEED, MIN_TOLERANCE, shoot);
 
         // Create a path for to pickup each group of artifact on the order specified and a path back to the shooting position.
         for (Order o : order) {
@@ -207,9 +206,9 @@ public class Auto {
             }
             Pose artifactStart = createPose(x1 * xSign, y2, heading);
             Pose artifactEnd = createPose(x2 * xSign, y2, heading);
-            navigate.addPath(getPathName(pathState), MAX_SPEED, artifactStart);
-            navigate.appendPose(pathState.name(), LOW_SPEED, artifactEnd);
-            navigate.addPath(getPathName(PathState.SHOOT), MAX_SPEED, shoot);
+            navigate.addPath(getPathName(pathState), MAX_SPEED, MIN_TOLERANCE, artifactStart);
+            navigate.appendPose(pathState.name(), LOW_SPEED, LOW_TOLERANCE, artifactEnd);
+            navigate.addPath(getPathName(PathState.SHOOT), MAX_SPEED, MIN_TOLERANCE, shoot);
         }
 
         // Create a path to the parking position.
@@ -219,7 +218,7 @@ public class Auto {
         } else {
             park = createPose(PARK_AUDIENCE.x * xSign, PARK_AUDIENCE.y, PARK_AUDIENCE.h);
         }
-        navigate.addPath(getPathName(PathState.PARK), MAX_SPEED, park);
+        navigate.addPath(getPathName(PathState.PARK), MAX_SPEED, HIGH_TOLERANCE, park);
     }
 
     private Pose createPose(double x, double y, double heading) {
@@ -233,7 +232,7 @@ public class Auto {
     }
 
     public void addPath(PathState pathState, double x, double y, double heading) {
-        navigate.addPath(getPathName(pathState), MAX_SPEED, createPose(x, y, heading));
+        navigate.addPath(getPathName(pathState), MAX_SPEED, 0, createPose(x, y, heading));
     }
 
     public void setStartPose(double x, double y, double heading) {

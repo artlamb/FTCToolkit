@@ -85,7 +85,7 @@ public class IntakeTest extends LinearOpMode {
         floodgate.display(1000);
 
         if (gamepad.aWasPressed()) {
-            intake.intakeToggle();
+            intake.toggle();
 
         } else if (gamepad.bWasPressed()) {
             hopper.leverToggle();

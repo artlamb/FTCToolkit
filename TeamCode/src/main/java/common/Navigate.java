@@ -59,6 +59,12 @@ public class Navigate {
         followPath(path);
     }
 
+    /**
+     * Follow the path with the specified name.
+     * @param name name of the path
+     *
+     * @noinspection unused
+     */
     public void followPath(String name) {
         for (Path path : paths) {
             if (path.name.equals(name)) {
@@ -97,14 +103,15 @@ public class Navigate {
      *
      * @param name name of the pose
      * @param speed speed of the path
+     * @param tolerance tolerance of the path's end pose
      * @param poses one or more poses
      */
-    public void addPath(String name, double speed, Pose... poses) {
+    public void addPath(String name, double speed, double tolerance, Pose... poses) {
         Path path = new Path();
         path.name = name;
         path.segment = new ArrayList<>();
         for (Pose pose: poses) {
-            path.segment.add(new PathSegment(pose, speed));
+            path.segment.add(new PathSegment(pose, speed, tolerance));
         }
         paths.add(path);
     }
@@ -115,10 +122,10 @@ public class Navigate {
      * @param name name of the path
      * @param pose pose to append
      */
-    public void appendPose(String name, double speed, Pose pose) {
+    public void appendPose(String name, double speed, double tolerance, Pose pose) {
         for (Path path : paths) {
             if (path.name.equals(name)) {
-                path.segment.add(new PathSegment(pose, speed));
+                path.segment.add(new PathSegment(pose, speed, tolerance));
                 return;
             }
         }
@@ -203,7 +210,7 @@ public class Navigate {
     public void printPaths() {
         for (Path path : paths) {
             for (PathSegment segment: path.segment) {
-                Logger.message("path %-12s %s", path.name, segment.toString());
+                Logger.message("path %-12s %s  speed: %5.2f  tolerance: %5.2f", path.name, segment.toString(), segment.speed, segment.tolerance);
             }
         }
     }
