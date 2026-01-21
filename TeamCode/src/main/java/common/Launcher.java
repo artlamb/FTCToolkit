@@ -56,6 +56,8 @@ public class Launcher extends Thread {
     private final Servo gateRight;
     private final Servo gateLeft;
 
+    private final Hopper hopper;
+
     private final DcMotorEx leftMotor;
     private final DcMotorEx rightMotor;
     public List<DcMotorEx> motors;
@@ -108,6 +110,8 @@ public class Launcher extends Thread {
         gateRight = opMode.hardwareMap.get(Servo.class, Config.GATE_RIGHT);
         gateLeft = opMode.hardwareMap.get(Servo.class, Config.GATE_LEFT);
         gateOpen();
+
+        hopper = new Hopper(opMode);
 
         artifactSensor = opMode.hardwareMap.get(DistanceSensor.class, Config.ARTIFACT_SENSOR);
 
@@ -315,12 +319,22 @@ public class Launcher extends Thread {
         Logger.info("fire complete after %d ms", System.currentTimeMillis() - startTime);
     }
 
+    private void fireOne() {
+        long startTime = System.currentTimeMillis();
+        setVelocity(speed);
+        hopper.leverUp();
+        fire();
+        Logger.info("fire one complete after %d ms", System.currentTimeMillis() - startTime);
+    }
+
     private void fireAll() {
         long startTime = System.currentTimeMillis();
         setVelocity(speed);
+        hopper.leverUp();
         for (int i = 0; i < 3; i++) {
             fire();
         }
+        hopper.leverDown();
         setVelocity(IDLE_SPEED);   // todo determine current draw
         Logger.info("fire all complete after %d ms", System.currentTimeMillis() - startTime);
     }
@@ -386,6 +400,22 @@ public class Launcher extends Thread {
         delay(TRIGGER_FIRE_TIME);
         trigger.setPosition(TRIGGER_COCK);
         delay(TRIGGER_COCK_TIME);
+    }
+
+    public void leverUp() {
+        hopper.leverUp();
+    }
+
+    public void leverDown() {
+        hopper.leverDown();
+    }
+
+    public boolean isLeverDown() {
+        return hopper.isLeverDown();
+    }
+
+    public void leverToggle() {
+        hopper.leverToggle();
     }
 
     public boolean isBusy() {

@@ -14,7 +14,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 import common.Config;
 import common.DriveControl;
-import common.Hopper;
 import common.Intake;
 import common.Launcher;
 import common.Limelight;
@@ -38,7 +37,6 @@ public class TeleOpComp extends LinearOpMode {
     private Launcher launcher;
     private Limelight limelight;
     private Intake intake;
-    private Hopper hopper;
     private LED redLeftLED;
     private LED redRightLED;
     private LED greenLeftLED;
@@ -98,7 +96,6 @@ public class TeleOpComp extends LinearOpMode {
         limelight.setPipeline(Limelight.Pipeline.LOCATION);
 
         intake = robot.getIntake();
-        hopper = robot.getHopper();
 
         greenLeftLED = hardwareMap.get(LED.class, Config.GREEN_LEFT_LED);
         greenRightLED = hardwareMap.get(LED.class, Config.GREEN_RIGHT_LED);
@@ -160,7 +157,7 @@ public class TeleOpComp extends LinearOpMode {
 
         } else if (drive2.dpadDownWasPressed()) {
             // line up with the goal and fire all artifacts
-            hopper.leverToggle();
+            launcher.leverToggle();
 
         } else if (drive2.dpadLeftWasPressed()) {
             // reverse the intake
@@ -311,35 +308,6 @@ public class TeleOpComp extends LinearOpMode {
             customSpeed = false;
     }
 
-    /**
-     * Set the color of the left and right LEDs
-     * @param color the color of the LEDs
-     */
-    private void setLED(LEDColor color) {
-
-        if (color == LEDColor.GREEN || color == LEDColor.NONE) {
-            redLeftLED.off();
-            redRightLED.off();
-        }
-        if (color == LEDColor.RED || color == LEDColor.NONE) {
-            greenLeftLED.off();
-            greenRightLED.off();
-        }
-        if (color == LEDColor.GREEN || color == LEDColor.YELLOW ) {
-            greenLeftLED.on();
-            greenRightLED.on();
-        }
-        if (color == LEDColor.RED || color == LEDColor.YELLOW) {
-            redLeftLED.on();
-            redRightLED.on();
-        }
-    }
-
-    private void setLEDs(LEDColor color) {
-        setLED(redLeftLED, greenLeftLED, color);
-        setLED(redRightLED, greenRightLED, color);
-    }
-
     private void setLEDs (LEDColor leftColor, LEDColor rightColor) {
         setLED(redLeftLED, greenLeftLED, leftColor);
         setLED(redRightLED, greenRightLED, rightColor);
@@ -422,18 +390,14 @@ public class TeleOpComp extends LinearOpMode {
      * Fire one artifact
      */
     private void fire() {
-        hopper.leverUp();
         launcher.fireLauncher();
-        hopper.leverDown();
     }
 
     /**
      * Fire all artifacts
      */
     private void fireAll() {
-        hopper.leverUp();
         launcher.fireAllArtifacts();
-        hopper.leverDown();
     }
 
     /**

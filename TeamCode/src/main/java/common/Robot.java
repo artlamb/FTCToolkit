@@ -249,8 +249,8 @@ public class Robot extends Thread {
         if (on) {
             launcher.idle();
             launcher.gateClose();
-            boolean leverDown = hopper.isLeverDown();
-            hopper.leverDown();
+            boolean leverDown = launcher.isLeverDown();
+            launcher.leverDown();
             if (!leverDown) {
                 Logger.message("delaying");
                 delay(500);
@@ -260,7 +260,7 @@ public class Robot extends Thread {
             intake.on();
         } else {
             intake.off();
-            hopper.leverUp();
+            launcher.leverUp();
             launcher.gateOpen();
         }
     }
@@ -269,16 +269,13 @@ public class Robot extends Thread {
      * Fire one artifact
      */
     public void fire() {
-        hopper.leverUp();
         launcher.fireLauncher();
-
     }
 
     /**
      * Fire all artifacts
      */
     public void fireAllArtifacts() {
-        hopper.leverUp();
         launcher.fireAllArtifacts();
     }
 
