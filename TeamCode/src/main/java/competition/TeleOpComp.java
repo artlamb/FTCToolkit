@@ -68,7 +68,7 @@ public class TeleOpComp extends LinearOpMode {
             telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
             telemetry.update();
 
-            setLED(LEDColor.NONE);
+            setLEDs(LEDColor.NONE, LEDColor.NONE);
 
             waitForStart();
 
@@ -230,7 +230,7 @@ public class TeleOpComp extends LinearOpMode {
                         Logger.message("odometer's position set to: %s", current);
                     }
                 }
-                setLED(LEDColor.GREEN);
+                setLEDs(LEDColor.GREEN, LEDColor.GREEN);
             }
         }
 
@@ -245,7 +245,7 @@ public class TeleOpComp extends LinearOpMode {
 
             } else {
                 displayAprilTagInfo("april tag if not found");
-                setLED(LEDColor.RED);
+                setLEDs(LEDColor.RED, LEDColor.RED);
                 return;
             }
         }
@@ -335,14 +335,14 @@ public class TeleOpComp extends LinearOpMode {
         }
     }
 
-    private void setLEDs (LEDColor leftColor, LEDColor rightColor) {
-        setLED(redLeftLED, greenLeftLED, leftColor);
-        setLED(redRightLED, greenRightLED, rightColor);
-    }
-
     private void setLEDs(LEDColor color) {
         setLED(redLeftLED, greenLeftLED, color);
         setLED(redRightLED, greenRightLED, color);
+    }
+
+    private void setLEDs (LEDColor leftColor, LEDColor rightColor) {
+        setLED(redLeftLED, greenLeftLED, leftColor);
+        setLED(redRightLED, greenRightLED, rightColor);
     }
 
     private void setLED (LED redLED , LED greenLED, LEDColor color) {
@@ -359,7 +359,6 @@ public class TeleOpComp extends LinearOpMode {
             redLED.on();
         }
     }
-
 
     private void displayAprilTagInfo(String msg) {
         aprilTagMsg.setValue("%s", msg);
@@ -425,6 +424,7 @@ public class TeleOpComp extends LinearOpMode {
     private void fire() {
         hopper.leverUp();
         launcher.fireLauncher();
+        hopper.leverDown();
     }
 
     /**
@@ -433,43 +433,7 @@ public class TeleOpComp extends LinearOpMode {
     private void fireAll() {
         hopper.leverUp();
         launcher.fireAllArtifacts();
-    }
-
-    /**
-     * Start or stop the launcher motors. If the launcher is being powered on
-     * set the speed of the launcher motors and also power off the intake
-     *
-     * @param on true to power the launcher on, false to power the launcher off
-     */
-    private void powerLauncher(boolean on) {
-
-        if (on) {
-            powerIntake(false);
-            launcher.setSpeed(speed);
-            launcher.runLauncher();
-        } else {
-            launcher.stopLauncher();
-        }
-    }
-
-    /**
-     * Start or stop the intake motor. Ii the intake is being powered on, stop the launcher
-     * motors,
-     *
-     * @param on true to power the intake on, false to power the intake off
-     */
-    private void powerIntake(boolean on) {
-
-        if (on) {
-            //powerLauncher(false);
-            launcher.gateClose();
-            hopper.leverDown();
-            intake.on();
-        } else {
-            intake.off();
-            hopper.leverUp();
-            launcher.gateOpen();
-        }
+        hopper.leverDown();
     }
 
     /**
