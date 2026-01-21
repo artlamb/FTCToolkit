@@ -34,8 +34,6 @@ public class Launcher extends Thread {
     public static long   TRIGGER_COCK_TIME =  300;               // time in millisecond to cock the trigger
     public static long   ARTIFACT_LOAD_TIME = 500;
 
-    public static double IDLE_SPEED = 20;
-
    private boolean gateOpen = true;
 
     private enum LAUNCHER_STATE {IDLE, FIRE, FIRE_ALL }
@@ -134,7 +132,7 @@ public class Launcher extends Thread {
                         Thread.yield();
                         break;
                     case FIRE:
-                        fire();
+                        fireOne();
                         state = LAUNCHER_STATE.IDLE;
                         break;
                     case FIRE_ALL:
@@ -335,7 +333,7 @@ public class Launcher extends Thread {
             fire();
         }
         hopper.leverDown();
-        setVelocity(IDLE_SPEED);   // todo determine current draw
+        setVelocity(idleSpeed);   // todo determine current draw
         Logger.info("fire all complete after %d ms", System.currentTimeMillis() - startTime);
     }
 
