@@ -59,8 +59,8 @@ import utils.PoseData;
 import utils.Waypoint;
 
 @TeleOp(name="Path Test", group="Test")
-@SuppressLint("DefaultLocale")
 @Disabled
+@SuppressLint("DefaultLocale")
 @Config
 
 public class PathTest extends LinearOpMode {
@@ -78,12 +78,10 @@ public class PathTest extends LinearOpMode {
     private final Mode MODE = Mode.AUTO_PATHS;
 
     private final PoseData[] waypoints = {
-            //new PoseData(-50.5, 50.5,   135, MAX_SPEED, Waypoint.START),
-            new PoseData(-23.5, 62.0, 90, MAX_SPEED, Waypoint.START),
-            new PoseData(-23.5, 23.5, 135, MAX_SPEED, Waypoint.SHOOT_1),
-            new PoseData(-30.5, 11.75,  0,   MAX_SPEED, Waypoint.PICKUP_1),
-            //new PoseData(-23.5, -11.75,  0,   MAX_SPEED, Waypoint.PICKUP_1),
-            //new PoseData(-47,   11.75,  0,   LOW_SPEED, Waypoint.PICKUP_END_1),
+            new PoseData(-50.50, 50.50, 135, MAX_SPEED, Waypoint.START),
+            new PoseData(-23.50, 23.50, 135, MAX_SPEED, Waypoint.SHOOT_1),
+            new PoseData(-27.00, 11.75, 0,   MAX_SPEED, Waypoint.PICKUP_1),
+            new PoseData(-47.00, 11.75, 0,   LOW_SPEED, Waypoint.PICKUP_END_1),
     };
 
     private DriveControl driveControl;

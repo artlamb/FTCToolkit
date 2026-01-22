@@ -1,5 +1,8 @@
 package test;
 
+import static common.Config.GREEN_LEFT_LED;
+import static common.Config.RED_LEFT_LED;
+
 import android.annotation.SuppressLint;
 
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
@@ -15,13 +18,14 @@ import common.DriveGamepad;
 import common.Floodgate;
 import common.Hopper;
 import common.Intake;
+import common.LEDTwoColor;
 import common.Launcher;
 import common.Logger;
 import utils.Increment;
 
 @TeleOp(name="Intake Test", group="Test")
 @SuppressLint("DefaultLocale")
-@Disabled
+//@Disabled
 
 public class IntakeTest extends LinearOpMode {
 
@@ -32,6 +36,7 @@ public class IntakeTest extends LinearOpMode {
     Increment speedIncrement;
     double speed = 0.9;
     Floodgate floodgate;
+    LEDTwoColor led;
 
     Telemetry.Item speedMsg;
 
@@ -44,6 +49,8 @@ public class IntakeTest extends LinearOpMode {
 
             while (opModeIsActive()) {
                 handleGamepad();
+                led.update();
+                Thread.yield();
             }
 
         } catch (Exception e) {
@@ -58,6 +65,8 @@ public class IntakeTest extends LinearOpMode {
         launcher = new Launcher(this);
 
         floodgate = new Floodgate(this);
+        led = new LEDTwoColor(this, RED_LEFT_LED, GREEN_LEFT_LED);
+        led.setColor(LEDTwoColor.LEDColor.GREEN);
 
         Drive drive = new Drive(this);
 
@@ -84,10 +93,11 @@ public class IntakeTest extends LinearOpMode {
     private void handleGamepad() {
         Gamepad gamepad = gamepad1;
 
-        floodgate.display(1000);
+        //floodgate.display(1000);
 
-        if (gamepad.aWasPressed()) {
+        if (gamepad1.aWasPressed()) {
             intake.toggle();
+            led.blink(intake.isRunning());
 
         } else if (gamepad.bWasPressed()) {
             hopper.leverToggle();

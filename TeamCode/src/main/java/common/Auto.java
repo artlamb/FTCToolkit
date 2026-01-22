@@ -18,9 +18,9 @@ public class Auto {
 
     public static PoseData START_AUDIENCE = new PoseData(12.25, -62,    90);
     public static PoseData START_GOAL =     new PoseData(50.50, 50.50,  45);
-    public static PoseData START_OBELISK =  new PoseData(23.50, 62,     90);
-    public static PoseData SHOOT =          new PoseData(23.50, 23.50,  45);
-    public static PoseData ARTIFACT =       new PoseData(23.50, 11.75,  0);
+    public static PoseData SHOOT_GOAL =     new PoseData(23.50, 23.50,  45);
+    public static PoseData SHOOT_AUDIENCE = new PoseData(00.00, 00.00,  45);
+    public static PoseData ARTIFACT =       new PoseData(27.00, 11.75,  0);
     public static PoseData PARK_AUDIENCE =  new PoseData(12.25, -36,    0);
     public static PoseData PARK_GOAL =      new PoseData(23.50, -12,    0);
 
@@ -28,7 +28,7 @@ public class Auto {
 
     public Alliance alliance;
 
-    public enum StartPosition {GOAL, AUDIENCE, OBELISK}
+    public enum StartPosition {GOAL, AUDIENCE}
 
     public StartPosition startPosition;
 
@@ -144,6 +144,7 @@ public class Auto {
                     followPath();
                     robot.delay(1000);
                     robot.powerIntake(false);
+                    robot.loadArtifact();
                     break;
 
                 case PARK:
@@ -168,16 +169,19 @@ public class Auto {
         if (startPosition == StartPosition.GOAL) {
             heading = (alliance == Alliance.RED) ? START_GOAL.h : START_GOAL.h + 90;
             start = createPose(START_GOAL.x * xSign, START_GOAL.y, heading);
-        } else if (startPosition == StartPosition.OBELISK) {
-             start = createPose(START_OBELISK.x * xSign, START_OBELISK.y, START_OBELISK.h);
         } else if (startPosition == StartPosition.AUDIENCE) {
             start = createPose(START_AUDIENCE.x * xSign, START_AUDIENCE.y, START_AUDIENCE.h);
         }
         navigate.addPath(getPathName(PathState.START), MAX_SPEED, MIN_TOLERANCE, start);
 
         // Create a path to the shooting position.
-        heading = (alliance == Alliance.RED) ? SHOOT.h : SHOOT.h + 90;
-        Pose shoot = createPose(SHOOT.x * xSign, SHOOT.y, heading);
+        Pose shoot = null;
+        heading = (alliance == Alliance.RED) ? SHOOT_GOAL.h : SHOOT_GOAL.h + 90;
+        if (startPosition == StartPosition.GOAL) {
+            shoot = createPose(SHOOT_GOAL.x * xSign, SHOOT_GOAL.y, heading);
+        } else if (startPosition == StartPosition.AUDIENCE) {
+            shoot = createPose(SHOOT_AUDIENCE.x * xSign, SHOOT_AUDIENCE.y, heading);
+        }
         navigate.addPath(getPathName(PathState.SHOOT), MAX_SPEED, MIN_TOLERANCE, shoot);
 
         // Create a path for to pickup each group of artifact on the order specified and a path back to the shooting position.
@@ -186,7 +190,7 @@ public class Auto {
             double tileSize = 23.5;
             double x1 = ARTIFACT.x;
             double y1 = ARTIFACT.y;
-            double x2 = x1 + tileSize;
+            double x2 = (tileSize * 2);
             double y2 = y1;
             PathState pathState;
             switch (o) {
@@ -208,6 +212,9 @@ public class Auto {
             Pose artifactEnd = createPose(x2 * xSign, y2, heading);
             navigate.addPath(getPathName(pathState), MAX_SPEED, MIN_TOLERANCE, artifactStart);
             navigate.appendPose(pathState.name(), LOW_SPEED, LOW_TOLERANCE, artifactEnd);
+            if (startPosition == StartPosition.AUDIENCE) {
+                navigate.appendPose(pathState.name(), MAX_SPEED, LOW_TOLERANCE, artifactStart);
+            }
             navigate.addPath(getPathName(PathState.SHOOT), MAX_SPEED, MIN_TOLERANCE, shoot);
         }
 

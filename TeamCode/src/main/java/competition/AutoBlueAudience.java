@@ -14,8 +14,8 @@ public class AutoBlueAudience extends LinearOpMode {
     public void runOpMode() {
 
         long delay = 0;
-        double launcherSpeed = 27;
-        Auto.Order[] order = { Auto.Order.TOP, Auto.Order.MIDDLE };
+        double launcherSpeed = 29;
+        Auto.Order[] order = { Auto.Order.BOTTOM };
 
         try {
             Auto auto = new common.Auto(this,

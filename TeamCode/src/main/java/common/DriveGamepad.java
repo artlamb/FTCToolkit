@@ -80,11 +80,10 @@ public class DriveGamepad extends Thread {
                 driveControl.emergencyStop();
                 break;
             }
-/*
-            if (gamepad.a) {
+
+            if (gamepad.aWasPressed()) {
                 moveToPose(PoseButton.A);
-                while (gamepad.a) Thread.yield();
-            } else if (gamepad.b) {
+            } /*else if (gamepad.b) {
                 moveToPose(PoseButton.B);
                 while (gamepad.b) Thread.yield();
             } else if (gamepad.x) {
@@ -168,7 +167,7 @@ public class DriveGamepad extends Thread {
      *
      * @param button  gamepad button [a b x y]
      */
-    private void setToCurrentPosition(PoseButton button) {
+    public void setToCurrentPosition(PoseButton button) {
         Pose pose = driveControl.getPose();
         setPosePosition(button, pose);
     }

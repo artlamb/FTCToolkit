@@ -14,6 +14,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 import common.Config;
 import common.DriveControl;
+import common.DriveGamepad;
 import common.Intake;
 import common.Launcher;
 import common.Limelight;
@@ -36,6 +37,7 @@ public class TeleOpComp extends LinearOpMode {
 
     private Robot robot;
     private DriveControl driveControl;
+    private DriveGamepad driveGamepad;
     private Launcher launcher;
     private Limelight limelight;
     private Intake intake;
@@ -91,6 +93,8 @@ public class TeleOpComp extends LinearOpMode {
         driveControl = robot.getDriveControl();
         driveControl.reset();
 
+        driveGamepad = robot.getDriveGamepad();
+
         launcher = robot.getLauncher();
         launcher.setSpeed(speed);
         launcher.setIdleSpeed(IDLE_SPEED);
@@ -113,7 +117,7 @@ public class TeleOpComp extends LinearOpMode {
         displaySpeed();
 
         telemetry.addData("\nControls", "\n" +
-                "  a - start / stop launcher motors\n" +
+                "  a - run / idle launcher motors\n" +
                 "  b - line up with april tag\n" +
                 "  x - open / close close loader gate\n" +
                 "  y - start / stop intake\n" +
@@ -139,7 +143,7 @@ public class TeleOpComp extends LinearOpMode {
 
         if (drive2.aWasPressed()) {
             // start or stop the launcher motors
-            robot.powerLauncher(! launcher.isRunning(), speed);
+            robot.powerLauncher(! launcher.isIdling(), speed);
 
         } else if (drive2.yWasPressed()) {
             // turn the intake on or off and open, close the lever
@@ -149,6 +153,7 @@ public class TeleOpComp extends LinearOpMode {
             // line up with the goal
             lineUpWithGoal(false);
             setSpeed();
+            driveGamepad.setToCurrentPosition(DriveGamepad.PoseButton.A);
 
         } else if (drive2.xWasPressed()) {
             // open /close the loader gate
@@ -166,9 +171,13 @@ public class TeleOpComp extends LinearOpMode {
             // reverse the intake
             intake.toggleReverse();
 
+        } else if (drive2.dpadRightWasPressed()) {
+            // toggle launcher power
+            toggleLauncherPower();
+
         } else if (drive2.right_trigger > 0) {
             // fire one artifact
-            fire();
+            fireOne();
             while (drive2.right_trigger > 0) {
                 Thread.yield();
             }
@@ -227,7 +236,7 @@ public class TeleOpComp extends LinearOpMode {
                         odometerSetTime = time;
                         aprilTagID = id;
                         driveControl.setPose(current);
-                        Logger.message("odometer's position set to: %s", current);
+                        Logger.debug("odometer's position set to: %s", current);
                     }
                 }
                 setLEDs(LEDColor.GREEN, LEDColor.GREEN);
@@ -240,8 +249,8 @@ public class TeleOpComp extends LinearOpMode {
             if (useOdometer && odometerSetTime != 0) {
                 current = driveControl.getPose();
                 id = aprilTagID;
-                Logger.message("no april tag found, using odometer's position: %s", current);
                 setLEDs(LEDColor.GREEN, LEDColor.YELLOW);
+                //Logger.verbose("no april tag found, using odometer's position: %s", current);
 
             } else {
                 displayAprilTagInfo("april tag if not found");
@@ -280,8 +289,8 @@ public class TeleOpComp extends LinearOpMode {
             }
         }
 
-        Logger.debug("current: %s   target: %s   pose: %s   new: %s   angle: %5.1f  rotation: %5.1f  ID: %d  distance: %4.1f  speed: %2.0f",
-                current, target, pose, newPose, Math.toDegrees(angle), Math.toDegrees(rotation), id, distance, velocity);
+        Logger.verbose("current: %s   odometer: %s   target: %s   new: %s   angle: %5.1f  rotation: %5.1f  ID: %d  distance: %4.1f  speed: %2.0f",
+                current, pose, target, newPose, Math.toDegrees(angle), Math.toDegrees(rotation), id, distance, velocity);
 
         String msg = String.format("ID: %d  rotation: %5.1f  distance: %4.1f", id, Math.toDegrees(rotation), distance);
         displayAprilTagInfo(msg);
@@ -390,9 +399,21 @@ public class TeleOpComp extends LinearOpMode {
     }
 
     /**
+     * Toggle the launcher power on or off
+     */
+    private void toggleLauncherPower() {
+        if (launcher.isRunning()) {
+            launcher.stopLauncher();
+        } else {
+            launcher.runLauncher();
+        }
+    }
+
+    /**
      * Fire one artifact
      */
-    private void fire() {
+    private void fireOne() {
+        robot.powerLauncher(true, speed);
         launcher.fireLauncher();
     }
 
@@ -400,6 +421,7 @@ public class TeleOpComp extends LinearOpMode {
      * Fire all artifacts
      */
     private void fireAll() {
+        robot.powerLauncher(true, speed);
         launcher.fireAllArtifacts();
     }
 

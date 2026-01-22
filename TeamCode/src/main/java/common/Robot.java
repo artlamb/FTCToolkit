@@ -221,6 +221,10 @@ public class Robot extends Thread {
         return launcher;
     }
 
+    public DriveGamepad getDriveGamepad() {
+        return driveGamepad;
+    }
+
     /**
      * Start or stop the launcher motors. If the launcher is being powered on
      * set the speed of the launcher motors and also power off the intake
@@ -231,10 +235,12 @@ public class Robot extends Thread {
 
         if (on) {
             powerIntake(false);
+            launcher.leverUp();
+            launcher.gateOpen();
             launcher.setSpeed(speed);
             launcher.runLauncher();
         } else {
-            launcher.stopLauncher();
+            launcher.idleLauncher();
         }
     }
 
@@ -247,24 +253,29 @@ public class Robot extends Thread {
     public void powerIntake(boolean on) {
 
         if (on) {
-            launcher.idle();
+            launcher.idleLauncher();
             launcher.gateClose();
             boolean leverDown = launcher.isLeverDown();
-            launcher.leverDown();
             if (!leverDown) {
                 Logger.message("delaying");
-                delay(500);
+                launcher.leverDown();
+                delay(1000);
                 Logger.message("done delaying");
-
             }
             intake.on();
         } else {
             intake.off();
-            launcher.leverUp();
-            launcher.gateOpen();
         }
     }
 
+    public void loadArtifact() {
+        launcher.leverUp();
+        launcher.gateOpen();
+    }
+
+    public void fireArtifact() {
+        launcher.fireLauncher();
+    }
     /**
      * Fire one artifact
      */
@@ -277,12 +288,6 @@ public class Robot extends Thread {
      */
     public void fireAllArtifacts() {
         launcher.fireAllArtifacts();
-    }
-
-    public void lineUpTarget() {
-        synchronized (this) {
-            robotState = ROBOT_STATE.LINE_UP_TARGET;
-        }
     }
 
 } // end of class

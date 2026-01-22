@@ -32,7 +32,7 @@ public class Launcher extends Thread {
     public static long   GATE_REACT_TIME =    0;                 // time in millisecond for the loader to open/close
     public static long   TRIGGER_FIRE_TIME =  300;               // time in millisecond to pull the trigger
     public static long   TRIGGER_COCK_TIME =  300;               // time in millisecond to cock the trigger
-    public static long   ARTIFACT_LOAD_TIME = 500;
+    public static long   ARTIFACT_LOAD_TIME = 1000;
 
    private boolean gateOpen = true;
 
@@ -70,6 +70,7 @@ public class Launcher extends Thread {
     private double velocity;
     private double angleAdjustTime;
     private boolean running = false;
+    private boolean idling = false;
 
     private long velocityCheckTime;
     private long startTime;
@@ -148,7 +149,7 @@ public class Launcher extends Thread {
      * Turn the launcher on, if the launcher is already on change the speed of the launcher motors
      */
     public void runLauncher() {
-        Logger.message("launcher run");
+        Logger.message("launcher running");
             setVelocity(speed);
         startTime = System.currentTimeMillis();
     }
@@ -164,6 +165,15 @@ public class Launcher extends Thread {
         setVelocity(0);
     }
 
+    public void idleLauncher() {
+        synchronized (this) {
+            Logger.message("launcher idling");
+            if (running) {
+                setVelocity(idleSpeed);
+            }
+        }
+    }
+
     public void fireLauncher() {
         Logger.message("launcher fire");
         synchronized (this) {
@@ -174,7 +184,7 @@ public class Launcher extends Thread {
     }
 
     public void fireAllArtifacts() {
-        Logger.message("launcher fire");
+        Logger.message("launcher fire all");
         synchronized (this) {
             if (state == LAUNCHER_STATE.IDLE) {
                 state = LAUNCHER_STATE.FIRE_ALL;
@@ -192,25 +202,17 @@ public class Launcher extends Thread {
         }
     }
 
-    public void idle() {
-        synchronized (this) {
-
-            if (running) {
-                setVelocity(idleSpeed);
-            }
-        }
-    }
 
     public void setIdleSpeed(double speed) {
         this.idleSpeed = speed;
     }
 
     private void setVelocity(double speed) {
-        //velocity = MAX_VELOCITY * speed;
         velocity = VELOCITY_MULTIPLIER * speed;
         leftMotor.setVelocity(velocity);
         rightMotor.setVelocity(velocity);
         running = (velocity != 0);
+        idling = (speed == idleSpeed);
     }
 
     /**
@@ -251,8 +253,17 @@ public class Launcher extends Thread {
         long timeout = 3000;
         long startTime = System.currentTimeMillis();
 
-        // wait for an artifact to load
-        senseArtifact(ARTIFACT_LOAD_TIME);
+        // raise the lever if it is down
+        if (hopper.isLeverDown()) {
+            Logger.message("waiting for lever to raise");
+            hopper.leverUp();
+            senseArtifact(ARTIFACT_LOAD_TIME * 2);
+
+        } else {
+            // wait for an artifact to load
+            senseArtifact(ARTIFACT_LOAD_TIME);
+        }
+
 
         // hold other artifacts
         gateClose(0);
@@ -322,6 +333,10 @@ public class Launcher extends Thread {
         setVelocity(speed);
         hopper.leverUp();
         fire();
+        if (! senseArtifact(ARTIFACT_LOAD_TIME)) {
+            hopper.leverDown();
+            setVelocity(idleSpeed);
+        }
         Logger.info("fire one complete after %d ms", System.currentTimeMillis() - startTime);
     }
 
@@ -337,7 +352,7 @@ public class Launcher extends Thread {
         Logger.info("fire all complete after %d ms", System.currentTimeMillis() - startTime);
     }
 
-    private void senseArtifact(long timeout) {
+    private boolean senseArtifact(long timeout) {
         long startTime = System.currentTimeMillis();
         while (true) {
             double distance = artifactSensor.getDistance(DistanceUnit.INCH);
@@ -345,7 +360,7 @@ public class Launcher extends Thread {
 
             if (distance < 5) {
                 Logger.debug("artifact detected after %d ms, distance: %5.1f", time - startTime, distance);
-                break;
+                return true;
             }
 
             if (time - startTime >= timeout) {
@@ -354,6 +369,7 @@ public class Launcher extends Thread {
             }
             Thread.yield();
         }
+        return false;
     }
 
     public void gateClose() {
@@ -422,6 +438,10 @@ public class Launcher extends Thread {
 
     public boolean isRunning() {
         return running;
+    }
+
+    public boolean isIdling() {
+        return idling;
     }
 
     private void interruptAction () {
