@@ -32,6 +32,7 @@ public class TeleOpComp extends LinearOpMode {
     public static boolean useOdometer = true;
     public static double DEFAULT_SPEED = 28;
     public static double IDLE_SPEED = 20;
+    public static long TRIGGER_LOAD_TIME = 0;
 
     public static boolean DUAL_DRIVERS = true;
 
@@ -98,6 +99,7 @@ public class TeleOpComp extends LinearOpMode {
         launcher = robot.getLauncher();
         launcher.setSpeed(speed);
         launcher.setIdleSpeed(IDLE_SPEED);
+        launcher.setTriggerLoadTime(TRIGGER_LOAD_TIME);
 
         limelight = robot.getLimelight();
         limelight.setPipeline(Limelight.Pipeline.LOCATION);
@@ -358,7 +360,7 @@ public class TeleOpComp extends LinearOpMode {
 
         double velocity = DEFAULT_SPEED;
         double minVelocity = 25;
-        double[] distances = { 50, 60, 66, 70, 85, 120 };
+        double[] distances = { 60, 65, 75, 85, 120 };
 
         if (distance == 0)
             return velocity;
