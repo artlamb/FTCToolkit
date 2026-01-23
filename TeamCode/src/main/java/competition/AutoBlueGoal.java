@@ -15,7 +15,7 @@ public class AutoBlueGoal extends LinearOpMode {
 
         try {
             long delay = 0;
-            double launcherSpeed = 27;
+            double launcherSpeed = 26;
             Auto.Order[] order = { Auto.Order.TOP, Auto.Order.MIDDLE };
 
             Auto auto = new common.Auto(this,
