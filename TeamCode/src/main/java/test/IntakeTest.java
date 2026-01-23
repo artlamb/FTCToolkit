@@ -25,7 +25,7 @@ import utils.Increment;
 
 @TeleOp(name="Intake Test", group="Test")
 @SuppressLint("DefaultLocale")
-//@Disabled
+@Disabled
 
 public class IntakeTest extends LinearOpMode {
 
