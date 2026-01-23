@@ -19,7 +19,7 @@ public class Auto {
     public static PoseData START_AUDIENCE = new PoseData(12.25, -62,    90);
     public static PoseData START_GOAL =     new PoseData(50.50, 50.50,  45);
     public static PoseData SHOOT_GOAL =     new PoseData(23.50, 23.50,  45);
-    public static PoseData SHOOT_AUDIENCE = new PoseData(00.00, 00.00,  45);
+    public static PoseData SHOOT_AUDIENCE = new PoseData(11.50, 11.50,  45);
     public static PoseData ARTIFACT =       new PoseData(27.00, 11.75,  0);
     public static PoseData PARK_AUDIENCE =  new PoseData(12.25, -36,    0);
     public static PoseData PARK_GOAL =      new PoseData(23.50, -12,    0);
