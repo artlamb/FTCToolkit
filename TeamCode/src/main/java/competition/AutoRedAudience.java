@@ -15,8 +15,8 @@ public class AutoRedAudience extends LinearOpMode {
 
         try {
             long delay = 0;
-            double launcherSpeed = 27;
-            Auto.Order[] order = { Auto.Order.TOP, Auto.Order.MIDDLE };
+            double launcherSpeed = 29;
+            Auto.Order[] order = { Auto.Order.BOTTOM };
 
             Auto auto = new common.Auto(this,
                     Auto.Alliance.RED,
