@@ -143,7 +143,8 @@ public class TeleOpComp extends LinearOpMode {
 
         if (drive2.aWasPressed()) {
             // start or stop the launcher motors
-            robot.powerLauncher(! launcher.isIdling(), speed);
+            boolean run = launcher.isIdling() ||  ! launcher.isRunning();
+            robot.powerLauncher(run, speed);
 
         } else if (drive2.yWasPressed()) {
             // turn the intake on or off and open, close the lever
@@ -160,20 +161,19 @@ public class TeleOpComp extends LinearOpMode {
             launcher.gateToggle();
 
         } else if (drive2.dpadUpWasPressed()){
-            // pull the trigger
-            launcher.pullTrigger();
+            // raise or lower the hopper lever
+            launcher.leverToggle();
 
         } else if (drive2.dpadDownWasPressed()) {
-            // line up with the goal and fire all artifacts
-            launcher.leverToggle();
+            // toggle launcher power
+            toggleLauncherPower();
 
         } else if (drive2.dpadLeftWasPressed()) {
             // reverse the intake
             intake.toggleReverse();
 
         } else if (drive2.dpadRightWasPressed()) {
-            // toggle launcher power
-            toggleLauncherPower();
+            launcher.pullTrigger();
 
         } else if (drive2.right_trigger > 0) {
             // fire one artifact
@@ -358,7 +358,7 @@ public class TeleOpComp extends LinearOpMode {
 
         double velocity = DEFAULT_SPEED;
         double minVelocity = 25;
-        double[] distances = { 58, 69, 74, 82, 85, 120 };
+        double[] distances = { 50, 60, 66, 70, 85, 120 };
 
         if (distance == 0)
             return velocity;
