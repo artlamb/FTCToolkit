@@ -81,9 +81,10 @@ public class DriveGamepad extends Thread {
                 break;
             }
 
+            /*
             if (gamepad.aWasPressed()) {
                 moveToPose(PoseButton.A);
-            } /*else if (gamepad.b) {
+            } else if (gamepad.b) {
                 moveToPose(PoseButton.B);
                 while (gamepad.b) Thread.yield();
             } else if (gamepad.x) {
