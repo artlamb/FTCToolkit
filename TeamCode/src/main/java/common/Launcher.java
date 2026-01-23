@@ -33,6 +33,8 @@ public class Launcher extends Thread {
     public static long   TRIGGER_FIRE_TIME =  300;               // time in millisecond to pull the trigger
     public static long   TRIGGER_COCK_TIME =  300;               // time in millisecond to cock the trigger
     public static long   ARTIFACT_LOAD_TIME = 1000;
+    public static long   TRIGGER_LOAD_TIME = 0;
+
 
    private boolean gateOpen = true;
 
@@ -71,6 +73,7 @@ public class Launcher extends Thread {
     private double angleAdjustTime;
     private boolean running = false;
     private boolean idling = false;
+    private long triggerLoadTime = TRIGGER_LOAD_TIME;
 
     private long velocityCheckTime;
     private long startTime;
@@ -253,6 +256,8 @@ public class Launcher extends Thread {
         long timeout = 3000;
         long startTime = System.currentTimeMillis();
 
+        boolean artifactReady = artifactReady();
+
         // raise the lever if it is down
         if (hopper.isLeverDown()) {
             Logger.message("waiting for lever to raise");
@@ -264,6 +269,9 @@ public class Launcher extends Thread {
             senseArtifact(ARTIFACT_LOAD_TIME);
         }
 
+        if ( triggerLoadTime > 0 && ! artifactReady) {
+            delay(triggerLoadTime);
+        }
 
         // hold other artifacts
         gateClose(0);
@@ -372,6 +380,10 @@ public class Launcher extends Thread {
         return false;
     }
 
+    private boolean artifactReady() {
+        return artifactSensor.getDistance(DistanceUnit.INCH) < 5;
+    }
+
     public void gateClose() {
         gateClose(GATE_REACT_TIME);
     }
@@ -442,6 +454,10 @@ public class Launcher extends Thread {
 
     public boolean isIdling() {
         return idling;
+    }
+
+    public void setTriggerLoadTime  (long milliseconds) {
+        triggerLoadTime = milliseconds;
     }
 
     private void interruptAction () {
