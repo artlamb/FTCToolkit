@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 public class Hopper {
 
-    public static double leverUpPosition = 0.390;
+    public static double leverUpPosition = 0.380;
     public static double levelDownPosition = 0.830;
 
     private final Servo lever;
