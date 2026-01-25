@@ -141,6 +141,11 @@ public class DriveControl extends Thread {
         }
     }
 
+    /**
+     * Initialize the distance sensors on the front of the robot.
+     *
+     * @noinspection unused
+     */
     private void initDistanceSensors() {
 
         try {
@@ -656,6 +661,8 @@ public class DriveControl extends Thread {
      *
      * @param stopDistance  distance for the object to stop
      * @param timeout timeout in milliseconds
+     *
+     * @noinspection unused
      */
     public void moveToObject (double stopDistance, double timeout) {
 
