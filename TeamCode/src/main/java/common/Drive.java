@@ -234,7 +234,7 @@ public class Drive extends Thread {
             coefficients.p = p;
             coefficients.i = i;
             motor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, coefficients);
-            Logger.message("coefficients: %s", coefficients.toString());
+            Logger.message("drive pid coefficients: %s", coefficients.toString());
         }
 
     }
