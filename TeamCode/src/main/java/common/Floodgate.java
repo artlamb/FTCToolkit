@@ -24,7 +24,7 @@ public class Floodgate {
         double maxVoltage = currentSensor.getMaxVoltage();
         double voltage = currentSensor.getVoltage();
         double current = 80 * (voltage / maxVoltage);
-        Logger.message("sensor value: %f  max: %f,  current: %f", voltage, maxVoltage, current );
+        //Logger.message("sensor value: %f  max: %f,  current: %f", voltage, maxVoltage, current );
         return 80 * (voltage / maxVoltage);  // 80 amps is the max measured current
     }
 
@@ -53,7 +53,7 @@ public class Floodgate {
         update();
         if (System.currentTimeMillis() - displayTime > frequency) {
             displayTime = System.currentTimeMillis();
-            Logger.message("current %f  %f", current, maxCurrent);
+            Logger.verbose("current %f  %f", current, maxCurrent);
         }
     }
 }
