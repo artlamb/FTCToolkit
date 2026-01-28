@@ -88,6 +88,7 @@ public class DriveControl extends Thread {
     private double headingTolerance;
     private double magnitudeTolerance;
     private double rotationTolerance;
+    private double tolerance;
     private double timeout;
 
     private final ElapsedTime timeoutTimer;
@@ -102,6 +103,8 @@ public class DriveControl extends Thread {
     private double leftX;
     private double leftY;
     private double rightX;
+    private Pose   focalPoint;
+    private boolean alignWithFocalPoint;
 
     private  Pose target;
 
@@ -327,7 +330,8 @@ public class DriveControl extends Thread {
             boolean onBearing = Math.abs(rotation) <= Math.toRadians(headingTolerance);
             boolean stopped = Math.abs(magnitude) <= magnitudeTolerance;
             boolean rotated = Math.abs(rotationVelocity) <= Math.toRadians(rotationTolerance);
-            nearPose = (distance < 5) && (rotation < Math.PI / 18) && (magnitude <= 10) && (Math.abs(rotationVelocity) <= Math.toRadians(10));
+            //nearPose = (distance < 5) && (rotation < Math.PI / 18) && (magnitude <= 10) && (Math.abs(rotationVelocity) <= Math.toRadians(10));                // todo make parameters
+            nearPose = (distance < 1.5) && (rotation < Math.toRadians(2)) && (magnitude <= 10) && (Math.abs(rotationVelocity) <= Math.toRadians(10));
 
             // Scale the wheel velocity factors such that they don't total more the one.
             if (power + Math.abs(turn) > speed) {
@@ -524,8 +528,6 @@ public class DriveControl extends Thread {
             double minTurn = drive.getMinTurnPower();
             double maxTurn = drive.getMaxTurnPower();
             turn = Math.pow(Math.min(Math.abs(turn), 1), 3);  // exponential power curve for better low speed control
-
-            //turn = Math.pow(Math.abs(Math.min(turn, 1)), 3);
             turn = (turn * (maxTurn - minTurn)) + minTurn;
             turn *= sign;
         }
@@ -589,6 +591,32 @@ public class DriveControl extends Thread {
         Logger.message("distance x: %6.1f  y: %6.1f   from x: %5.1f  y: %5.1f    to x: %5.1f  y: %5.1f ", distanceX, distanceY,pose.getX(), pose.getY(), x, y);
     }
 
+    private double getRotationToFocalPoint() {
+
+        if (focalPoint == null) {
+            Logger.warning("focal point not set");
+            return 0;
+        }
+        Pose pose = getPose();
+        double a = focalPoint.getX() - pose.getX();
+        double b = focalPoint.getY() - pose.getY();
+        double angle = Math.atan2(b, a);
+        double rotation = AngleUnit.normalizeRadians(pose.getHeading() - angle);
+
+        double rotationVelocity = -localizer.getVelocityHeading();
+        double turnDeceleration = rotationVelocity * DECELERATION_TURN;
+        if (MathUtil.getSign(rotation) != MathUtil.getSign(rotationVelocity))
+            turnDeceleration = -turnDeceleration;
+
+        turnPID.reset();
+        turnPID.setCoefficients(PIDFCoefficientsTurnSlow);
+        turnPID.updateError(rotation, turnDeceleration);
+        double turn = turnPID.runPIDF();
+
+        Logger.debug("rotation to focal point: %6.1f , %6.1f", Math.toDegrees(rotation), turn);
+        return turn;
+    }
+
     private boolean isEmergencyStop() {
         return opMode.gamepad1.back;        // todo remove
     }
@@ -601,25 +629,26 @@ public class DriveControl extends Thread {
         }
     }
 
-    public void moveToPose(double targetX, double targetY, double targetHeading, double maxSpeed, double timeout) {
-        moveToPose(new Pose(targetX, targetY, targetHeading), maxSpeed, timeout);
-    }
-
     public void moveToPose(double targetX, double targetY, double targetHeading, double timeout) {
-    moveToPose(new Pose(targetX, targetY, targetHeading), MAX_SPEED, timeout);
+        moveToPose(new Pose(targetX, targetY, targetHeading), MAX_SPEED, 0, timeout);
     }
 
     public void moveToPose(Pose target, double timeout) {
-        moveToPose(target, MAX_SPEED, timeout);
+        moveToPose(target, MAX_SPEED, 0, timeout);
     }
 
     public void moveToPose(Pose target, double maxSpeed, double timeout) {
+        moveToPose(target, maxSpeed, 0, timeout);
+    }
+
+    public void moveToPose(Pose target, double maxSpeed, double tolerance, double timeout) {
         synchronized (this) {
             interruptAction();
 
             this.target = target;
             this.maxSpeed = maxSpeed;
             this.minSpeed = MIN_SPEED;
+            this.tolerance = tolerance;
             this.timeout = timeout;
             driveState = DRIVE_STATE.MOVING_TO_POSE;
         }
@@ -676,6 +705,10 @@ public class DriveControl extends Thread {
     }
 
     public void moveWithJoystick (double leftX, double leftY, double rightX) {
+        moveWithJoystick(leftX, leftY, rightX, false);
+    }
+
+    public void moveWithJoystick (double leftX, double leftY, double rightX, boolean alignWithFocalPoint) {
 
         synchronized (this) {
             if (driveState != DRIVE_STATE.MOVING) {
@@ -684,6 +717,7 @@ public class DriveControl extends Thread {
             this.leftX = leftX;
             this.leftY = leftY;
             this.rightX = rightX;
+            this.alignWithFocalPoint = alignWithFocalPoint;
             driveState = DRIVE_STATE.MOVING;
         }
     }
@@ -719,6 +753,18 @@ public class DriveControl extends Thread {
         localizer.setPose(pose);
         dashboard.setPose(pose);
 
+    }
+
+    /**
+     * Set the focal point. While the robot is being controlled by
+     * the joystick, it will rotate such the its heading will
+     * point to the focal point.
+     *
+     * @param pose focal point
+     * @noinspection unused
+     */
+    public void setFocalPoint(Pose pose) {
+        focalPoint = pose;
     }
 
     /**
