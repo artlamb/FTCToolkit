@@ -80,7 +80,7 @@ public class Pose extends Pose2D {
     public static Pose subtract(Pose one, Pose two) {
         double x = one.getX(DistanceUnit.INCH) - two.getX(DistanceUnit.INCH);
         double y = one.getY(DistanceUnit.INCH) - two.getY(DistanceUnit.INCH);
-        double heading = one.getHeading(AngleUnit.RADIANS) - two.getHeading(AngleUnit.RADIANS);
+        double heading = AngleUnit.normalizeRadians(one.getHeading(AngleUnit.RADIANS) - two.getHeading(AngleUnit.RADIANS));
         return new Pose(x, y, heading);
     }
     /**
