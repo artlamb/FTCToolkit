@@ -321,7 +321,6 @@ public class PIDFController {
     /**
      * Format the pid parameters into a string
      *
-     * @param degrees true to convert radians to degrees
      * @return formatted string
      */
      public String toStringDegrees() {
