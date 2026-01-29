@@ -24,8 +24,6 @@ import utils.Pose;
  */
 public class DriveGamepad extends Thread {
 
-    private final double MAX_WAYPOINT_SPEED = 0.5;
-
     public enum PoseButton { A, B, X, Y}
     private final int poseCount = PoseButton.values().length;
     private final Pose[] poses = new Pose[poseCount];
@@ -66,14 +64,14 @@ public class DriveGamepad extends Thread {
 
         while (opMode.opModeIsActive()) {
 
+            if (!Debug.drive) {
+                break;
+            }
+
             Gamepad gamepad = opMode.gamepad1;
 
             if (gamepad.atRest()) {
                 Thread.yield();
-            }
-
-            if (!Debug.drive) {
-                break;
             }
 
             if (gamepad.back) {
@@ -81,20 +79,17 @@ public class DriveGamepad extends Thread {
                 break;
             }
 
-            /*
             if (gamepad.aWasPressed()) {
                 moveToPose(PoseButton.A);
-            } else if (gamepad.b) {
+            }  else if (gamepad.bWasPressed()) {
                 moveToPose(PoseButton.B);
-                while (gamepad.b) Thread.yield();
-            } else if (gamepad.x) {
+            } else if (gamepad.xWasPressed()) {
                 moveToPose(PoseButton.X);
-                while (gamepad.x) Thread.yield();
-            } else if (gamepad.y) {
+            } else if (gamepad.yWasPressed()) {
                 moveToPose(PoseButton.Y);
-                while (gamepad.y) Thread.yield();
             }
 
+            /*
             if (gamepad.right_bumper) {
                 driveControl.alignInCorner();
                 while (gamepad.right_bumper)  Thread.yield();
@@ -179,18 +174,15 @@ public class DriveGamepad extends Thread {
      * @param button [a b x y]
      */
     private void moveToPose(PoseButton button) {
+
+        double WAYPOINT_SPEED = 0.7;
+
         int index = button.ordinal();
         Pose pose =  poses[index];
         if (pose != null) {
-            double x = pose.getX();
-            double y = pose.getY();
-            double heading = Math.toDegrees(pose.getHeading());
-
-            Logger.message("%s  move to (%.1f, %.1f) heading: %.0f", button, x, y, heading);
-            driveControl.moveToPose(x, y, heading, MAX_WAYPOINT_SPEED, 4000 );
+            Logger.debug("Button %s pressed, move to %s", button, pose.toString());
+            driveControl.moveToPose(pose, WAYPOINT_SPEED, 4000 );
         }
     }
 }
-
-
 
