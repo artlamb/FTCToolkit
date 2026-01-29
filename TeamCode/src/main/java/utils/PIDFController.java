@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 
 import androidx.annotation.NonNull;
 
-import java.util.Locale;
 
 /**
  * This is the PIDFController class. This class handles the running of PIDFs. PIDF stands for
@@ -212,6 +211,7 @@ public class PIDFController {
      * This returns the PIDF's current coefficients.
      *
      * @return this returns the current coefficients.
+     * @noinspection unused
      */
     public PIDFCoefficients getCoefficients() {
         return coefficients;
