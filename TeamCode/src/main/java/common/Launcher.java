@@ -302,7 +302,7 @@ public class Launcher extends Thread {
             int leftError = (int)((velocity - leftVelocity) / VELOCITY_MULTIPLIER);
             int rightError = (int)((velocity - rightVelocity) / VELOCITY_MULTIPLIER);
             if ((leftError == 0 || leftError == 1) &&  (rightError == 0 || rightError == 1) && (leftError + rightError <= TOLERANCE)) {
-                Logger.message("launcher spin up complete after %d ms   velocity: %.0f  left: %.0f %d  right: %.0f %d",
+                Logger.info("launcher spin up complete after %d ms   velocity: %.0f  left: %.0f %d  right: %.0f %d",
                         System.currentTimeMillis() - spinUpStart, velocity, leftVelocity, leftError, rightVelocity, rightError);
                 break;
             }
