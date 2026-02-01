@@ -31,16 +31,18 @@ import utils.PIDFController;
 
 public class DriveControl extends Thread {
 
+    public static boolean SINGLE_ITERATION = true;
+
     public static double MAX_SPEED       = 0.60;
     public static double MAX_STICK_SPEED = 0.90;
     public static double MAX_TURN_SPEED  = 0.50;
     public static double MIN_SPEED       = 0.05;
     public static double MIN_TURN_SPEED  = 0.10;
 
-    public static double TOLERANCE_DISTANCE_FAST = 1;              // in inches
+    public static double TOLERANCE_DISTANCE_FAST = 10.5;            // in inches
     public static double TOLERANCE_DISTANCE_SLOW = 0.5;
 
-    public static double TOLERANCE_HEADING_FAST = 20;               // in degrees
+    public static double TOLERANCE_HEADING_FAST = 10.5;             // in degrees
     public static double TOLERANCE_HEADING_SLOW = 0.5;
 
     public static double TOLERANCE_MAGNITUDE_FAST = 40;             // in inches per second
@@ -49,28 +51,35 @@ public class DriveControl extends Thread {
     public static double TOLERANCE_ROTATION_FAST = 200;             // in degrees per second
     public static double TOLERANCE_ROTATION_SLOW = 12;
 
-    public static double DECELERATION_DRIVE = 0.10;                 // drive deceleration (distance to stop / magnitude)
-    public static double DECELERATION_TURN = 0.09;                  // turn deceleration (rotation to stop / heading velocity)
+    public static double DECELERATION_DRIVE = 0.15;                 // drive deceleration (distance to stop / magnitude)
+    public static double DECELERATION_TURN = 0.12;                  // turn deceleration (rotation to stop / heading velocity)
 
-    public static double PID_DRIVE_P    = 0.09;
-    public static double PID_DRIVE_P_EXPONENT = 1;
+    public static double PID_DRIVE_P           = 0.09;
+    public static double PID_DRIVE_P_EXPONENT  = 1;
+    public static double PID_DRIVE_S           = 0;
+    public static double PID_DRIVE_S_EXPONENT  = 0.34;
+    public static double PID_DRIVE_S_ERROR     = 2;
+    public static double PID_DRIVE_S_THRESHOLD = 2;
 
+    public static double PID_TURN_P = 1.2;
+    public static double PID_TURN_P_EXPONENT  = 1;
     public static double PID_TURN_S = 0.09;
     public static double PID_TURN_S_EXPONENT = 0.34;
     public static double PID_TURN_S_ERROR = 2;
     public static double PID_TURN_S_THRESHOLD = 3;
 
+    public static double PID_P_TURN_FAST = 2;
+    public static double PID_P_TURN_SLOW = 1.2;
+
+    /*
     public double PID_P_DRIVE_FAST = 0.1; // todo 0.15;
     public double PID_P_DRIVE_SLOW = 0.1;
-    public double PID_P_TURN_FAST = 2;
-    public double PID_P_TURN_SLOW = 1.2;
-
     private final PIDFCoefficients PIDFCoefficientsDriveFast = new PIDFCoefficients(
             PID_P_DRIVE_FAST, 0, 0, 0);
 
     private final PIDFCoefficients PIDFCoefficientsDriveSlow = new PIDFCoefficients(
             PID_P_DRIVE_SLOW, 1, 0, 0, 0, 0);
-
+    */
     private final PIDFCoefficients PIDFCoefficientsTurnFast = new PIDFCoefficients(
             PID_P_TURN_FAST, 0, 0, 0);
 
@@ -78,11 +87,24 @@ public class DriveControl extends Thread {
             PID_P_TURN_SLOW, 1, PID_TURN_S, PID_TURN_S_EXPONENT, Math.toRadians(PID_TURN_S_ERROR), Math.toRadians(PID_TURN_S_THRESHOLD));
 
     private final PIDFCoefficients PIDFCoefficientsDrive = new PIDFCoefficients(
-            PID_DRIVE_P, PID_DRIVE_P_EXPONENT,0, 0, 0, 0);
+            PID_DRIVE_P, PID_DRIVE_P_EXPONENT,PID_DRIVE_S, PID_DRIVE_S_EXPONENT, PID_DRIVE_S_ERROR, PID_DRIVE_S_THRESHOLD);
 
-    PIDFController oldDrivePID = new PIDFController(PIDFCoefficientsDriveFast);
-    PIDFController turnPID = new PIDFController(PIDFCoefficientsTurnFast);
-    PIDFController drivePID = new PIDFController(PIDFCoefficientsDrive);
+    private final PIDFCoefficients PIDFCoefficientsTurn = new PIDFCoefficients(
+            PID_TURN_P, PID_TURN_P_EXPONENT, PID_TURN_S, PID_TURN_S_EXPONENT, Math.toRadians(PID_TURN_S_ERROR), Math.toRadians(PID_TURN_S_THRESHOLD));
+
+
+    private final PIDFCoefficients PIDFCoefficientsDriveTest = new PIDFCoefficients(
+            0.02, 1.34, 0.086, 0.41, 1, 5);
+
+//    private final PIDFCoefficients PIDFCoefficientsTurnTest = new PIDFCoefficients(
+//            1.95, 1.24, 0.29, 0.59, Math.toRadians(PID_TURN_S_ERROR), Math.toRadians(PID_TURN_S_THRESHOLD));
+
+    private final PIDFCoefficients PIDFCoefficientsTurnTest = new PIDFCoefficients(
+            4.1, 1.48, 0.32, 0.59, Math.toRadians(PID_TURN_S_ERROR), Math.toRadians(PID_TURN_S_THRESHOLD));
+
+
+    PIDFController turnPID = new PIDFController(PIDFCoefficientsTurnTest);
+    PIDFController drivePID = new PIDFController(PIDFCoefficientsDriveTest);
 
     private double distanceTolerance;
     private double headingTolerance;
@@ -232,7 +254,6 @@ public class DriveControl extends Thread {
 
         if (highSpeed) {
             turnPID.setCoefficients(PIDFCoefficientsTurnFast);
-            oldDrivePID.setCoefficients(PIDFCoefficientsDriveFast);
 
             distanceTolerance = TOLERANCE_DISTANCE_FAST;
             headingTolerance = TOLERANCE_HEADING_FAST;
@@ -241,10 +262,8 @@ public class DriveControl extends Thread {
 
             drivePID.reset();
             turnPID.reset();
-            oldDrivePID.reset();
         } else {
             turnPID.setCoefficients(PIDFCoefficientsTurnSlow);
-            oldDrivePID.setCoefficients(PIDFCoefficientsDriveSlow);
 
             distanceTolerance = TOLERANCE_DISTANCE_SLOW;
             headingTolerance = TOLERANCE_HEADING_SLOW;
@@ -282,7 +301,7 @@ public class DriveControl extends Thread {
      */
     private void moveTo(Pose target, double speed ) {
 
-        Logger.debug("target  %s  %s %s", target.toString(), drivePID.toString(), turnPID.toStringDegrees());
+        Logger.debug("target %s  speed %.2f  drive  %s  turn %s", target.toString(), speed, drivePID.toString(), turnPID.toStringDegrees());
 
         double maxVelocity = drive.getMaxVelocity();
 
@@ -304,20 +323,15 @@ public class DriveControl extends Thread {
             double velocityAngle = AngleUnit.normalizeRadians(Math.atan2(velocityY, velocityX) - current.getHeading());   // angle is robot relative;
             double deltaAngle = AngleUnit.normalizeRadians(angle - velocityAngle);
 
-            // adjust pid input errors to compensate for deceleration from current velocities
-            //double distanceError = distance;
-            //if ((magnitude > SLOW_DRIVE) && (Math.abs(deltaAngle) < Math.PI/6)) {
-            //    distanceError = Math.max(0, distanceError - ((magnitude) * DECELERATION_DRIVE));
-            //}
-            //oldDrivePID.updateError(distanceError);
-            //double power = oldDrivePID.runPIDF();
-
             double driveDeceleration = magnitude * DECELERATION_DRIVE;
-            if (Math.abs(deltaAngle) > Math.PI/4 * 3)   // 135 degrees
-                driveDeceleration = -driveDeceleration;
+            if (Math.abs(deltaAngle) > Math.PI/4 * 3) {  // 135 degrees
+                // We are accelerating in the wrong direction
+                //driveDeceleration = -driveDeceleration;
+                driveDeceleration = 0;
+            }
 
             drivePID.updateError(distance, driveDeceleration);
-            double power = drivePID.runPIDF();
+            double power = drivePID.runPIDFS();
 
             double turnDeceleration = rotationVelocity * DECELERATION_TURN;
             if (MathUtil.getSign(rotation) != MathUtil.getSign(rotationVelocity))
@@ -347,7 +361,8 @@ public class DriveControl extends Thread {
             double rightRearPower  = (power * (cos / max) - turn);
 
             Logger.verbose("%s",
-                    String.format("time: %4.0f   ", timeoutTimer.milliseconds()) +
+                    String.format("time: %4.0f  ", timeoutTimer.milliseconds()) +
+                    String.format("%s%s%s%s%s  ", (inRange) ? "i":" ", (onBearing) ? "o":" " , (stopped) ? "s":" ", (rotated) ? "r":" ",  (nearPose) ? "n":" ")  +
                     String.format("x %5.1f  y %5.1f  h %5.1f  ", current.getX(), current.getY(), current.getHeading(AngleUnit.DEGREES)) +
                     String.format("distance: %5.2f %5.2f  ", distance, driveDeceleration) +
                     String.format("heading: %6.1f %6.1f  ", Math.toDegrees(rotation), Math.toDegrees(turnDeceleration)) +
@@ -355,11 +370,10 @@ public class DriveControl extends Thread {
                     String.format("power: %4.2f  turn: %5.2f  ", power, turn) +
                     String.format("wheels: %5.2f %5.2f %5.2f %5.2f  ", leftFrontPower, rightFrontPower, leftRearPower, rightRearPower) +
                     String.format("vx: %3.0f  vy: %3.0f  ", velocityX, velocityY) +
-                    String.format("vm: %3.0f  vh: %3.0f  ", magnitude, Math.toDegrees(rotationVelocity)) +
+                    String.format("vm: %3.0f  vh: %4.0f  ", magnitude, Math.toDegrees(rotationVelocity)) +
                     String.format("va: %4.0f  da: %4.0f  ", Math.toDegrees(velocityAngle), Math.toDegrees(deltaAngle)) +
-                    String.format("%s%s%s%s%s  ", (nearPose) ? "n":" ", (inRange) ? "i":" ", (onBearing) ? "o":" " , (stopped) ? "s":" ", (rotated) ? "r":" " )  +
-                    String.format("drive %-50s", drivePID.toString()) +
-                    String.format("turn %-50s", turnPID.toStringDegrees())
+                    String.format("  drive %-60s  ", drivePID.toString()) +
+                    String.format("turn %-60s  ", turnPID.toStringDegrees())
                     //String.format("volts: %4.1f  ", voltageSensor.getVoltage()) +
                     //String.format("dr: %6.1f %6.1f  ", oldDrivePID.errorDerivative, Math.toDegrees(turnPID.errorDerivative)) +
                     //String.format("ss: %6.2f  ", Math.toDegrees(turnPID.error - turnPID.previousError)) +
@@ -398,10 +412,18 @@ public class DriveControl extends Thread {
         dashboard.addWaypoint(target);
 
         timeoutTimer.reset();
-        moveInit(true);
-        moveTo(target);
-        moveInit(false);
-        moveTo(target);
+        if (SINGLE_ITERATION) {
+            setTolerances(tolerance);
+            drivePID.reset();
+            turnPID.reset();
+            moveTo(target);
+
+        } else {
+            moveInit(true);
+            moveTo(target);
+            moveInit(false);
+            moveTo(target);
+        }
 
         drive.stopRobot();
         Pose pose = getPose();
@@ -414,7 +436,8 @@ public class DriveControl extends Thread {
         double targetHeading = Math.toDegrees(target.getHeading());
 
         Logger.info("%s   %s   %s   %s",
-                String.format("to: x %3.0f y %3.0f heading %4.0f", targetX, targetY, targetHeading),
+                //String.format("to: x %3.0f y %3.0f heading %4.0f", targetX, targetY, targetHeading),
+                String.format("to: %s", target.toString()),
                 String.format("pose: x %5.1f  y %5.1f  heading %5.1f", x, y, heading),
                 String.format("error: x %5.1f  y %5.1f  heading %5.1f", Math.abs(targetX-x), Math.abs(targetY-y), Math.abs(targetHeading-heading)),
                 String.format("time: %4.2f", timeoutTimer.seconds()));
@@ -431,15 +454,26 @@ public class DriveControl extends Thread {
         }
 
         timeoutTimer.reset();
-        moveInit(true);
-        setTolerances(1);       // least accurate
-        for (PathSegment segment : segment) {
-            moveTo(segment.pose, segment.speed);
+
+        if (SINGLE_ITERATION) {
+            drivePID.reset();
+            turnPID.reset();
+            for (PathSegment segment : segment) {
+                setTolerances(segment.tolerance);
+                moveTo(segment.pose, segment.speed);
+            }
+
+        } else {
+            moveInit(true);
+            setTolerances(1);       // least accurate
+            for (PathSegment segment : segment) {
+                moveTo(segment.pose, segment.speed);
+            }
+            moveInit(false);
+            setTolerances(0);      // most accurate
+            PathSegment last = segment.get(segment.size() - 1);
+            moveTo(last.pose, last.speed);
         }
-        moveInit(false);
-        setTolerances(0);      // most accurate
-        PathSegment last = segment.get(segment.size()-1);
-        moveTo(last.pose, last.speed);
 
         drive.stopRobot();
         Pose pose = getPose();
@@ -447,6 +481,7 @@ public class DriveControl extends Thread {
         double y =  pose.getY();
         double heading = Math.toDegrees(pose.getHeading());
 
+        PathSegment last = segment.get(segment.size() - 1);
         double targetX = last.pose.getX();
         double targetY = last.pose.getY();
         double targetHeading = Math.toDegrees(last.pose.getHeading());
@@ -825,8 +860,8 @@ public class DriveControl extends Thread {
         turnPID.updateError(headingError);
         double turn = turnPID.runPIDF();
 
-        oldDrivePID.updateError(distance);
-        double power = oldDrivePID.runPIDF();
+        drivePID.updateError(distance);
+        double power = drivePID.runPIDF();
 
         // If the heading error is greater than 45 degrees then give the heading error greater weight
         if (Math.abs(headingError) < Math.toRadians(45))  {
