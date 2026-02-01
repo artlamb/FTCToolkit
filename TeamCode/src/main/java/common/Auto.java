@@ -10,19 +10,22 @@ import utils.PoseData;
 
 public class Auto {
 
-    public static double MAX_SPEED = 0.60;
-    public static double LOW_SPEED = 0.20;
+    public static double MAX_SPEED = 0.80;
+    public static double FAST_SPEED = 0.60;
+    public static double SLOW_SPEED = 0.30;
+
     public static double MIN_TOLERANCE = 0;
-    public static double LOW_TOLERANCE = 0.30;
-    public static double HIGH_TOLERANCE = 0.60;
+    public static double LOW_TOLERANCE = 0.05;
+    public static double HIGH_TOLERANCE = 0.20;
 
     public static PoseData START_AUDIENCE = new PoseData(12.25, -62,    90);
     public static PoseData START_GOAL =     new PoseData(50.50, 50.50,  45);
-    public static PoseData SHOOT_GOAL =     new PoseData(23.50, 23.50,  45);
+    public static PoseData SHOOT_GOAL =     new PoseData(20.00, 20.00,  45);
     public static PoseData SHOOT_AUDIENCE = new PoseData(11.50, 11.50,  45);
-    public static PoseData ARTIFACT =       new PoseData(27.00, 11.75,  0);
-    public static PoseData PARK_AUDIENCE =  new PoseData(12.25, -36,    0);
-    public static PoseData PARK_GOAL =      new PoseData(23.50, -12,    0);
+    public static PoseData ARTIFACT =       new PoseData(26.00, 11.75,  0);
+    //public static PoseData PARK_AUDIENCE =  new PoseData(12.25, -36,    90);
+    public static PoseData PARK_AUDIENCE =  new PoseData(35.25, -58.75,    90);
+    public static PoseData PARK_GOAL =      new PoseData(23.50, -23.5,   90);
 
     public enum Alliance {BLUE, RED}
 
@@ -48,6 +51,7 @@ public class Auto {
 
     private double launcherSpeed = 28;
     private long delay = 0;
+    private int timesToShoot = 0;
 
     private final ElapsedTime elapsedTime = new ElapsedTime();
     private final ElapsedTime timer = new ElapsedTime();
@@ -80,7 +84,8 @@ public class Auto {
                 StartPosition startPosition,
                 Order[] order,
                 double launcherSpeed,
-                long delay) {
+                long delay,
+                int timesToShoot) {
 
         this(opMode);
         this.alliance = alliance;
@@ -88,6 +93,7 @@ public class Auto {
         this.order = order;
         this.launcherSpeed = launcherSpeed;
         this.delay = delay;
+        this.timesToShoot = timesToShoot;
 
         generatePaths();
         drawPaths();
@@ -95,6 +101,8 @@ public class Auto {
 
         setLauncherSpeed(launcherSpeed);
         navigate.setStartingPose(pathIndex);
+
+        robot.powerLauncher(true, launcherSpeed);
     }
 
     public void runAuto() {
@@ -127,8 +135,6 @@ public class Auto {
                     break;
 
                 case SHOOT:
-                    waitUntilNearPose();
-                    robot.powerLauncher(true, launcherSpeed);
                     waitUntilNotMoving();
                     robot.fireAllArtifacts();
                     waitUntilRobotIdIdle();
@@ -160,6 +166,7 @@ public class Auto {
     private void generatePaths() {
 
         double heading;
+        int shootCount = 0;
 
         // The coordinates are the same for both alliances except the x coordinate are negative for the blue alliance.
         double xSign = (alliance == Alliance.RED) ? 1 : -1;
@@ -172,7 +179,7 @@ public class Auto {
         } else if (startPosition == StartPosition.AUDIENCE) {
             start = createPose(START_AUDIENCE.x * xSign, START_AUDIENCE.y, START_AUDIENCE.h);
         }
-        navigate.addPath(getPathName(PathState.START), MAX_SPEED, MIN_TOLERANCE, start);
+        navigate.addPath(getPathName(PathState.START), FAST_SPEED, MIN_TOLERANCE, start);
 
         // Create a path to the shooting position.
         Pose shoot = null;
@@ -182,7 +189,10 @@ public class Auto {
         } else if (startPosition == StartPosition.AUDIENCE) {
             shoot = createPose(SHOOT_AUDIENCE.x * xSign, SHOOT_AUDIENCE.y, heading);
         }
-        navigate.addPath(getPathName(PathState.SHOOT), MAX_SPEED, MIN_TOLERANCE, shoot);
+        if (timesToShoot < shootCount) {
+            navigate.addPath(getPathName(PathState.SHOOT), FAST_SPEED, MIN_TOLERANCE, shoot);
+            shootCount++;
+        }
 
         // Create a path for to pickup each group of artifact on the order specified and a path back to the shooting position.
         for (Order o : order) {
@@ -210,12 +220,12 @@ public class Auto {
             }
             Pose artifactStart = createPose(x1 * xSign, y2, heading);
             Pose artifactEnd = createPose(x2 * xSign, y2, heading);
-            navigate.addPath(getPathName(pathState), MAX_SPEED, MIN_TOLERANCE, artifactStart);
-            navigate.appendPose(pathState.name(), LOW_SPEED, LOW_TOLERANCE, artifactEnd);
-            if (startPosition == StartPosition.AUDIENCE) {
-                navigate.appendPose(pathState.name(), MAX_SPEED, LOW_TOLERANCE, artifactStart);
+            navigate.addPath(getPathName(pathState), MAX_SPEED, LOW_TOLERANCE, artifactStart);
+            navigate.appendPose(pathState.name(), SLOW_SPEED, LOW_TOLERANCE, artifactEnd);
+            if (shootCount < timesToShoot) {
+                navigate.addPath(getPathName(PathState.SHOOT), MAX_SPEED, MIN_TOLERANCE, shoot);
+                shootCount++;
             }
-            navigate.addPath(getPathName(PathState.SHOOT), MAX_SPEED, MIN_TOLERANCE, shoot);
         }
 
         // Create a path to the parking position.
@@ -239,7 +249,7 @@ public class Auto {
     }
 
     public void addPath(PathState pathState, double x, double y, double heading) {
-        navigate.addPath(getPathName(pathState), MAX_SPEED, 0, createPose(x, y, heading));
+        navigate.addPath(getPathName(pathState), FAST_SPEED, 0, createPose(x, y, heading));
     }
 
     public void setStartPose(double x, double y, double heading) {
@@ -296,6 +306,11 @@ public class Auto {
         robot.waitUntilOkToMove();
     }
 
+    /**
+     * Wait until the robot is near the pose.
+     *
+     * @noinspection unused
+     */
     private void waitUntilNearPose() {
         Logger.debug("waiting");
         long timeout = 5000;
