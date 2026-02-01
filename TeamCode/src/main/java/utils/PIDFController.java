@@ -61,6 +61,22 @@ public class PIDFController {
         return output;
     }
 
+
+    /**
+     * This takes the current error and runs the PIDF on it.
+     *
+     * @return this returns the value of the PIDF from the current error.
+     */
+    public double runPIDFS() {
+        if (errorSteadyState > 0) {
+            output =  errorSteadyState * S() + errorDerivative * D() + errorIntegral * I() + F();
+
+        } else {
+            output = errorProportional * P() + errorDerivative * D() + errorIntegral * I() + F();
+        }
+        return output;
+    }
+
     /**
      * As opposed to updating position against a target position, this just sets the error to some
      * specified value.
@@ -121,9 +137,9 @@ public class PIDFController {
         errorIntegral += error * (deltaTimeNano / Math.pow(10.0, 9));
         errorDerivative = deltaError / (deltaTimeNano / Math.pow(10.0, 9));
 
-        if ((Math.abs(error) < coefficients.sThreshold &&
+        if ((Math.abs(errorDecelerated) < coefficients.sThreshold &&
                 Math.abs(deltaError) < coefficients.sError)) {
-            errorSteadyState = MathUtil.pow(error, coefficients.sExponent);
+            errorSteadyState = MathUtil.pow(errorDecelerated, coefficients.sExponent);
         } else {
             errorSteadyState = 0;
         }
@@ -327,17 +343,17 @@ public class PIDFController {
 
         if (output == 0) return "";
 
-        double error =  Math.toDegrees(this.error);
-        double errorP = Math.toDegrees(this.errorProportional);
-        double errorD = Math.toDegrees(this.errorDerivative);
-        double errorI = Math.toDegrees(this.errorIntegral);
-        double errorS= Math.toDegrees(this.errorSteadyState);
+        //double error =  Math.toDegrees(this.error);
+        double errorP = errorProportional;
+        double errorD = errorDerivative;
+        double errorI = errorIntegral;
+        double errorS = errorSteadyState;
 
-        String s = String.format("pid: %+6.3f(%+7.3f %+7.3f) = ", output, error, errorDecelerated);
-        if (P() != 0 && errorProportional != 0)  s+= String.format("P(%+7.3f %7.3f) ", errorP * P(), errorP);
-        if (D() != 0 && errorDerivative != 0)    s+= String.format("D(%+6.3f %+6.3f) ", errorD * D(), errorD);
-        if (I() != 0 && errorIntegral != 0)      s+= String.format("I(%+6.3f %+6.3f) ", errorI * I(), errorI);
-        if (S() != 0 && errorSteadyState != 0)   s+= String.format("S(%+.3f %+.3f) ", errorS * S(), errorS);
+        String s = String.format("pid: %+5.2f (%+7.2f %+7.2f) = ", output, Math.toDegrees(error), Math.toDegrees(errorDecelerated));
+        if (P() != 0 && errorProportional != 0)  s+= String.format("P(%+6.2f %6.2f) ",  errorP * P(), Math.toDegrees(errorP));
+        if (D() != 0 && errorDerivative != 0)    s+= String.format("D(%+5.2f %+5.2f) ", errorD * D(), Math.toDegrees(errorD));
+        if (I() != 0 && errorIntegral != 0)      s+= String.format("I(%+5.2f %+5.2f) ", errorI * I(), Math.toDegrees(errorI));
+        if (S() != 0 && errorSteadyState != 0)   s+= String.format("S(%+.2f %+.2f) ",   errorS * S(), Math.toDegrees(errorS));
         return (s);
     }
 
@@ -346,11 +362,11 @@ public class PIDFController {
     public String toString() {
         if (output == 0) return "";
 
-        String s = String.format("pid: %+6.3f(%+7.3f %+7.3f) = ", output, error, errorDecelerated);
-        if (P() != 0 && errorProportional != 0)  s+= String.format("P(%+7.3f %+7.3f) ", errorProportional * P(), errorProportional);
-        if (D() != 0 && errorDerivative != 0)    s+= String.format("D(%+6.3f %+6.3f) ", errorDerivative * D(), errorDerivative);
-        if (I() != 0 && errorIntegral != 0)      s+= String.format("I(%+6.3f %+6.3f) ", errorIntegral * I(), errorIntegral);
-        if (S() != 0 && errorSteadyState != 0)   s+= String.format("S(%+6.3f %+6.3f) ", errorSteadyState * S(), errorSteadyState);
+        String s = String.format("pid: %+5.2f (%+6.2f %+6.2f) = ", output, error, errorDecelerated);
+        if (P() != 0 && errorProportional != 0)  s+= String.format("P(%+6.2f %+6.2f) ", errorProportional * P(), errorProportional);
+        if (D() != 0 && errorDerivative != 0)    s+= String.format("D(%+5.2f %+5.2f) ", errorDerivative * D(), errorDerivative);
+        if (I() != 0 && errorIntegral != 0)      s+= String.format("I(%+5.2f %+5.2f) ", errorIntegral * I(), errorIntegral);
+        if (S() != 0 && errorSteadyState != 0)   s+= String.format("S(%+5.2f %+5.2f) ", errorSteadyState * S(), errorSteadyState);
         return (s);
     }
 }
