@@ -31,7 +31,7 @@ public class TeleOpComp extends LinearOpMode {
 
     public static boolean useOdometer = true;
     public static double DEFAULT_SPEED = 28;
-    public static double IDLE_SPEED = 20;
+    public static double IDLE_SPEED = 27;
     public static long TRIGGER_LOAD_TIME = 0;
 
     public static boolean DUAL_DRIVERS = true;
@@ -60,6 +60,8 @@ public class TeleOpComp extends LinearOpMode {
 
     long odometerSetTime = 0;
     int aprilTagID = 0;
+
+    Pose waypoint = null;
 
     enum LEDColor { GREEN, RED, YELLOW, NONE }
 
@@ -143,10 +145,9 @@ public class TeleOpComp extends LinearOpMode {
             drive2 = gamepad1;
         }
 
-        if (drive2.aWasPressed()) {
-            // start or stop the launcher motors
-            boolean run = launcher.isIdling() ||  ! launcher.isRunning();
-            robot.powerLauncher(run, speed);
+        if (gamepad1.aWasPressed()) {
+            // Move to the pose that we last shoot from and shoot three artifacts
+            fastLaunch();
 
         } else if (drive2.yWasPressed()) {
             // turn the intake on or off and open, close the lever
@@ -157,6 +158,7 @@ public class TeleOpComp extends LinearOpMode {
             lineUpWithGoal(false);
             setSpeed();
             driveGamepad.setToCurrentPosition(DriveGamepad.PoseButton.A);
+            waypoint = driveControl.getPose();
 
         } else if (drive2.xWasPressed()) {
             // open /close the loader gate
@@ -434,15 +436,23 @@ public class TeleOpComp extends LinearOpMode {
      */
     private void fastLaunch() {
 
-        long timeout = 3000;
+        driveControl.moveToPose(waypoint, 0.7, 5000);
+        launcher.runLauncher();
+        launcher.loadArtifact();
+
+        sleep(100);
+        long timeout = 5000;
         long start = System.currentTimeMillis();
-        launcher.setSpeed(20);
-        lineUpWithGoal(false);
-        while (driveControl.isBusy()) {
+        while (!driveControl.nearPose()) {
+            if (!opModeIsActive())
+                return;
+
             if (System.currentTimeMillis() - start > timeout)
                 return;
-        }
-        setSpeed();
+
+            if (!gamepad1.atRest() || !gamepad2.atRest())
+                return;
+            }
         launcher.fireAllArtifacts();
     }
 }
