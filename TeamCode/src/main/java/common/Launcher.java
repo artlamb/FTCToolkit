@@ -18,32 +18,33 @@ import java.util.List;
 
 public class Launcher extends Thread {
 
-    public static double pidP = 40.0;
-    public static double pidI = 1.0;
+    public static PIDFCoefficients coefficientsLeft  = new PIDFCoefficients(40, 1, 0, 0);
+    public static PIDFCoefficients coefficientsRight = new PIDFCoefficients(40, 1, 0, 0);
 
-    public static double TRIGGER_COCK   = 0.375;
-    public static double TRIGGER_FIRE   = 0.670;
+    public static double TRIGGER_COCK   = 0.465; //0.375;
+    public static double TRIGGER_FIRE   = 0.770; //0.670;
 
     public static double GATE_RIGHT_OPENED = 0.500;
     public static double GATE_RIGHT_CLOSED = 0.760;
     public static double GATE_LEFT_OPENED = 0.500;
     public static double GATE_LEFT_CLOSED = 0.240;
 
-    public static long   GATE_REACT_TIME =    0;                 // time in millisecond for the loader to open/close
-    public static long   TRIGGER_FIRE_TIME =  300;               // time in millisecond to pull the trigger
+    public static long   GATE_REACT_TIME =    0;                 // time in millisecond for the gate to open/close
+    public static long   TRIGGER_FIRE_TIME =  200;               // time in millisecond to pull the trigger
     public static long   TRIGGER_COCK_TIME =  300;               // time in millisecond to cock the trigger
     public static long   ARTIFACT_LOAD_TIME = 1000;
     public static long   TRIGGER_LOAD_TIME = 0;
 
+    public static int    TOLERANCE = 2;                         // velocity tolerance of the motors spin up
 
    private boolean gateOpen = true;
 
     private enum LAUNCHER_STATE {IDLE, FIRE, FIRE_ALL }
     private LAUNCHER_STATE state = LAUNCHER_STATE.IDLE;
 
-    protected final double MOTOR_RPM = 6000;                      // Gobilda Yellow Jacket Motor 5203-2402-0001
-    protected final double MOTOR_TICKS_PER_REV = 28;              // Gobilda Yellow Jacket Motor 5203-2402-0001
-    protected final double MAX_VELOCITY = MOTOR_TICKS_PER_REV * MOTOR_RPM / 60;
+    //protected final double MOTOR_RPM = 6000;                      // Gobilda Yellow Jacket Motor 5203-2402-0001
+    //protected final double MOTOR_TICKS_PER_REV = 28;              // Gobilda Yellow Jacket Motor 5203-2402-0001
+    //protected final double MAX_VELOCITY = MOTOR_TICKS_PER_REV * MOTOR_RPM / 60;
     protected final double VELOCITY_MULTIPLIER = 20;
 
     // Linear Servo HLS12-5050-6V
@@ -68,7 +69,7 @@ public class Launcher extends Thread {
     LinearOpMode opMode;
     private double angle = 0;
     private double speed = 28;
-    private double idleSpeed = 20;
+    private double idleSpeed = 27;
     private double velocity;
     private double angleAdjustTime;
     private boolean running = false;
@@ -89,20 +90,17 @@ public class Launcher extends Thread {
         leftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         rightMotor.setDirection(DcMotorSimple.Direction.FORWARD);
 
-        // adjust the PID coefficients of the launcher motors so the the motors spin at the desired speed faster
-        // and more accurately.
-        PIDFCoefficients coefficients =  leftMotor.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER);
-        Logger.message("coefficients: %s", coefficients.toString());
-        coefficients.p = pidP;
-        coefficients.i = pidI;
-
         for (DcMotorEx motor : motors) {
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            motor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, coefficients);
-            Logger.message("coefficients: %s", coefficients.toString());
         }
+
+        // adjust the PID coefficients of the launcher motors so the the motors spin at the desired speed faster
+        // and more accurately.
+        Logger.debug("pid coefficients: left %s   right %s", coefficientsLeft.toString(),coefficientsRight.toString() );
+        leftMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, coefficientsLeft);
+        rightMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, coefficientsRight);
 
         linearServo = opMode.hardwareMap.get(Servo.class, Config.LINEAR_SERVO);
 
@@ -152,8 +150,13 @@ public class Launcher extends Thread {
      * Turn the launcher on, if the launcher is already on change the speed of the launcher motors
      */
     public void runLauncher() {
+        if (!Debug.launcher()) {
+            Logger.message("launcher disabled");
+            return;
+        }
+
         Logger.message("launcher running");
-            setVelocity(speed);
+        setVelocity(speed);
         startTime = System.currentTimeMillis();
     }
 
@@ -277,7 +280,7 @@ public class Launcher extends Thread {
         gateClose(0);
 
         // wait for the launcher to reach the desired launch angle.
-        while (true) {
+        while (angleAdjustTime > 0) {
 
             long time = System.currentTimeMillis();
             if (time >= angleAdjustTime) {
@@ -296,12 +299,11 @@ public class Launcher extends Thread {
         while (true) {
             double leftVelocity = leftMotor.getVelocity();
             double rightVelocity = rightMotor.getVelocity();
-
-            double threshold = MAX_VELOCITY * 0.001;
-            if (Math.abs(velocity - Math.abs(leftVelocity)) <= threshold ||
-                    Math.abs(velocity - Math.abs(rightVelocity)) <= threshold) {
-                Logger.message("launcher spin up complete after %d ms  left: %5.0f  right: %5.0f ",
-                        System.currentTimeMillis() - startTime, leftVelocity, rightVelocity);
+            int leftError = (int)((velocity - leftVelocity) / VELOCITY_MULTIPLIER);
+            int rightError = (int)((velocity - rightVelocity) / VELOCITY_MULTIPLIER);
+            if ((leftError == 0 || leftError == 1) &&  (rightError == 0 || rightError == 1) && (leftError + rightError <= TOLERANCE)) {
+                Logger.message("launcher spin up complete after %d ms   velocity: %.0f  left: %.0f %d  right: %.0f %d",
+                        System.currentTimeMillis() - spinUpStart, velocity, leftVelocity, leftError, rightVelocity, rightError);
                 break;
             }
 
@@ -316,11 +318,11 @@ public class Launcher extends Thread {
             Thread.yield();
         }
 
-        // wait for the loader to close if it hasn't already.
-        while (true) {
+        // wait for the gate to close if it hasn't already.
+        while (GATE_REACT_TIME > 0) {
             long time = System.currentTimeMillis();
             if (time - startTime >= GATE_REACT_TIME) {
-                Logger.message("launcher loader close complete");
+                Logger.message("launcher gate close complete");
                 break;
             }
         }
@@ -343,7 +345,7 @@ public class Launcher extends Thread {
         fire();
         if (! senseArtifact(ARTIFACT_LOAD_TIME)) {
             hopper.leverDown();
-            setVelocity(idleSpeed);
+            //setVelocity(idleSpeed);
         }
         Logger.info("fire one complete after %d ms", System.currentTimeMillis() - startTime);
     }
@@ -356,7 +358,7 @@ public class Launcher extends Thread {
             fire();
         }
         hopper.leverDown();
-        setVelocity(idleSpeed);   // todo determine current draw
+        //setVelocity(idleSpeed);   // todo determine current draw
         Logger.info("fire all complete after %d ms", System.currentTimeMillis() - startTime);
     }
 
@@ -393,7 +395,7 @@ public class Launcher extends Thread {
     }
 
     public void gateClose(long delay) {
-        Logger.debug("loader gate close");
+        Logger.debug("launcher gate close");
         gateRight.setPosition(GATE_RIGHT_CLOSED);
         gateLeft.setPosition(GATE_LEFT_CLOSED);
         gateOpen = false;
@@ -401,13 +403,19 @@ public class Launcher extends Thread {
     }
 
     public void gateOpen(long delay) {
-        Logger.debug("loader gate open");
+        Logger.debug("launcher gate open");
         gateRight.setPosition(GATE_RIGHT_OPENED);
         gateLeft.setPosition(GATE_LEFT_OPENED);
         gateOpen = true;
         delay(delay);
     }
 
+    /**
+     * Check if the gate is open
+     *
+     * @return true if the gate is open
+     * @noinspection unused
+     */
     public boolean gateIsOpen() {
         return gateOpen;
     }
@@ -452,12 +460,32 @@ public class Launcher extends Thread {
         return running;
     }
 
+    /**
+     * Check if the launcher is idling
+     * @return true if the launcher is idling
+     * @noinspection unused
+     */
     public boolean isIdling() {
         return idling;
     }
 
     public void setTriggerLoadTime  (long milliseconds) {
         triggerLoadTime = milliseconds;
+    }
+
+    public void loadArtifact() {
+
+        // raise the lever if it is down
+        if (hopper.isLeverDown()) {
+            Logger.message("waiting for lever to raise");
+            hopper.leverUp();
+            senseArtifact(ARTIFACT_LOAD_TIME * 2);
+
+        } else {
+            // wait for an artifact to load
+            senseArtifact(ARTIFACT_LOAD_TIME);
+        }
+        gateClose();
     }
 
     private void interruptAction () {
