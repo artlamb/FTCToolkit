@@ -13,6 +13,7 @@ public class AutoBlueAudience extends LinearOpMode {
     @Override
     public void runOpMode() {
 
+        int timesToShoot = 1;
         long delay = 0;
         double launcherSpeed = 29;
         Auto.Order[] order = { Auto.Order.BOTTOM };
@@ -23,7 +24,8 @@ public class AutoBlueAudience extends LinearOpMode {
                     Auto.StartPosition.AUDIENCE,
                     order,
                     launcherSpeed,
-                    delay);
+                    delay,
+                    timesToShoot);
 
             auto.runAuto();
 

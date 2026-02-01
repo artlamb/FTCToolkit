@@ -24,7 +24,7 @@ public class AutoAll extends LinearOpMode {
     public void runOpMode() {
 
         try {
-            Auto auto = new common.Auto(this, alliance, startPosition, order, launcherSpeed, delay);
+            Auto auto = new common.Auto(this, alliance, startPosition, order, launcherSpeed, delay, 2);
             auto.runAuto();
 
         } catch (Exception e) {

@@ -14,16 +14,18 @@ public class AutoBlueGoal extends LinearOpMode {
     public void runOpMode() {
 
         try {
+            int timesToShoot = 3;
             long delay = 0;
             double launcherSpeed = 26;
-            Auto.Order[] order = { Auto.Order.TOP, Auto.Order.MIDDLE };
+            Auto.Order[] order = { Auto.Order.TOP, Auto.Order.MIDDLE, Auto.Order.BOTTOM };
 
             Auto auto = new common.Auto(this,
                     Auto.Alliance.BLUE,
                     Auto.StartPosition.GOAL,
                     order,
                     launcherSpeed,
-                    delay);
+                    delay,
+                    timesToShoot);
 
             auto.runAuto();
 

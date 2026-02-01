@@ -1,31 +1,31 @@
 package competition;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import common.Auto;
 import common.Logger;
 
-@Disabled
-@Autonomous(name="Auto Red Delay", group="Competition")
+@Autonomous(name="Auto Red Only Park", group="Competition")
 
-public class AutoRedAudienceDelay extends LinearOpMode {
+public class AutoRedAudienceOnlyPark extends LinearOpMode {
 
     @Override
     public void runOpMode() {
 
         try {
-            long delay = 10;
+            int timesToShoot = 0;
+            long delay = 0;
             double launcherSpeed = 29;
-            Auto.Order[] order = { Auto.Order.BOTTOM };
+            Auto.Order[] order = {  };
 
             Auto auto = new common.Auto(this,
                     Auto.Alliance.RED,
                     Auto.StartPosition.AUDIENCE,
                     order,
                     launcherSpeed,
-                    delay);
+                    delay,
+                    timesToShoot);
 
             auto.runAuto();
 

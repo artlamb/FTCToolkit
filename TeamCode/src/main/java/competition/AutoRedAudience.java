@@ -14,6 +14,7 @@ public class AutoRedAudience extends LinearOpMode {
     public void runOpMode() {
 
         try {
+            int timesToShoot = 1;
             long delay = 0;
             double launcherSpeed = 29;
             Auto.Order[] order = { Auto.Order.BOTTOM };
@@ -23,7 +24,8 @@ public class AutoRedAudience extends LinearOpMode {
                     Auto.StartPosition.AUDIENCE,
                     order,
                     launcherSpeed,
-                    delay);
+                    delay,
+                    timesToShoot);
 
             auto.runAuto();
 
