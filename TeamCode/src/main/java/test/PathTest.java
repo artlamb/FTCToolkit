@@ -59,7 +59,7 @@ import utils.PoseData;
 import utils.Waypoint;
 
 @TeleOp(name=" Path Test", group="Test")
-@Disabled
+//@Disabled
 @SuppressLint("DefaultLocale")
 @Config
 
@@ -70,10 +70,10 @@ public class PathTest extends LinearOpMode {
     public static boolean READ_POSES = false;
     public static boolean WRITE_POSES = false;
     public static double MAX_SPEED = 0.80;
-    public static double HIGH_SPEED = 0.60;
-    //public static double LOW_SPEED = 0.30;
+    public static double FAST_SPEED = 0.60;
+    public static double SLOW_SPEED = 0.25;
 
-    public static double TOLERANCE= 0.05;
+    public static double TOLERANCE= 0.1;
 
     public static PoseData waypoint = new PoseData(0, 0, 0, Waypoint.UNKNOWN);
 
@@ -81,10 +81,10 @@ public class PathTest extends LinearOpMode {
     private final Mode MODE = Mode.AUTO_PATHS;
 
     private final PoseData[] waypoints = {
-        //new PoseData(-50.50, 50.50, 135, MAX_SPEED, Waypoint.START),
-        new PoseData(-23.50, 23.50, 135, HIGH_SPEED, Waypoint.SHOOT_1),
-        new PoseData(-27.00, -11.75, 0,   MAX_SPEED, Waypoint.PICKUP_1),
-        //new PoseData(-47.00, 11.75, 0,   LOW_SPEED, Waypoint.PICKUP_END_1),
+        new PoseData(-50.50, 50.50,  135, MAX_SPEED,  Waypoint.START),
+        new PoseData(-20.00, 20.00,  135, FAST_SPEED, Waypoint.SHOOT_1),
+        new PoseData(-25.00, -11.75, 0,   MAX_SPEED,  Waypoint.PICKUP_1),
+        new PoseData(-48.00, -11.75, 0,   SLOW_SPEED, Waypoint.PICKUP_1),
         //new PoseData(-23.50, 23.50, 135, MAX_SPEED, Waypoint.SHOOT_2),
     };
 
@@ -157,7 +157,6 @@ public class PathTest extends LinearOpMode {
 
         //robot.getIntake().on();
         //robot.getLauncher().gateClose();
-        //sleep(1000);
     }
 
     private void editWaypoint () {
