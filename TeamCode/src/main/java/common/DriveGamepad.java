@@ -79,6 +79,7 @@ public class DriveGamepad extends Thread {
                 break;
             }
 
+            /*
             if (gamepad.aWasPressed()) {
                 moveToPose(PoseButton.A);
             }  else if (gamepad.bWasPressed()) {
@@ -89,7 +90,6 @@ public class DriveGamepad extends Thread {
                 moveToPose(PoseButton.Y);
             }
 
-            /*
             if (gamepad.right_bumper) {
                 driveControl.alignInCorner();
                 while (gamepad.right_bumper)  Thread.yield();
@@ -172,6 +172,8 @@ public class DriveGamepad extends Thread {
      * Move to the pose associated with the specified button.
      *
      * @param button [a b x y]
+     *
+     * @noinspection unused
      */
     private void moveToPose(PoseButton button) {
 
