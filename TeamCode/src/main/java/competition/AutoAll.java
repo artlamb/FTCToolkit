@@ -5,7 +5,6 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import common.Auto;
-import common.Debug;
 import common.Logger;
 
 @Autonomous(name="Auto All", group="Competition")
