@@ -58,7 +58,7 @@ import common.Logger;
 import utils.PoseData;
 import utils.Waypoint;
 
-@TeleOp(name="Path Test", group="Test")
+@TeleOp(name=" Path Test", group="Test")
 @Disabled
 @SuppressLint("DefaultLocale")
 @Config
@@ -69,8 +69,11 @@ public class PathTest extends LinearOpMode {
     public static boolean DRAW_ONLY = false;
     public static boolean READ_POSES = false;
     public static boolean WRITE_POSES = false;
-    public static double MAX_SPEED = 0.60;
-    public static double LOW_SPEED = 0.20;
+    public static double MAX_SPEED = 0.80;
+    public static double HIGH_SPEED = 0.60;
+    //public static double LOW_SPEED = 0.30;
+
+    public static double TOLERANCE= 0.05;
 
     public static PoseData waypoint = new PoseData(0, 0, 0, Waypoint.UNKNOWN);
 
@@ -78,10 +81,11 @@ public class PathTest extends LinearOpMode {
     private final Mode MODE = Mode.AUTO_PATHS;
 
     private final PoseData[] waypoints = {
-            new PoseData(-50.50, 50.50, 135, MAX_SPEED, Waypoint.START),
-            new PoseData(-23.50, 23.50, 135, MAX_SPEED, Waypoint.SHOOT_1),
-            new PoseData(-27.00, 11.75, 0,   MAX_SPEED, Waypoint.PICKUP_1),
-            new PoseData(-47.00, 11.75, 0,   LOW_SPEED, Waypoint.PICKUP_END_1),
+        //new PoseData(-50.50, 50.50, 135, MAX_SPEED, Waypoint.START),
+        new PoseData(-23.50, 23.50, 135, HIGH_SPEED, Waypoint.SHOOT_1),
+        new PoseData(-27.00, -11.75, 0,   MAX_SPEED, Waypoint.PICKUP_1),
+        //new PoseData(-47.00, 11.75, 0,   LOW_SPEED, Waypoint.PICKUP_END_1),
+        //new PoseData(-23.50, 23.50, 135, MAX_SPEED, Waypoint.SHOOT_2),
     };
 
     private DriveControl driveControl;
@@ -151,6 +155,9 @@ public class PathTest extends LinearOpMode {
         limelight = new Limelight(this);
         limelight.setPipeline(Limelight.Pipeline.LOCATION);
 
+        //robot.getIntake().on();
+        //robot.getLauncher().gateClose();
+        //sleep(1000);
     }
 
     private void editWaypoint () {
@@ -191,9 +198,9 @@ public class PathTest extends LinearOpMode {
         for (PoseData data: waypoints) {
             Pose pose = createPose(data.x, data.y, data.h);
             if (navigate.pathExists(data.desc.name())) {
-                navigate.appendPose(data.desc.name(), data.speed, 0, pose);
+                navigate.appendPose(data.desc.name(), data.speed, TOLERANCE, pose);
             } else {
-                navigate.addPath(data.desc.name(), data.speed, 0, pose);
+                navigate.addPath(data.desc.name(), data.speed, TOLERANCE, pose);
             }
         }
     }
@@ -268,13 +275,13 @@ public class PathTest extends LinearOpMode {
         telemetry.addData("pose", str2);
         telemetry.update();
 
-        Logger.info("%s %s", str1, str2);
+        Logger.verbose("%s %s", str1, str2);
     }
 
     private void displayPoses () {
         for (PoseData data: waypoints) {
             String str1 = String.format("x %5.1f  y %5.1f  heading %5.1f  %s", data.x, data.y, data.h, data.desc.name());
-            Logger.message("pose: %s", str1);
+            Logger.verbose("pose: %s", str1);
             telemetry.addLine(str1);
         }
         telemetry.update();
