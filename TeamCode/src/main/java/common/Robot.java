@@ -239,8 +239,8 @@ public class Robot extends Thread {
             launcher.gateOpen();
             launcher.setSpeed(speed);
             launcher.runLauncher();
-        } else {
-            launcher.idleLauncher();
+        //} else {
+        //    launcher.idleLauncher();
         }
     }
 
@@ -253,7 +253,7 @@ public class Robot extends Thread {
     public void powerIntake(boolean on) {
 
         if (on) {
-            launcher.idleLauncher();
+            //launcher.idleLauncher();
             launcher.gateClose();
             boolean leverDown = launcher.isLeverDown();
             if (!leverDown) {
