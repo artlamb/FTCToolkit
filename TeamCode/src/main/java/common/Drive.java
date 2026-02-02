@@ -101,6 +101,10 @@ public class Drive extends Thread {
     double accelerationLastSpeed;
     double accelerationLastTime;
 
+    boolean braking;
+    boolean runWithEncoders;
+    PIDFCoefficients coefficients;
+
     private DIRECTION lastDirection = DIRECTION.STOOPED;
 
     public List<DcMotorEx> motors;
@@ -228,7 +232,15 @@ public class Drive extends Thread {
                                 Math.abs(rightBackDrive.getVelocity())))));
     }
 
+    public void  setPower (double power) {
+        leftFrontDrive.setVelocity(power);
+        rightFrontDrive.setVelocity(power);
+        leftBackDrive.setVelocity(power);
+        rightBackDrive.setVelocity(power);
+    }
+
     public void setPIDFCoefficients(double p, double i) {
+        coefficients = new PIDFCoefficients(p, 0, i, 0);
         for (DcMotorEx motor : motors) {
             PIDFCoefficients coefficients =  motor.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER);
             coefficients.p = p;
@@ -255,6 +267,7 @@ public class Drive extends Thread {
             else
                 motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         }
+        braking = enabled;
     }
 
     public void setRunWithEncoders(boolean runWithEncoders) {
@@ -265,6 +278,7 @@ public class Drive extends Thread {
             else
                 motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         }
+        this.runWithEncoders = runWithEncoders;
     }
 
     public void resetEncoders() {
@@ -827,5 +841,55 @@ public class Drive extends Thread {
     }
 
 
+    /**
+     * Sets the target position for all drive motors.
+     * This should be called *before* switching to RUN_TO_POSITION mode.
+     */
+    public void setTargetPosition() {
+        // The target position is the *current* position.
+        int frontLeftTarget = leftFrontDrive.getCurrentPosition();
+        int frontRightTarget = rightFrontDrive.getCurrentPosition();
+        int rearLeftTarget = leftBackDrive.getCurrentPosition();
+        int rearRightTarget = rightBackDrive.getCurrentPosition();
+
+        leftFrontDrive.setTargetPosition(frontLeftTarget);
+        rightFrontDrive.setTargetPosition(frontRightTarget);
+        leftBackDrive.setTargetPosition(rearLeftTarget);
+        rightBackDrive.setTargetPosition(rearRightTarget);
+    }
+
+    /**
+     * Engages the RUN_TO_POSITION mode on all motors to hold the last set target.
+     * The motors will be given a power value to actively hold their positions.
+     */
+    public void holdPosition() {
+
+        PIDFCoefficients coefficients = new PIDFCoefficients(PID_P, PID_I, 0, 0);
+
+        for (DcMotorEx motor : motors) {
+            int position = motor.getCurrentPosition();
+            motor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, coefficients);
+            motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            motor.setTargetPosition(position);
+            motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        }
+
+        // Give the motors power to hold their position.
+        // This power value acts as a *maximum speed limit* for the PID controller.
+        // A value of 1.0 is common, but you can use a smaller value if you want
+        // the corrections to be less aggressive.
+        setPower(1.0);
+    }
+
+    /**
+     * Releases the motors from holding position and returns to a standard drive mode.
+     */
+    public void releasePosition() {
+        setPIDFCoefficients(PID_P, PID_I);
+        setRunWithEncoders(runWithEncoders);
+        setBraking(braking);
+        setPower(0.0);
+    }
 }
 
