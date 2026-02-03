@@ -149,7 +149,13 @@ public class TeleOpComp extends LinearOpMode {
             // Move to the pose that we last shoot from and shoot three artifacts
             fastLaunch();
 
-        } else if (drive2.yWasPressed()) {
+        } else if (gamepad1.bWasPressed()) {
+            if (fastLaunch())
+                launcher.fireAllArtifacts();
+        }
+
+
+        if (drive2.yWasPressed()) {
             // turn the intake on or off and open, close the lever
             robot.powerIntake(! intake.isRunning());
 
@@ -237,10 +243,12 @@ public class TeleOpComp extends LinearOpMode {
                 if (useOdometer) {
                     long time = System.currentTimeMillis();
                     if (odometerSetTime == 0 || time - odometerSetTime > 20000) {
-                        odometerSetTime = time;
-                        aprilTagID = id;
-                        driveControl.setPose(current);
-                        Logger.debug("odometer's position set to: %s", current);
+                        if (! driveControl.isBusy()) {
+                            odometerSetTime = time;
+                            aprilTagID = id;
+                            driveControl.setPose(current);
+                            Logger.debug("odometer's position set to: %s", current);
+                        }
                     }
                 }
                 setLEDs(LEDColor.GREEN, LEDColor.GREEN);
@@ -272,6 +280,8 @@ public class TeleOpComp extends LinearOpMode {
         } else {   //red
             target = new Pose(num, num, Math.toRadians(45));
         }
+
+        //driveControl.setFocalPoint(target);
 
         double a = target.getX() - current.getX();
         double b = target.getY() - current.getY();
@@ -434,9 +444,19 @@ public class TeleOpComp extends LinearOpMode {
      *
      * @noinspection unused
      */
-    private void fastLaunch() {
+    private boolean fastLaunch() {
+        Logger.info("fast launch");
 
-        driveControl.moveToPose(waypoint, 0.7, 5000);
+        if (waypoint == null) {
+            Logger.warning("no waypoint set");
+            return false;
+        }
+
+        intake.off();
+        launcher.leverUp();
+        launcher.gateOpen();
+
+        driveControl.moveToPose(waypoint, 0.8, 5000);
         launcher.runLauncher();
         launcher.loadArtifact();
 
@@ -445,14 +465,14 @@ public class TeleOpComp extends LinearOpMode {
         long start = System.currentTimeMillis();
         while (!driveControl.nearPose()) {
             if (!opModeIsActive())
-                return;
+                return false;
 
             if (System.currentTimeMillis() - start > timeout)
-                return;
+                return false;
 
             if (!gamepad1.atRest() || !gamepad2.atRest())
-                return;
+                return false;
             }
-        launcher.fireAllArtifacts();
+    return true;
     }
 }
