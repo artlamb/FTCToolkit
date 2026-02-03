@@ -12,17 +12,17 @@ public class Auto {
 
     public static double MAX_SPEED = 0.80;
     public static double FAST_SPEED = 0.60;
-    public static double SLOW_SPEED = 0.30;
+    public static double SLOW_SPEED = 0.25;
 
     public static double MIN_TOLERANCE = 0;
-    public static double LOW_TOLERANCE = 0.05;
+    public static double LOW_TOLERANCE = 0.1;
     public static double HIGH_TOLERANCE = 0.20;
 
     public static PoseData START_AUDIENCE = new PoseData(12.25, -62,    90);
     public static PoseData START_GOAL =     new PoseData(50.50, 50.50,  45);
     public static PoseData SHOOT_GOAL =     new PoseData(20.00, 20.00,  45);
     public static PoseData SHOOT_AUDIENCE = new PoseData(11.50, 11.50,  45);
-    public static PoseData ARTIFACT =       new PoseData(26.00, 11.75,  0);
+    public static PoseData ARTIFACT =       new PoseData(25.00, 11.75,  0);
     //public static PoseData PARK_AUDIENCE =  new PoseData(12.25, -36,    90);
     public static PoseData PARK_AUDIENCE =  new PoseData(35.25, -58.75,    90);
     public static PoseData PARK_GOAL =      new PoseData(23.50, -23.5,   90);
@@ -189,7 +189,7 @@ public class Auto {
         } else if (startPosition == StartPosition.AUDIENCE) {
             shoot = createPose(SHOOT_AUDIENCE.x * xSign, SHOOT_AUDIENCE.y, heading);
         }
-        if (timesToShoot < shootCount) {
+        if (shootCount < timesToShoot) {
             navigate.addPath(getPathName(PathState.SHOOT), FAST_SPEED, MIN_TOLERANCE, shoot);
             shootCount++;
         }
@@ -200,7 +200,7 @@ public class Auto {
             double tileSize = 23.5;
             double x1 = ARTIFACT.x;
             double y1 = ARTIFACT.y;
-            double x2 = (tileSize * 2);
+            double x2 = (tileSize * 2) + 1;
             double y2 = y1;
             PathState pathState;
             switch (o) {
