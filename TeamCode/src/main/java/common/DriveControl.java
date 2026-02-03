@@ -136,7 +136,7 @@ public class DriveControl extends Thread {
 
     private ArrayList<PathSegment> segment;
 
-    private enum DRIVE_STATE { IDLE, MOVING, MOVING_TO_POSE, MOVING_TO_OBJECT, TURN_BY, FOLLOW_PATH, STOPPING }
+    private enum DRIVE_STATE { IDLE, MOVING, MOVING_TO_POSE, MOVING_TO_OBJECT, TURN_BY, FOLLOW_PATH, STOPPING, HOLD_POSITION, RELEASE_POSITION }
     private volatile DRIVE_STATE driveState;
 
     private final Drive drive;
@@ -246,6 +246,16 @@ public class DriveControl extends Thread {
                 case STOPPING:
                     drive.setVelocity(0);
                     driveState = DRIVE_STATE.IDLE;
+                    break;
+
+                case HOLD_POSITION:
+                    drive.holdPosition();
+                    break;
+
+                case RELEASE_POSITION:
+                    drive.releasePosition();
+                    driveState = DRIVE_STATE.IDLE;
+                    break;
             }
         }
     }
@@ -416,13 +426,13 @@ public class DriveControl extends Thread {
             setTolerances(tolerance);
             drivePID.reset();
             turnPID.reset();
-            moveTo(target);
+            moveTo(target, maxSpeed);
 
         } else {
             moveInit(true);
-            moveTo(target);
+            moveTo(target, maxSpeed);
             moveInit(false);
-            moveTo(target);
+            moveTo(target, maxSpeed);
         }
 
         drive.stopRobot();
@@ -555,7 +565,11 @@ public class DriveControl extends Thread {
             double maxPower = drive.getMaxPower();
             power = power * (maxPower - minPower) + minPower;
             power = Math.max(drive.accelerationLimit(power), minPower);
-            turn /= 3;                              // limit turn speed when drive in any direction
+            if (alignWithFocalPoint) {
+                turn = getRotationToFocalPoint();
+            } else {
+                turn /= 3;                              // limit turn speed when drive in any direction
+            }
 
         } else  if (turn != 0) {
             // if only turning scale joystick value for turning only.
@@ -757,6 +771,10 @@ public class DriveControl extends Thread {
         }
     }
 
+    public void startMoving() {
+        drive.accelerationReset();
+    }
+
     public void stopMoving() {
 
         synchronized (this) {
@@ -767,9 +785,26 @@ public class DriveControl extends Thread {
         }
     }
 
-    public void startMoving() {
-        drive.accelerationReset();
+    public void holdPosition() {
+
+        synchronized (this) {
+            if (driveState != DRIVE_STATE.IDLE) {
+                interruptAction();
+            }
+            driveState = DRIVE_STATE.HOLD_POSITION;
+        }
     }
+
+    public void releasePosition() {
+
+        synchronized (this) {
+            if (driveState != DRIVE_STATE.IDLE && driveState != DRIVE_STATE.HOLD_POSITION) {
+                interruptAction();
+            }
+            driveState = DRIVE_STATE.RELEASE_POSITION;
+        }
+    }
+
 
     public boolean isBusy () {
         return driveState != DRIVE_STATE.IDLE;
@@ -799,6 +834,7 @@ public class DriveControl extends Thread {
      * @noinspection unused
      */
     public void setFocalPoint(Pose pose) {
+        Logger.debug("set focal point %s", pose.toString());
         focalPoint = pose;
     }
 
