@@ -79,6 +79,15 @@ public class DriveGamepad extends Thread {
                 break;
             }
 
+            // Hold the robot at its current position
+            if (gamepad.x) {
+                driveControl.holdPosition();
+                while (gamepad.x) {
+                    Thread.yield();
+                }
+                driveControl.releasePosition();
+            }
+
             /*
             if (gamepad.aWasPressed()) {
                 moveToPose(PoseButton.A);
@@ -136,6 +145,7 @@ public class DriveGamepad extends Thread {
                     driveControl.startMoving();
                     moving = true;
                 }
+                //boolean alignWithFocalPoint = gamepad.right_bumper;
                 driveControl.moveWithJoystick(x, y, x2);
 
             } else if (moving) {
