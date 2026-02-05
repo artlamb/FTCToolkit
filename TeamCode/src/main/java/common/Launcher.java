@@ -35,7 +35,7 @@ public class Launcher extends Thread {
     public static long   ARTIFACT_LOAD_TIME = 1000;
     public static long   TRIGGER_LOAD_TIME = 0;
 
-    public static int    TOLERANCE = 2;                         // velocity tolerance of the motors spin up
+    public static int    TOLERANCE = 0;                         // velocity tolerance of the motors spin up
 
    private boolean gateOpen = true;
 
