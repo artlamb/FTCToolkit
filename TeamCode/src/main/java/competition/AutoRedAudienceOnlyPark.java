@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import common.Auto;
 import common.Logger;
 
-@Autonomous(name="Auto Red Only Park", group="Competition")
+@Autonomous(name="Red Only Park", group="Competition")
 
 public class AutoRedAudienceOnlyPark extends LinearOpMode {
 
