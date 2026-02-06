@@ -370,8 +370,8 @@ public class TeleOpComp extends LinearOpMode {
      */
     private double getVelocity(double distance) {
 
-        double[] distances  = { 60, 65, 75, 85, 100, 200 };
-        double[] velocities = { 25, 26, 27, 28, 30,  38 };
+        double[] distances  = {     60, 65, 74, 77, 84, 90, 100, 200 };
+        double[] velocities = { 25, 26, 27, 28, 29, 30, 31, 38 };
 
         for (int i = 0; i < distances.length; i++) {
             if (distance < distances[i]) {
