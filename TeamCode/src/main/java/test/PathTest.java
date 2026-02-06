@@ -59,7 +59,7 @@ import utils.PoseData;
 import utils.Waypoint;
 
 @TeleOp(name=" Path Test", group="Test")
-//@Disabled
+@Disabled
 @SuppressLint("DefaultLocale")
 @Config
 
