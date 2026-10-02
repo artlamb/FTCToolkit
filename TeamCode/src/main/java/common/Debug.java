@@ -5,6 +5,7 @@
 package common;
 
 @com.acmerobotics.dashboard.config.Config
+@SuppressWarnings({"BooleanMethodIsAlwaysInverted", "unused"})
 
 public final class Debug {
 
@@ -13,7 +14,6 @@ public final class Debug {
     public static boolean dashboard = true;
     public static boolean drawPaths = false;
     public static boolean waitForButtonPress = false;
-
 
     public static boolean drive() {
         return drive;

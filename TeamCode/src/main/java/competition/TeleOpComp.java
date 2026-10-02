@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
@@ -26,6 +27,7 @@ import utils.Pose;
 @TeleOp(name="TeleOpComp", group="Competition")
 @SuppressLint("DefaultLocale")
 @com.acmerobotics.dashboard.config.Config
+@Disabled
 
 public class TeleOpComp extends LinearOpMode {
 

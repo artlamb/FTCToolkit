@@ -2,19 +2,16 @@ package test;
 
 import android.annotation.SuppressLint;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
-
-import java.util.Arrays;
-import java.util.List;
 
 import common.Config;
 import common.Floodgate;
@@ -24,20 +21,16 @@ import utils.Increment;
 
 @TeleOp(name="Launcher Test", group="Test")
 @SuppressLint("DefaultLocale")
-@Disabled
+//@Disabled
 @com.acmerobotics.dashboard.config.Config
 
-public class LauncherTest extends LinearOpMode {
+public class LauncherOneMotor extends LinearOpMode {
 
-    //public static double pidP = 40;
-    //public static double pidI = 0;
-    //public static double pidF = 14.5;
     public static double runSpeed = 27;
     public static double idleSpeed = 25;
     public static PIDFCoefficients coefficientsLeft  = new PIDFCoefficients(50, 0, 0, 14.5);
-    public static PIDFCoefficients coefficientsRight = new PIDFCoefficients(50, 0, 0, 14.5);
 
-    private Launcher launcher;
+    //private Launcher launcher;
     Floodgate floodgate;
 
     Increment speedIncrement;
@@ -46,15 +39,11 @@ public class LauncherTest extends LinearOpMode {
     boolean idling = false;
     boolean speedChanged = false;
 
-    private double lastLeftError = 0;
-    private double lastRightError = 0;
+    private double lastError = 0;
     private long   leftTime = 0;
-    private long   rightTime = 0;
     private long   spinUpStartTime;
 
-    private DcMotorEx leftMotor;
-    private DcMotorEx rightMotor;
-    public List<DcMotorEx> motors;
+    private DcMotorEx motor;
 
     Telemetry.Item speedMsg;
 
@@ -76,15 +65,17 @@ public class LauncherTest extends LinearOpMode {
     }
 
     private void initialize() {
-        leftMotor = hardwareMap.get(DcMotorEx.class, Config.LAUNCHER_LEFT);
-        rightMotor = hardwareMap.get(DcMotorEx.class, Config.LAUNCHER_RIGHT);
-        motors = Arrays.asList(leftMotor, rightMotor);
+        motor = hardwareMap.get(DcMotorEx.class, Config.LAUNCHER_LEFT);
+        motor.setDirection(DcMotorSimple.Direction.REVERSE);
+        motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
 
-        launcher = new Launcher(this);
-        launcher.start();
+        //launcher = new Launcher(this);
+        //launcher.start();
 
-        floodgate = new Floodgate(this);
+        //floodgate = new Floodgate(this);
 
         speedIncrement = new Increment(1, 2, 3);
 
@@ -107,58 +98,68 @@ public class LauncherTest extends LinearOpMode {
     private void handleGamepad() {
         Gamepad gamepad = gamepad1;
 
+        // Start the launcher motor
         if (gamepad.aWasPressed()) {
             runLauncher(! running, runSpeed);
 
+        // Stop the launcher motor
         } else if (gamepad.bWasPressed()) {
             runLauncher(true, (idling ? runSpeed : idleSpeed));
             idling = ! idling;
 
+        // Open / close the launcher gate
         } else if (gamepad.xWasPressed()) {
             running = ! running;
 
+        // Change the PID coefficients of the launcher motors
         } else if (gamepad.yWasPressed()) {
             setPID();
 
+        // Pull the trigger
         } else if (gamepad.right_trigger > 0) {
-            launcher.fireLauncher();
+            //launcher.fireLauncher();
             while (gamepad.right_trigger > 0) {
                 Thread.yield();
             }
 
+        // Fire all the artifacts
         } else if (gamepad.left_trigger > 0) {
-            launcher.fireAllArtifacts();
+            //launcher.fireAllArtifacts();
             while (gamepad.left_trigger > 0) {
                 Thread.yield();
             }
 
+        // increase motor speed
         } else if (gamepad.left_bumper) {
-            // increase motor speed
             speedIncrement.reset();
             while (gamepad.left_bumper) {
                 speed = Math.max(speed - speedIncrement.get(), 0);
                 setDisplaySpeed(speedMsg);
                 telemetry.update();
-            launcher.setSpeed(speed);
+            updateSpeed(speed);
             }
 
+        // decrease the motor speed
         } else if (gamepad.right_bumper) {
-            // decrease the motor speed
             speedIncrement.reset();
             while (gamepad.right_bumper) {
                 speed = Math.min(speed + speedIncrement.get(), 120);
                 setDisplaySpeed(speedMsg);
                 telemetry.update();
             }
-            launcher.setSpeed(speed);
+            updateSpeed(speed);
         }
     }
 
     private void updateSpeed(double speed) {
+
         double VELOCITY_MULTIPLIER = 20;
         double velocity = VELOCITY_MULTIPLIER * speed;
-        leftMotor.setVelocity(velocity);
-        rightMotor.setVelocity(velocity);
+        motor.setVelocity(velocity);
+
+        Logger.message("launcher speed set to %f  velocity set to %f", speed, velocity);
+        //launcher.setSpeed(speed);
+
         running = speed != 0;
         spinUpStartTime = System.currentTimeMillis();
         speedChanged = true;
@@ -169,70 +170,54 @@ public class LauncherTest extends LinearOpMode {
         if (running) {
             double VELOCITY_MULTIPLIER = 20;
             double velocity = VELOCITY_MULTIPLIER * speed;
-            double leftVelocity = leftMotor.getVelocity();
-            double rightVelocity = rightMotor.getVelocity();
+            double motorVelocity = motor.getVelocity();
 
-            double leftError = (velocity - leftVelocity) / VELOCITY_MULTIPLIER;
-            double rightError = (velocity - rightVelocity) / VELOCITY_MULTIPLIER;
+            double leftError = (velocity - motorVelocity) / VELOCITY_MULTIPLIER;
 
             long time = System.currentTimeMillis();
 
             if (speedChanged) {
-                if (Math.abs(leftError) <= 1 && Math.abs(rightError) <= 1 &&  Math.abs(leftError + rightError) <= 2) {
-                    Logger.info("launcher spin up complete after %d ms",
-                            time - spinUpStartTime);
+                if (Math.abs(leftError) <= 1) {
+                    Logger.info("launcher spin up complete after %d ms", time - spinUpStartTime);
                     speedChanged = false;
                 }
             }
 
-            if (leftError != lastLeftError || rightError != lastRightError) {
-                String stableLeft = "";
-                String stableRight = "";
-                if (leftError != lastLeftError) {
-                    stableLeft = String.format("%6d ms", time - leftTime);
+            if (leftError != lastError) {
+                String stable = "";
+                if (leftError != lastError) {
+                    stable = String.format("%6d ms", time - leftTime);
                     leftTime = time;
                 }
-                if (rightError != lastRightError) {
-                    stableRight += String.format("%6d ms", time - rightTime);
-                    rightTime = time;
-                }
 
+                double leftCurrent = motor.getCurrent(CurrentUnit.AMPS);
 
-                double leftCurrent = leftMotor.getCurrent(CurrentUnit.AMPS);
-                double rightCurrent = rightMotor.getCurrent(CurrentUnit.AMPS);
-
-                Logger.verbose("spin up: %6d ms  stable: %10s  %10s  delta velocity  left: %5.0f  right: %5.0f    current  left: %5.2f  right: %5.2f",
+                Logger.verbose("spin up: %6d ms  stable: %10s  delta velocity : %5.0f  current:  %5.2f  ",
                         time - spinUpStartTime,
-                        stableLeft, stableRight,
-                        leftError, rightError,
-                        leftCurrent,
-                        rightCurrent
-                        //(leftCurrent + rightCurrent) /floodgate.getCurrent()
+                        stable,
+                        leftError,
+                        leftCurrent
+                        //floodgate.getCurrent()
                 );
 
-                lastLeftError = leftError;
-                lastRightError = rightError;
+                lastError = leftError;
             }
             //floodgate.display(100);
-
         }
     }
-
-    private void setPID( ) {
-        //PIDFCoefficients coefficients = new PIDFCoefficients(pidP, pidI, 0, pidF);
-        leftMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, coefficientsLeft);
-        rightMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, coefficientsRight);
-        updateSpeed(runSpeed);
-        }
-
-       private void runLauncher(boolean run, double speed)  {
-            if (run) spinUpStartTime = System.currentTimeMillis();
-            updateSpeed(run ? speed : 0);
-            Logger.debug("launcher running: %b  speed: %5.0f", run, speed);
-       }
 
     private void setDisplaySpeed(Telemetry.Item item) {
         item.setValue("%5.3f", speed);
     }
 
+    private void setPID( ) {
+        motor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, coefficientsLeft);
+        updateSpeed(runSpeed);
+        }
+
+    private void runLauncher(boolean run, double speed)  {
+            if (run) spinUpStartTime = System.currentTimeMillis();
+            updateSpeed(run ? speed : 0);
+            Logger.debug("launcher running: %b  speed: %5.0f", run, speed);
+       }
 }

@@ -215,8 +215,9 @@ public class Launcher extends Thread {
 
     private void setVelocity(double speed) {
         velocity = VELOCITY_MULTIPLIER * speed;
-        leftMotor.setVelocity(velocity);
-        rightMotor.setVelocity(velocity);
+        for (DcMotorEx motor : motors) {
+            motor.setVelocity(velocity);
+        }
         running = (velocity != 0);
         idling = (speed == idleSpeed);
     }

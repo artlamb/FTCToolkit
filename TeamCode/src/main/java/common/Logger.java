@@ -80,6 +80,11 @@ public final class Logger {
         Log.d(TAG, msg);
     }
 
+    public static void monitor(String format, Object... args) {
+        String str = format(String.format(format, args));
+        Log.i("MONITOR", str);
+    }
+
     public static void setErrorLevel(int level) {
         errorLevel = level;
     }

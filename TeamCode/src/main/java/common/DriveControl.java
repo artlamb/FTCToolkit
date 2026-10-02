@@ -71,15 +71,6 @@ public class DriveControl extends Thread {
     public static double PID_P_TURN_FAST = 2;
     public static double PID_P_TURN_SLOW = 1.2;
 
-    /*
-    public double PID_P_DRIVE_FAST = 0.1; // todo 0.15;
-    public double PID_P_DRIVE_SLOW = 0.1;
-    private final PIDFCoefficients PIDFCoefficientsDriveFast = new PIDFCoefficients(
-            PID_P_DRIVE_FAST, 0, 0, 0);
-
-    private final PIDFCoefficients PIDFCoefficientsDriveSlow = new PIDFCoefficients(
-            PID_P_DRIVE_SLOW, 1, 0, 0, 0, 0);
-    */
     private final PIDFCoefficients PIDFCoefficientsTurnFast = new PIDFCoefficients(
             PID_P_TURN_FAST, 0, 0, 0);
 
@@ -91,7 +82,6 @@ public class DriveControl extends Thread {
 
     private final PIDFCoefficients PIDFCoefficientsTurn = new PIDFCoefficients(
             PID_TURN_P, PID_TURN_P_EXPONENT, PID_TURN_S, PID_TURN_S_EXPONENT, Math.toRadians(PID_TURN_S_ERROR), Math.toRadians(PID_TURN_S_THRESHOLD));
-
 
     private final PIDFCoefficients PIDFCoefficientsDriveTest = new PIDFCoefficients(
             0.02, 1.34, 0.086, 0.41, 1, 5);
@@ -140,13 +130,19 @@ public class DriveControl extends Thread {
     private volatile DRIVE_STATE driveState;
 
     private final Drive drive;
-    Pinpoint localizer;
-    LinearOpMode opMode;
-    VoltageSensor voltageSensor;
+    private final Pinpoint localizer;
+    private final VoltageSensor voltageSensor;
+    private DistanceSensor centerFrontSensor;
     private DistanceSensor leftFrontSensor;
     private DistanceSensor rightFrontSensor;
     private final Dashboard dashboard;
+    private final LinearOpMode opMode;
 
+    /**
+     * Contractor
+     *
+     * @param opMode instance of opMode
+     */
     public DriveControl(LinearOpMode opMode, Drive drive) {
 
         this.setName("driveControl");
@@ -155,15 +151,9 @@ public class DriveControl extends Thread {
         driveState = DRIVE_STATE.IDLE;
         timeoutTimer = new ElapsedTime();
         dashboard = new Dashboard();
-
+        localizer = new Pinpoint(opMode);
         voltageSensor = opMode.hardwareMap.voltageSensor.iterator().next();
         //initDistanceSensors();
-
-        try {
-            localizer = new Pinpoint(opMode);
-        } catch (Exception e) {
-            Logger.error(e, "Odometry Sensor not found");
-        }
     }
 
     /**
@@ -172,6 +162,12 @@ public class DriveControl extends Thread {
      * @noinspection unused
      */
     private void initDistanceSensors() {
+
+        try {
+            centerFrontSensor = opMode.hardwareMap.get(DistanceSensor.class, Config.LEFT_FRONT_SENSOR);
+        } catch (Exception e) {
+            Logger.error(e, "center distance sensor not found", 2);
+        }
 
         try {
             leftFrontSensor = opMode.hardwareMap.get(DistanceSensor.class, Config.LEFT_FRONT_SENSOR);
@@ -511,9 +507,12 @@ public class DriveControl extends Thread {
      */
     private void moveToObject() {
 
+        if (centerFrontSensor == null)
+            return;
+
         timeoutTimer.reset();
 
-        double distance = drive.distanceToObject() - stopDistance;
+        double distance = centerFrontSensor.getDistance(DistanceUnit.INCH) - stopDistance;
         Pose pose = getPose();
         Pose target = new Pose(pose.getX() + distance, pose.getY(), pose.getHeading());
 
@@ -602,8 +601,41 @@ public class DriveControl extends Thread {
                         String.format("power: %4.2f  sin: %5.2f  cos: %5.2f  ", power, sin, cos) +
                         String.format("turn: %5.2f  ", turn) +
                         String.format("power: %4.2f  %4.2f  %4.2f  %4.2f   ", leftFrontPower, rightFrontPower, leftRearPower, rightRearPower) +
-                        String.format("pos: %6d %6d %6d %6d  ", drive.leftFrontDrive.getCurrentPosition(), drive.rightFrontDrive.getCurrentPosition(), drive.leftBackDrive.getCurrentPosition(), drive.rightBackDrive.getCurrentPosition()) +
-                        String.format("velocity: %4.0f %4.0f %4.0f %4.0f", drive.leftFrontDrive.getVelocity(), drive.rightFrontDrive.getVelocity(), drive.leftBackDrive.getVelocity(), drive.rightBackDrive.getVelocity())
+                        String.format("pos: %6d %6d %6d %6d  ", drive.leftFront.getCurrentPosition(), drive.rightFront.getCurrentPosition(), drive.leftRear.getCurrentPosition(), drive.rightRear.getCurrentPosition()) +
+                        String.format("velocity: %4.0f %4.0f %4.0f %4.0f", drive.leftFront.getVelocity(), drive.rightFront.getVelocity(), drive.leftRear.getVelocity(), drive.rightRear.getVelocity())
+        );
+    }
+
+    private void moveInDirection (double angle, double turn, double power) {
+
+        double scale = 1;
+        double maxPower = drive.getMaxPower();
+        if (power != 0 &&(power + Math.abs(turn) > maxPower))
+            scale = (power + Math.abs(turn)) / maxPower;
+
+        double maxVelocity = drive.getMaxVelocity();
+        double sin = Math.sin(angle - (Math.PI / 4));
+        double cos = Math.cos(angle - (Math.PI / 4));
+        double max = Math.max(Math.abs(sin), Math.abs(cos));
+
+        double leftFrontPower  = (power * (cos/max) + turn) / scale;
+        double rightFrontPower = (power * (sin/max) - turn) / scale;
+        double leftRearPower   = (power * (sin/max) + turn) / scale;
+        double rightRearPower  = (power * (cos/max) - turn) / scale;
+
+        drive.setVelocity(
+                leftFrontPower * maxVelocity,
+                rightFrontPower * maxVelocity,
+                leftRearPower * maxVelocity,
+                rightRearPower * maxVelocity);
+
+        Logger.verbose("%s",
+                String.format("angle: %5.2f (rad)  %4.0f (deg)  ", angle, Math.toDegrees(angle)) +
+                String.format("power: %4.2f  sin: %5.2f  cos: %5.2f  ", power, sin, cos) +
+                String.format("turn: %5.2f  ", turn) +
+                String.format("power: %4.2f  %4.2f  %4.2f  %4.2f   ", leftFrontPower, rightFrontPower, leftRearPower, rightRearPower) +
+                String.format("pos: %6d %6d %6d %6d  ", drive.leftFront.getCurrentPosition(), drive.rightFront.getCurrentPosition(), drive.leftRear.getCurrentPosition(), drive.rightRear.getCurrentPosition()) +
+                String.format("velocity: %4.0f %4.0f %4.0f %4.0f", drive.leftFront.getVelocity(), drive.rightFront.getVelocity(), drive.leftRear.getVelocity(), drive.rightRear.getVelocity())
         );
     }
 

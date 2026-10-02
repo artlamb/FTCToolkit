@@ -31,7 +31,7 @@ public class DecelerationTest extends LinearOpMode {
     public void runOpMode() {
         try {
             drive = new Drive(this);
-            drive.start();
+            //drive.start();
             driveControl = new DriveControl(this, drive);
             driveControl.resetIMU();
             driveControl.start();

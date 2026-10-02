@@ -3,27 +3,21 @@ package common;
 import android.graphics.Color;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.LED;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 
 //@com.acmerobotics.dashboard.config.Config
+@SuppressWarnings("unused")
 
 public class ColorSensor {
 
     public static float COLOR_SENSOR_GAIN = 2.2F;
 
-    public enum COLOR {RED, BLUE, WHITE }
+    public enum COLOR { RED, BLUE, WHITE, UNKNOWN }
 
-    private COLOR color = COLOR.WHITE;
-    private LED redLED;
-    private LED greenLED;
-
+    private COLOR color = COLOR.UNKNOWN;
     private float lastHue = 0;
     private float lastSaturation = 0;
-
-    private boolean installed;
-    private boolean enabled;
 
     private NormalizedColorSensor colorSensor;
 
@@ -32,16 +26,9 @@ public class ColorSensor {
         try {
             colorSensor = opMode.hardwareMap.get(NormalizedColorSensor.class, Config.COLOR_SENSOR);
             colorSensor.setGain(COLOR_SENSOR_GAIN);
-            greenLED = opMode.hardwareMap.get(LED.class, Config.GREEN_LEFT_LED);
-            redLED = opMode.hardwareMap.get(LED.class, Config.RED_LEFT_LED);
-            redLED.off();
-            greenLED.off();
-
             Logger.message("color sensor installed");
-            installed = true;
 
         } catch (Exception e) {
-            installed = false;
             Logger.error(e, "Color sensor hardware not found");
         }
     }
@@ -52,28 +39,26 @@ public class ColorSensor {
      * @param color the color to look for
      */
     public void SetColor (COLOR color)  {
-
-        if (!installed) return;
         this.color = color;
     }
 
-    public void enable(boolean enable) {
-        if (!installed) return;
-
-        if (!enable) {
-            redLED.off();
-            greenLED.off();
-        }
-        enabled = enable;
-        Logger.message("color sensor enabled %b", enabled);
+    /**
+     * Check if the sensor detects the specified color
+     */
+    public boolean findColor() {
+        return findColor(color);
     }
 
     /**
-     * Update the LEDs based on the color sensor current reading
+     * Check if the sensor detects the specified color
+     * @param color the color to look for
      */
-    public void update() {
+    public boolean findColor(COLOR color) {
 
-        if (!installed) return;
+        if (colorSensor == null) {
+            Logger.warning("color sensor not found");
+            return false;
+        }
 
         boolean found = false;
         float[] hsvValues = new float[3];
@@ -87,33 +72,27 @@ public class ColorSensor {
         float saturation = hsvValues[1];
 
         if (hue != lastHue || saturation != lastSaturation) {
-            Logger.message("hue %f saturation %f", hue, saturation);
+            Logger.verbose("hue %f saturation %f", hue, saturation);
             lastHue = hue;
             lastSaturation = saturation;
         }
 
         if (color == COLOR.BLUE) {
             if (hue >= 190 && hue <= 230 && saturation >= .5) {
-                Logger.message("blue found");
+                Logger.verbose("blue found");
                 found = true;
             }
         } else if (color == COLOR.RED) {
             if ((hue >= 0 && hue <= 90) && saturation >= .5) {
-                Logger.message("red found");
+                Logger.verbose("red found");
                 found = true;
             }
         } else if (color == COLOR.WHITE) {
             if (hue <= 10 && saturation >= .1) {
-                Logger.message("white found");
+                Logger.verbose("white found");
                 found = true;
             }
         }
-        if (found) {
-            redLED.off();
-            greenLED.on();
-        } else {
-            redLED.on();
-            greenLED.off();
-        }
+    return found;
     }
 }
