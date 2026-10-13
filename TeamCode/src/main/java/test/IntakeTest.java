@@ -1,11 +1,7 @@
 package test;
 
-import static common.Config.GREEN_LEFT_LED;
-import static common.Config.RED_LEFT_LED;
-
 import android.annotation.SuppressLint;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
@@ -15,28 +11,20 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import common.Drive;
 import common.DriveControl;
 import common.DriveGamepad;
-import common.Floodgate;
-import common.Hopper;
 import common.Intake;
-import common.LEDTwoColor;
-import common.Launcher;
 import common.Logger;
 import utils.Increment;
 
 @TeleOp(name="Intake Test", group="Test")
 @SuppressLint("DefaultLocale")
-@Disabled
+//@Disabled
 
 public class IntakeTest extends LinearOpMode {
 
     private Intake intake;
-    private Hopper hopper;
-    private Launcher launcher;
 
     Increment speedIncrement;
     double speed = 0.9;
-    Floodgate floodgate;
-    LEDTwoColor led;
 
     Telemetry.Item speedMsg;
 
@@ -49,7 +37,6 @@ public class IntakeTest extends LinearOpMode {
 
             while (opModeIsActive()) {
                 handleGamepad();
-                led.update();
                 Thread.yield();
             }
 
@@ -61,13 +48,8 @@ public class IntakeTest extends LinearOpMode {
     private void initialize() {
 
         intake = new Intake(this);
-        hopper = new Hopper(this);
-        launcher = new Launcher(this);
 
-        floodgate = new Floodgate(this);
-        led = new LEDTwoColor(this, RED_LEFT_LED, GREEN_LEFT_LED);
-        led.setColor(LEDTwoColor.LEDColor.GREEN);
-
+        /*
         Drive drive = new Drive(this);
 
         DriveControl driveControl = new DriveControl(this, drive);
@@ -76,6 +58,7 @@ public class IntakeTest extends LinearOpMode {
 
         DriveGamepad driveGamepad = new DriveGamepad(this, driveControl);
         driveGamepad.start();
+        */
 
         speedIncrement = new Increment(0.01, 0.02, 0.05);
 
@@ -93,17 +76,8 @@ public class IntakeTest extends LinearOpMode {
     private void handleGamepad() {
         Gamepad gamepad = gamepad1;
 
-        //floodgate.display(1000);
-
         if (gamepad1.aWasPressed()) {
             intake.toggle();
-            led.blink(intake.isRunning());
-
-        } else if (gamepad.bWasPressed()) {
-            hopper.leverToggle();
-
-        } else if (gamepad.yWasPressed()) {
-            launcher.gateToggle();
 
         } else if (gamepad.left_bumper) {
             // increase motor speed

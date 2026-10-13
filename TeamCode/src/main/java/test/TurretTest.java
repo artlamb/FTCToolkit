@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import common.Turret;
+import common.TurretProto;
 
 @TeleOp(name="Turret Test")
 @com.acmerobotics.dashboard.config.Config
@@ -17,7 +17,7 @@ public class TurretTest extends LinearOpMode {
     public void runOpMode() {
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
-        Turret turret = new Turret(hardwareMap);
+        TurretProto turret = new TurretProto(hardwareMap);
         waitForStart();
 
         while (opModeIsActive()) {
