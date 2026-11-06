@@ -24,7 +24,7 @@ public class IntakeTest extends LinearOpMode {
     private Intake intake;
 
     Increment speedIncrement;
-    double speed = 0.9;
+    double speed = 0.3;
 
     Telemetry.Item speedMsg;
 

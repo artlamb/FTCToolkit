@@ -2,6 +2,7 @@ package common;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 public class Intake {
 
@@ -11,7 +12,7 @@ public class Intake {
 
     public Intake(LinearOpMode opMode) {
         intake = opMode.hardwareMap.get(DcMotorEx.class, Config.INTAKE);
-
+        intake.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 
     public void setSpeed(double speed) {
