@@ -4,6 +4,8 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 
+import common.Config;
+
 @TeleOp(name="ServoTest", group="Test")
 //@Disabled
 @SuppressWarnings({"FieldCanBeLocal", "unused"})
@@ -17,7 +19,7 @@ public class ServoTest extends LinearOpMode {
     @Override
     public void runOpMode() {
 
-        continuousServo = hardwareMap.get(CRServo.class, "servo");
+        continuousServo = hardwareMap.get(CRServo.class, Config.TRIGGER);
 
         telemetry.addData("Status", "Continuous Servo, Press start");
         telemetry.update();

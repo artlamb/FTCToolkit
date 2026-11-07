@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -15,7 +16,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 
 import common.Config;
 import common.Floodgate;
-import common.Launcher;
+import common.Intake;
 import common.Logger;
 import utils.Increment;
 
@@ -43,7 +44,13 @@ public class LauncherOneMotor extends LinearOpMode {
     private long   leftTime = 0;
     private long   spinUpStartTime;
 
+    double intakeSpeed = 0.3;
+
     private DcMotorEx motor;
+    private Intake intake;
+    private CRServo triggerServo;
+    private boolean servoOn = false;
+
 
     Telemetry.Item speedMsg;
 
@@ -71,6 +78,11 @@ public class LauncherOneMotor extends LinearOpMode {
         motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
+        intake = new Intake(this);
+        intake.setSpeed(intakeSpeed);
+
+        triggerServo = hardwareMap.get(CRServo.class, "servo");
+
 
         //launcher = new Launcher(this);
         //launcher.start();
@@ -86,9 +98,8 @@ public class LauncherOneMotor extends LinearOpMode {
                 "  a - start / stop launcher motors\n" +
                 "  b - run / idle launcher motors\n" +
                 "  x - open / close close loader gate\n" +
-                "  y - pull trigger\n" +
-                "  right trigger - fire artifact\n" +
-                "  left trigger - fire all artifacts\n" +
+                "  y - toggle intake\n" +
+                "  right trigger - fire pollen\n" +
                 "  left bumper - decrease motor speed\n" +
                 "  right bumper - increase motor speed\n" +
                 "\n");
@@ -112,12 +123,17 @@ public class LauncherOneMotor extends LinearOpMode {
             running = ! running;
 
         // Change the PID coefficients of the launcher motors
-        } else if (gamepad.yWasPressed()) {
-            setPID();
+        //} else if (gamepad.yWasPressed()) {
+        //    setPID();
+
+        //
+        } else if (gamepad1.yWasPressed()) {
+            intake.toggle();
 
         // Pull the trigger
         } else if (gamepad.right_trigger > 0) {
-            //launcher.fireLauncher();
+            servoOn = !servoOn;
+            triggerServo.setPower(servoOn ? -1.0 : 0.0);
             while (gamepad.right_trigger > 0) {
                 Thread.yield();
             }

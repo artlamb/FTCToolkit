@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -25,6 +26,9 @@ public class IntakeTest extends LinearOpMode {
 
     Increment speedIncrement;
     double speed = 0.3;
+
+    private CRServo triggerServo;
+    private boolean servoOn = false;
 
     Telemetry.Item speedMsg;
 
@@ -78,6 +82,10 @@ public class IntakeTest extends LinearOpMode {
 
         if (gamepad1.aWasPressed()) {
             intake.toggle();
+
+        } else if (gamepad1.bWasPressed()) {
+            servoOn = !servoOn;
+            triggerServo.setPower(servoOn ? -1.0 : 0.0);
 
         } else if (gamepad.left_bumper) {
             // increase motor speed
