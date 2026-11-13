@@ -1,5 +1,6 @@
 package test;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -13,6 +14,7 @@ import common.Logger;
 @TeleOp(name=" Floodgate Test", group="Test")
 //@SuppressLint("DefaultLocale")
 @com.acmerobotics.dashboard.config.Config
+@Disabled
 
 public class FloodgateTest extends LinearOpMode {
 

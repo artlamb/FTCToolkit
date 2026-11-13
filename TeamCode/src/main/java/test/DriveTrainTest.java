@@ -23,6 +23,7 @@ import utils.Pose;
 @TeleOp(name="Drivetrain Test", group="Test")
 @SuppressLint("DefaultLocale")
 @com.acmerobotics.dashboard.config.Config
+@Disabled
 
 public class DriveTrainTest extends LinearOpMode {
 

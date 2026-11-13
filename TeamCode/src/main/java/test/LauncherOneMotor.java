@@ -15,6 +15,9 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 
 import common.Config;
+import common.Drive;
+import common.DriveControl;
+import common.DriveGamepad;
 import common.Floodgate;
 import common.Intake;
 import common.Logger;
@@ -29,7 +32,8 @@ public class LauncherOneMotor extends LinearOpMode {
 
     public static double runSpeed = 27;
     public static double idleSpeed = 25;
-    public static PIDFCoefficients coefficientsLeft  = new PIDFCoefficients(50, 0, 0, 14.5);
+    //public static PIDFCoefficients coefficientsLeft  = new PIDFCoefficients(50, 0, 0, 14.5);
+    public static PIDFCoefficients pidfLauncher  = new PIDFCoefficients(40, 1, 0, 0);
 
     //private Launcher launcher;
     Floodgate floodgate;
@@ -72,7 +76,7 @@ public class LauncherOneMotor extends LinearOpMode {
     }
 
     private void initialize() {
-        motor = hardwareMap.get(DcMotorEx.class, Config.LAUNCHER_LEFT);
+        motor = hardwareMap.get(DcMotorEx.class, Config.LAUNCHER);
         motor.setDirection(DcMotorSimple.Direction.REVERSE);
         motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -81,8 +85,16 @@ public class LauncherOneMotor extends LinearOpMode {
         intake = new Intake(this);
         intake.setSpeed(intakeSpeed);
 
-        triggerServo = hardwareMap.get(CRServo.class, "servo");
+        triggerServo = hardwareMap.get(CRServo.class, Config.TRIGGER);
 
+        Drive drive = new Drive(this);
+
+        DriveControl driveControl = new DriveControl(this, drive);
+        driveControl.reset();
+        driveControl.start();
+
+        DriveGamepad driveGamepad = new DriveGamepad(this, driveControl);
+        driveGamepad.start();
 
         //launcher = new Launcher(this);
         //launcher.start();
@@ -97,7 +109,6 @@ public class LauncherOneMotor extends LinearOpMode {
         telemetry.addData("\nControls", "\n" +
                 "  a - start / stop launcher motors\n" +
                 "  b - run / idle launcher motors\n" +
-                "  x - open / close close loader gate\n" +
                 "  y - toggle intake\n" +
                 "  right trigger - fire pollen\n" +
                 "  left bumper - decrease motor speed\n" +
@@ -120,7 +131,7 @@ public class LauncherOneMotor extends LinearOpMode {
 
         // Open / close the launcher gate
         } else if (gamepad.xWasPressed()) {
-            running = ! running;
+            //running = ! running;
 
         // Change the PID coefficients of the launcher motors
         //} else if (gamepad.yWasPressed()) {
@@ -133,14 +144,13 @@ public class LauncherOneMotor extends LinearOpMode {
         // Pull the trigger
         } else if (gamepad.right_trigger > 0) {
             servoOn = !servoOn;
-            triggerServo.setPower(servoOn ? -1.0 : 0.0);
+            triggerServo.setPower(servoOn ? 1.0 : 0.0);
             while (gamepad.right_trigger > 0) {
                 Thread.yield();
             }
 
         // Fire all the artifacts
         } else if (gamepad.left_trigger > 0) {
-            //launcher.fireAllArtifacts();
             while (gamepad.left_trigger > 0) {
                 Thread.yield();
             }
@@ -227,7 +237,7 @@ public class LauncherOneMotor extends LinearOpMode {
     }
 
     private void setPID( ) {
-        motor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, coefficientsLeft);
+        motor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfLauncher);
         updateSpeed(runSpeed);
         }
 

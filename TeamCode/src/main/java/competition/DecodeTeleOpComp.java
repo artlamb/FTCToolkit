@@ -29,7 +29,7 @@ import utils.Pose;
 @com.acmerobotics.dashboard.config.Config
 @Disabled
 
-public class TeleOpComp extends LinearOpMode {
+public class DecodeTeleOpComp extends LinearOpMode {
 
     public static boolean useOdometer = true;
     public static double DEFAULT_SPEED = 28;

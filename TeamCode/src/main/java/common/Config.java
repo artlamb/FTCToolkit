@@ -30,6 +30,7 @@ public class Config {
     public static final String RIGHT_FRONT_SENSOR  = "rightFrontSensor";
     public static final String LIFTER_LEFT         = "lifterLeft";
     public static final String LIFTER_RIGHT        = "lifterRight";
+    public static final String LAUNCHER            = "launcher";
     public static final String LAUNCHER_LEFT       = "launcherLeft";
     public static final String LAUNCHER_RIGHT      = "launcherRight";
     public static final String LINEAR_SERVO        = "linearServo";
