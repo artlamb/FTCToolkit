@@ -31,8 +31,8 @@ import utils.Increment;
 
 public class BioBuzzTeleOp extends LinearOpMode {
 
-    public static double runSpeed = 70;
-    public static double idleSpeed = 85;
+    public static double runSpeed = 84;
+    public static double idleSpeed = 84;
     //public static PIDFCoefficients coefficientsLeft  = new PIDFCoefficients(50, 0, 0, 14.5);
     public static PIDFCoefficients pidfLauncher  = new PIDFCoefficients(40, 1, 0, 0);
 
@@ -108,7 +108,7 @@ public class BioBuzzTeleOp extends LinearOpMode {
 
         telemetry.addData("\nControls", "\n" +
                 "  a - start / stop launcher motors\n" +
-                "  b - run / idle launcher motors\n" +
+                "  x - toggle intake in reverse\n" +
                 "  y - toggle intake\n" +
                 "  right trigger - fire pollen\n" +
                 "  left bumper - decrease motor speed\n" +
@@ -126,19 +126,19 @@ public class BioBuzzTeleOp extends LinearOpMode {
 
             // Stop the launcher motor
         } else if (gamepad.bWasPressed()) {
-            runLauncher(true, (idling ? runSpeed : idleSpeed));
-            idling = ! idling;
+            //runLauncher(true, (idling ? runSpeed : idleSpeed));
+            //idling = ! idling;
 
             // Open / close the launcher gate
         } else if (gamepad.xWasPressed()) {
+            intake.toggleReverse();
             //running = ! running;
 
             // Change the PID coefficients of the launcher motors
             //} else if (gamepad.yWasPressed()) {
             //    setPID();
 
-            //
-        } else if (gamepad1.yWasPressed()) {
+        } else if (gamepad.yWasPressed()) {
             intake.toggle();
 
             // Pull the trigger

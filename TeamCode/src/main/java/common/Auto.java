@@ -18,14 +18,14 @@ public class Auto {
     public static double LOW_TOLERANCE = 0.1;
     public static double HIGH_TOLERANCE = 0.20;
 
-    public static PoseData START_AUDIENCE = new PoseData(12.25, -62,    90);
+    public static PoseData START_AUDIENCE = new PoseData(0, 0,    0);
     public static PoseData START_GOAL =     new PoseData(50.50, 50.50,  45);
     public static PoseData SHOOT_GOAL =     new PoseData(20.00, 20.00,  45);
     public static PoseData SHOOT_AUDIENCE = new PoseData(11.50, 11.50,  45);
     public static PoseData ARTIFACT =       new PoseData(25.00, 11.75,  0);
     //public static PoseData PARK_AUDIENCE =  new PoseData(12.25, -36,    90);
-    public static PoseData PARK_AUDIENCE =  new PoseData(35.25, -58.75,    90);
-    public static PoseData PARK_GOAL =      new PoseData(23.50, -23.5,   90);
+    public static PoseData PARK_AUDIENCE =  new PoseData(23.5, 0,  0);
+    public static PoseData PARK_GOAL =      new PoseData(23.5, 0, 0);
 
     public enum Alliance {BLUE, RED}
 
@@ -61,22 +61,22 @@ public class Auto {
     private final Robot robot;
     private final DriveControl driveControl;
     private final Navigate navigate;
-    private final Launcher launcher;
-    private final Limelight limelight;
+    private final Launcher launcher = null;
+    //private final Limelight limelight;
 
     public Auto(LinearOpMode opMode) {
 
         this.opMode = opMode;
         robot = new Robot(opMode);
 
-        launcher = robot.getLauncher();
+        //launcher = robot.getLauncher();
 
         driveControl = robot.getDriveControl();
         driveControl.reset();
         navigate = new Navigate(opMode, driveControl);
 
-        limelight = robot.getLimelight();
-        limelight.setPipeline(Limelight.Pipeline.LOCATION);
+        //limelight = robot.getLimelight();
+        //limelight.setPipeline(Limelight.Pipeline.LOCATION);
     }
 
     public Auto(LinearOpMode opMode,
@@ -102,7 +102,7 @@ public class Auto {
         setLauncherSpeed(launcherSpeed);
         navigate.setStartingPose(pathIndex);
 
-        robot.powerLauncher(true, launcherSpeed);
+        //robot.powerLauncher(true, launcherSpeed);
     }
 
     public void runAuto() {
@@ -235,7 +235,7 @@ public class Auto {
         } else {
             park = createPose(PARK_AUDIENCE.x * xSign, PARK_AUDIENCE.y, PARK_AUDIENCE.h);
         }
-        navigate.addPath(getPathName(PathState.PARK), MAX_SPEED, HIGH_TOLERANCE, park);
+        navigate.addPath(getPathName(PathState.PARK), SLOW_SPEED, HIGH_TOLERANCE, park);
     }
 
     private Pose createPose(double x, double y, double heading) {
@@ -277,7 +277,7 @@ public class Auto {
     }
 
     public void setLauncherSpeed(double speed) {
-        launcher.setSpeed(speed);
+        //launcher.setSpeed(speed);
     }
 
     public void waitUntilNotMoving() {
@@ -352,6 +352,7 @@ public class Auto {
 
     private void setOdometer() {
 
+        /*
         int blueID = 20;
         int redID = 24;
         Pose current;
@@ -365,5 +366,6 @@ public class Auto {
                 // todo should we do this? driveControl.setPose(current);
             }
         }
+         */
     }
 }

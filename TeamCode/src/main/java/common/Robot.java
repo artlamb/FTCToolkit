@@ -55,13 +55,14 @@ public class Robot extends Thread {
         try {
             drive = new Drive(opMode);
             driveControl = new DriveControl(opMode, drive);
+            driveControl.start();
             driveGamepad = new DriveGamepad(opMode, driveControl);
+
             launcher = new Launcher(opMode);
             limelight = new Limelight(opMode);
             intake = new Intake(opMode);
             hopper = new Hopper(opMode);
 
-            driveControl.start();
             launcher.start();
 
         } catch (Exception e) {

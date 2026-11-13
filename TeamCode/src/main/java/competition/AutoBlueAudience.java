@@ -1,12 +1,14 @@
 package competition;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import common.Auto;
 import common.Logger;
 
 @Autonomous(name="Blue Audience", group="Competition")
+@Disabled
 
 public class AutoBlueAudience extends LinearOpMode {
 
