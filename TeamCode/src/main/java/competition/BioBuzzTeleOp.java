@@ -31,8 +31,8 @@ import utils.Increment;
 
 public class BioBuzzTeleOp extends LinearOpMode {
 
-    public static double runSpeed = 75;
-    public static double idleSpeed = 75;
+    public static double runSpeed = 78;
+    public static double idleSpeed = 78;
     //public static PIDFCoefficients coefficientsLeft  = new PIDFCoefficients(50, 0, 0, 14.5);
     public static PIDFCoefficients pidfLauncher  = new PIDFCoefficients(40, 1, 0, 0);
 
