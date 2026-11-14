@@ -80,7 +80,7 @@ public class BioBuzzTeleOp extends LinearOpMode {
     private void initialize() {
         motor = hardwareMap.get(DcMotorEx.class, Config.LAUNCHER);
         motor.setDirection(DcMotorSimple.Direction.REVERSE);
-        motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
@@ -118,7 +118,7 @@ public class BioBuzzTeleOp extends LinearOpMode {
     }
 
     private void handleGamepad() throws InterruptedException {
-        Gamepad gamepad = gamepad1;
+        Gamepad gamepad = gamepad2;
 
         // Start the launcher motor
         if (gamepad.aWasPressed()) {
