@@ -99,4 +99,15 @@ public class Trigger extends Thread {
         }
         Logger.debug("trigger on");
     }
+
+    public void reverse() {
+        synchronized (this) {
+            triggerServo.setPower(-1.0);
+            startTime = System.currentTimeMillis();
+            state = TRIGGER_STATE.FIRING;
+            this.notifyAll();
+        }
+        Logger.debug("trigger on in reverse");
+    }
+
 }
