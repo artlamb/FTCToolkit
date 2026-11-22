@@ -216,10 +216,12 @@ public class Auto {
 
                 case FLOWER:
                     pose = createPose(FLOWER.x, FLOWER.y, FLOWER.h);
+                    // todo lower flower picker
                     navigate.addPath(getPathName(Auto.PathState.FLOWER), MAX_SPEED, MIN_TOLERANCE, pose);
                     break;
 
                 case FLOWER_AUDIENCE:
+                    // todo lower flower picker
                     pose = createPose(FLOWER_AUDIENCE.x, FLOWER_AUDIENCE.y, FLOWER_AUDIENCE.h);
                     navigate.addPath(getPathName(Auto.PathState.FLOWER_AUDIENCE), MAX_SPEED, MIN_TOLERANCE, pose);
                     break;
