@@ -19,15 +19,24 @@ import utils.Pose;
 public class Limelight {
 
     public enum Pipeline  {LOCATION, APRIL_TAG }
-    private final Limelight3A limelight;
-
+    private Limelight3A limelight;
 
     public Limelight (LinearOpMode opMode) {
-        limelight = opMode.hardwareMap.get(Limelight3A.class, "limelight");
-        limelight.start();
 
-        LLStatus status = limelight.getStatus();
-        Logger.message("%s started", status.getName());
+        try {
+            limelight = opMode.hardwareMap.get(Limelight3A.class, "limelight");
+            limelight.start();
+            LLStatus status = limelight.getStatus();
+            Logger.message("%s started", status.getName());
+
+        } catch (Exception e) {
+            limelight = null;
+            Logger.error(e, "hardware not found", 2);
+        }
+    }
+
+    public boolean isActive() {
+        return (limelight != null);
     }
 
     /**
@@ -38,6 +47,8 @@ public class Limelight {
      * @noinspection unused
      */
     public Pose getPosition (double heading) {
+
+        if (! isActive()) return null;
 
         Pose pose = null;
 

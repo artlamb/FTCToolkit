@@ -56,14 +56,16 @@ public class Robot extends Thread {
             drive = new Drive(opMode);
             driveControl = new DriveControl(opMode, drive);
             driveControl.start();
+
             driveGamepad = new DriveGamepad(opMode, driveControl);
 
             launcher = new Launcher(opMode);
+            launcher.start();
+
             limelight = new Limelight(opMode);
             intake = new Intake(opMode);
             hopper = new Hopper(opMode);
 
-            launcher.start();
 
         } catch (Exception e) {
             Logger.error(e, "hardware not found", 2);
@@ -274,9 +276,6 @@ public class Robot extends Thread {
         launcher.gateOpen();
     }
 
-    public void fireArtifact() {
-        launcher.fireLauncher();
-    }
     /**
      * Fire one artifact
      */
@@ -287,9 +286,12 @@ public class Robot extends Thread {
     /**
      * Fire all artifacts
      */
-    public void fireAllArtifacts() {
+    public void fireAll() {
         launcher.fireAllArtifacts();
     }
 
+    public void setLauncherSpeed(double speed) {
+        launcher.setSpeed(speed);
+    }
 } // end of class
 

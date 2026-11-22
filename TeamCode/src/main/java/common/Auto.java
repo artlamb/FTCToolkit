@@ -3,6 +3,8 @@ package common;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+
 import utils.Pose;
 import utils.PoseData;
 
@@ -18,40 +20,32 @@ public class Auto {
     public static double LOW_TOLERANCE = 0.1;
     public static double HIGH_TOLERANCE = 0.20;
 
-    public static PoseData START_AUDIENCE = new PoseData(0, 0,    0);
-    public static PoseData START_GOAL =     new PoseData(50.50, 50.50,  45);
-    public static PoseData SHOOT_GOAL =     new PoseData(20.00, 20.00,  45);
-    public static PoseData SHOOT_AUDIENCE = new PoseData(11.50, 11.50,  45);
-    public static PoseData ARTIFACT =       new PoseData(25.00, 11.75,  0);
-    //public static PoseData PARK_AUDIENCE =  new PoseData(12.25, -36,    90);
-    public static PoseData PARK_AUDIENCE =  new PoseData(23.5, 0,  0);
-    public static PoseData PARK_GOAL =      new PoseData(23.5, 0, 0);
+    public static PoseData START_HIVE_UP =   new PoseData(+12.60, +61.50, 270);
+    public static PoseData START_HIVE_DOWN = new PoseData(+12.60, -61.50, 0);
+    public static PoseData START_CONNOR =    new PoseData(+61.50, -61.50, 0);
+    public static PoseData SHOOT_ONE =       new PoseData(+12.60, +61.50, 270);
+    public static PoseData SHOOT_TWO =       new PoseData(+12.60, -61.50, 270);
+    public static PoseData GARDEN =          new PoseData(+61.50, +61.50, 0);
+    public static PoseData FLOWER =          new PoseData(+58.00, +23.50, 0);
+    public static PoseData FLOWER_AUDIENCE = new PoseData(+23.50, -58.00, 270);
+    public static PoseData CHANGE_SIDES =    new PoseData(+47, 47.00, 270);
+    public static PoseData PARK =            new PoseData(+55.00, -20.00, 180);
+    public static PoseData PARK_AUDIENCE =   new PoseData(+55.00, -50.00, 180);
 
     public enum Alliance {BLUE, RED}
-
     public Alliance alliance;
 
-    public enum StartPosition {GOAL, AUDIENCE}
-
-    public StartPosition startPosition;
-
-    public enum Order {TOP, MIDDLE, BOTTOM}
-
-    public Order[] order;
-
     public enum PathState {
-        START, SHOOT, ARTIFACT_1, ARTIFACT_2, ARTIFACT_3, PARK, UNKNOWN;
-
+        START_HIVE_UP, START_HIVE_DOWN, START_CONNOR, SHOOT_ONE, SHOOT_TWO, GARDEN, FLOWER, FLOWER_AUDIENCE, CHANGE_SIDES, PARK, PARK_AUDIENCE, UNKNOWN;
         public static PathState get(int index) {
             return values()[index];
         }
     }
-
+    public PathState[] order;
     private int pathIndex = 0;
 
     private double launcherSpeed = 28;
     private long delay = 0;
-    private int timesToShoot = 0;
 
     private final ElapsedTime elapsedTime = new ElapsedTime();
     private final ElapsedTime timer = new ElapsedTime();
@@ -61,57 +55,46 @@ public class Auto {
     private final Robot robot;
     private final DriveControl driveControl;
     private final Navigate navigate;
-    private final Launcher launcher = null;
-    //private final Limelight limelight;
+    private final Limelight limelight;
 
     public Auto(LinearOpMode opMode) {
 
         this.opMode = opMode;
         robot = new Robot(opMode);
 
-        //launcher = robot.getLauncher();
-
         driveControl = robot.getDriveControl();
         driveControl.reset();
         navigate = new Navigate(opMode, driveControl);
-
-        //limelight = robot.getLimelight();
-        //limelight.setPipeline(Limelight.Pipeline.LOCATION);
+        limelight = robot.getLimelight();
+        limelight.setPipeline(Limelight.Pipeline.APRIL_TAG);
     }
 
     public Auto(LinearOpMode opMode,
                 Alliance alliance,
-                StartPosition startPosition,
-                Order[] order,
+                PathState[] order,
                 double launcherSpeed,
-                long delay,
-                int timesToShoot) {
+                long delay) {
 
         this(opMode);
         this.alliance = alliance;
-        this.startPosition = startPosition;
         this.order = order;
         this.launcherSpeed = launcherSpeed;
         this.delay = delay;
-        this.timesToShoot = timesToShoot;
 
         generatePaths();
         drawPaths();
         navigate.printPaths();
 
-        setLauncherSpeed(launcherSpeed);
-        navigate.setStartingPose(pathIndex);
-
-        //robot.powerLauncher(true, launcherSpeed);
+        robot.setLauncherSpeed(launcherSpeed);
+        navigate.setStartingPose(0);
     }
 
     public void runAuto() {
 
         opMode.telemetry.addData("Alliance", alliance);
-        opMode.telemetry.addData("Start Position", startPosition);
         opMode.telemetry.addData("Launcher Speed", launcherSpeed);
         opMode.telemetry.addData("Delay", delay);
-        for (Order value : order) {
+        for (PathState value : order) {
             opMode.telemetry.addData("Order", value);
         }
         opMode.telemetry.addLine("Press start");
@@ -130,30 +113,47 @@ public class Auto {
             Logger.info("%s starts,  time: %6.2f", state, elapsedTime.seconds());
 
             switch (state) {
-                case START:
+                case START_HIVE_UP:
+                case START_HIVE_DOWN:
+                case START_CONNOR:
+                    robot.powerLauncher(true, launcherSpeed);
+                    waitUntilRobotIsIdle();
                     followPath();
                     break;
 
-                case SHOOT:
+                case SHOOT_ONE:
                     waitUntilNotMoving();
-                    robot.fireAllArtifacts();
-                    waitUntilRobotIdIdle();
-                    setOdometer();
+                    robot.fireAll();
+                    waitUntilRobotIsIdle();
                     followPath();
                     break;
 
-                case ARTIFACT_1:
-                case ARTIFACT_2:
-                case ARTIFACT_3:
+                case SHOOT_TWO:
+                    waitUntilNotMoving();
+                    waitUntilHiveTip();
+                    robot.fireAll();
+                    waitUntilRobotIsIdle();
+                    followPath();
+                    break;
+
+                case CHANGE_SIDES:
+                    waitUntilRobotIsIdle();
+                    waitUntilNotMoving();
+                    followPath();
+                    break;
+
+                case GARDEN:
+                case FLOWER:
+                case FLOWER_AUDIENCE:
                     robot.powerIntake(true);
                     waitUntilNotMoving();
                     followPath();
                     robot.delay(1000);
                     robot.powerIntake(false);
-                    robot.loadArtifact();
                     break;
 
                 case PARK:
+                case PARK_AUDIENCE:
                     waitUntilNotMoving();
                     running = false;
                     break;
@@ -163,83 +163,97 @@ public class Auto {
         Logger.info("opmode elapsed time %4.1f", elapsedTime.seconds());
     }
 
+    /**
+     * Generates and constructs all autonomous navigation paths based on the configured {@link #order}.
+     * <p>
+     * Iterates through each {@link PathState} in the execution order sequence and calculates alliance-specific
+     * coordinates and headings (flipping X/Y coordinate signs and adding 180° heading offsets for Red alliance).
+     * Registers the generated target poses with the {@link Navigate} subsystem.
+     */
     private void generatePaths() {
 
-        double heading;
-        int shootCount = 0;
+        Pose pose;
+        Pose startPose;
+        Pose endPose;
+        String pathName;
 
-        // The coordinates are the same for both alliances except the x coordinate are negative for the blue alliance.
-        double xSign = (alliance == Alliance.RED) ? 1 : -1;
-
-        // Create the pose for a starting position at the goal, near the obelisk or by the audience.
-        Pose start = null;
-        if (startPosition == StartPosition.GOAL) {
-            heading = (alliance == Alliance.RED) ? START_GOAL.h : START_GOAL.h + 90;
-            start = createPose(START_GOAL.x * xSign, START_GOAL.y, heading);
-        } else if (startPosition == StartPosition.AUDIENCE) {
-            start = createPose(START_AUDIENCE.x * xSign, START_AUDIENCE.y, START_AUDIENCE.h);
-        }
-        navigate.addPath(getPathName(PathState.START), FAST_SPEED, MIN_TOLERANCE, start);
-
-        // Create a path to the shooting position.
-        Pose shoot = null;
-        heading = (alliance == Alliance.RED) ? SHOOT_GOAL.h : SHOOT_GOAL.h + 90;
-        if (startPosition == StartPosition.GOAL) {
-            shoot = createPose(SHOOT_GOAL.x * xSign, SHOOT_GOAL.y, heading);
-        } else if (startPosition == StartPosition.AUDIENCE) {
-            shoot = createPose(SHOOT_AUDIENCE.x * xSign, SHOOT_AUDIENCE.y, heading);
-        }
-        if (shootCount < timesToShoot) {
-            navigate.addPath(getPathName(PathState.SHOOT), FAST_SPEED, MIN_TOLERANCE, shoot);
-            shootCount++;
-        }
-
-        // Create a path for to pickup each group of artifact on the order specified and a path back to the shooting position.
-        for (Order o : order) {
-            heading = (alliance == Alliance.RED) ? 180 : 0;
+        // Create a path for each state of the robot during autonomous.
+        for (PathState stateOrder : order) {
             double tileSize = 23.5;
-            double x1 = ARTIFACT.x;
-            double y1 = ARTIFACT.y;
-            double x2 = (tileSize * 2) + 1;
-            double y2 = y1;
-            PathState pathState;
-            switch (o) {
-                case TOP:
-                    pathState = PathState.ARTIFACT_1;
+            switch (stateOrder) {
+                case START_HIVE_UP:
+                    pose = createPose(START_HIVE_UP.x, START_HIVE_UP.y, START_HIVE_UP.h);
+                    navigate.addPath(getPathName(Auto.PathState.START_HIVE_UP), FAST_SPEED, MIN_TOLERANCE, pose);
                     break;
-                case MIDDLE:
-                    pathState = PathState.ARTIFACT_2;
-                    y2 -= tileSize;
+
+                case START_HIVE_DOWN:
+                    pose = createPose(START_HIVE_DOWN.x, START_HIVE_DOWN.y, START_HIVE_DOWN.h);
+                    navigate.addPath(getPathName(Auto.PathState.START_HIVE_DOWN), FAST_SPEED, MIN_TOLERANCE, pose);
                     break;
-                case BOTTOM:
-                    pathState = PathState.ARTIFACT_3;
-                    y2 -= tileSize * 2;
+
+                case START_CONNOR:
+                    pose = createPose(START_CONNOR.x, START_CONNOR.y, START_CONNOR.h);
+                    navigate.addPath(getPathName(Auto.PathState.START_CONNOR), FAST_SPEED, MIN_TOLERANCE, pose);
                     break;
+
+                case SHOOT_ONE:
+                    pose = createPose(SHOOT_ONE.x, SHOOT_ONE.y, SHOOT_ONE.h);
+                    navigate.addPath(getPathName(Auto.PathState.SHOOT_ONE), FAST_SPEED, MIN_TOLERANCE, pose);
+                    break;
+
+                case SHOOT_TWO:
+                    Pose shootAudience = createPose(SHOOT_TWO.x, SHOOT_TWO.y, SHOOT_TWO.h);
+                    navigate.addPath(getPathName(Auto.PathState.SHOOT_TWO), FAST_SPEED, MIN_TOLERANCE, shootAudience);
+                    break;
+
+                case GARDEN:
+                    pathName = getPathName(Auto.PathState.GARDEN);
+                    startPose = createPose(GARDEN.x, GARDEN.y, GARDEN.h);
+                    endPose = createPose((GARDEN.x + (tileSize / 2)), GARDEN.y, GARDEN.h);
+                    navigate.addPath(pathName, MAX_SPEED, LOW_TOLERANCE, startPose);
+                    navigate.appendPose(pathName, SLOW_SPEED, LOW_TOLERANCE, endPose);
+                    break;
+
+                case FLOWER:
+                    pose = createPose(FLOWER.x, FLOWER.y, FLOWER.h);
+                    navigate.addPath(getPathName(Auto.PathState.FLOWER), MAX_SPEED, MIN_TOLERANCE, pose);
+                    break;
+
+                case FLOWER_AUDIENCE:
+                    pose = createPose(FLOWER_AUDIENCE.x, FLOWER_AUDIENCE.y, FLOWER_AUDIENCE.h);
+                    navigate.addPath(getPathName(Auto.PathState.FLOWER_AUDIENCE), MAX_SPEED, MIN_TOLERANCE, pose);
+                    break;
+
+                case CHANGE_SIDES:
+                    pathName = getPathName(Auto.PathState.CHANGE_SIDES);
+                    startPose = createPose(CHANGE_SIDES.x, CHANGE_SIDES.y, CHANGE_SIDES.h);
+                    endPose = createPose((CHANGE_SIDES.x), (CHANGE_SIDES.y - (tileSize * 4)), CHANGE_SIDES.h);
+                    navigate.addPath(pathName, MAX_SPEED, HIGH_TOLERANCE, startPose);
+                    navigate.appendPose(pathName, MAX_SPEED, HIGH_TOLERANCE, endPose);
+                    break;
+
+                case PARK:
+                    pose = createPose(PARK.x, PARK.y, PARK.h);
+                    navigate.addPath(getPathName(Auto.PathState.PARK), MAX_SPEED, MIN_TOLERANCE, pose);
+                    break;
+
+                case PARK_AUDIENCE:
+                    pose = createPose(PARK_AUDIENCE.x, PARK_AUDIENCE.y, PARK_AUDIENCE.h);
+                    navigate.addPath(getPathName(Auto.PathState.PARK_AUDIENCE), MAX_SPEED, MIN_TOLERANCE, pose);
+                    break;
+
                 default:
                     return;
             }
-            Pose artifactStart = createPose(x1 * xSign, y2, heading);
-            Pose artifactEnd = createPose(x2 * xSign, y2, heading);
-            navigate.addPath(getPathName(pathState), MAX_SPEED, LOW_TOLERANCE, artifactStart);
-            navigate.appendPose(pathState.name(), SLOW_SPEED, LOW_TOLERANCE, artifactEnd);
-            if (shootCount < timesToShoot) {
-                navigate.addPath(getPathName(PathState.SHOOT), MAX_SPEED, MIN_TOLERANCE, shoot);
-                shootCount++;
-            }
         }
-
-        // Create a path to the parking position.
-        Pose park;
-        if (startPosition == StartPosition.GOAL) {
-            park = createPose(PARK_GOAL.x * xSign, PARK_GOAL.y, PARK_GOAL.h);
-        } else {
-            park = createPose(PARK_AUDIENCE.x * xSign, PARK_AUDIENCE.y, PARK_AUDIENCE.h);
-        }
-        navigate.addPath(getPathName(PathState.PARK), SLOW_SPEED, HIGH_TOLERANCE, park);
     }
 
     private Pose createPose(double x, double y, double heading) {
-        return new Pose(x, y, Math.toRadians(heading));
+
+        // The coordinates are the same for both alliances except the red alliance is a flipped mirror image
+        double sign   = (alliance == Alliance.BLUE) ? 1 : -1;
+        double rotate  = (alliance == Alliance.BLUE) ? 0 : - 180;
+        return new Pose(x * sign, y * sign, Math.toRadians(AngleUnit.normalizeDegrees(heading + rotate)));
     }
 
     public void drawPaths() {
@@ -261,12 +275,12 @@ public class Auto {
     }
 
     private PathState getPathState(String pathName) {
-        for (PathState state : PathState.values()) {
+        for (PathState state : Auto.PathState.values()) {
             if (state.name().equals(pathName)) {
                 return state;
             }
         }
-        return PathState.UNKNOWN;
+        return Auto.PathState.UNKNOWN;
     }
 
     private void followPath() {
@@ -274,10 +288,6 @@ public class Auto {
         waitUntilOkToMove();
         pathIndex++;
         navigate.followPath(pathIndex);
-    }
-
-    public void setLauncherSpeed(double speed) {
-        //launcher.setSpeed(speed);
     }
 
     public void waitUntilNotMoving() {
@@ -288,7 +298,13 @@ public class Auto {
 
     }
 
-    private void waitUntilRobotIdIdle() {
+    /**
+     * Blocks execution until the robot is no longer busy or until a 6-second timeout occurs.
+     * <p>
+     * Continuously checks if the robot is busy and yields the current thread while waiting.
+     * Logs a warning if the 6,000 ms timeout is reached before the robot becomes idle.
+     */
+    private void waitUntilRobotIsIdle() {
         Logger.debug("waiting");
         long timeout = 6000;
         timer.reset();
@@ -297,7 +313,7 @@ public class Auto {
                 Logger.warning("robot timed out after %d ms", timeout);
                 break;
             }
-            Thread.yield();
+            opMode.sleep(10);
         }
         Logger.debug("done waiting, time: %5.0f", timer.seconds());
     }
@@ -319,7 +335,7 @@ public class Auto {
             if (driveControl.nearPose() ) {
                 break;
             } else {
-                Thread.yield();
+                opMode.sleep(10);
             }
             if (timer.milliseconds() > timeout) {
                 Logger.warning("robot timed out");
@@ -327,6 +343,20 @@ public class Auto {
             }
         }
         Logger.debug("done waiting, time: %5.0f", timer.milliseconds());
+    }
+
+    private void waitUntilHiveTip() {
+        Logger.debug("waiting");
+        long timeout = 25000;
+        timer.reset();
+        while (limelight.GetAprilTagID() == 0) {        // todo May need additional checks.
+            if (timer.milliseconds() > timeout) {
+                Logger.warning("robot timed out after %d ms", timeout);
+                break;
+            }
+            opMode.sleep(10);
+        }
+        Logger.debug("done waiting, time: %5.0f", timer.seconds());
     }
 
     private void waitForButtonPress() {
@@ -346,26 +376,9 @@ public class Auto {
             } else if (opMode.gamepad1.x) {
                 pressed = true;
             }
+            opMode.sleep(10);
         }
         Logger.debug("done waiting for button press");
     }
 
-    private void setOdometer() {
-
-        /*
-        int blueID = 20;
-        int redID = 24;
-        Pose current;
-
-        int id = limelight.GetAprilTagID();
-        if ((id == blueID && alliance == Alliance.BLUE) || (id == redID) && alliance == Alliance.RED) {
-            Logger.debug("april tag found with id: %d", id);
-            current = limelight.getPosition();
-            if (current != null) {
-                Logger.debug("odometer's position set from: %s to: %s", driveControl.getPose(), current);
-                // todo should we do this? driveControl.setPose(current);
-            }
-        }
-         */
-    }
 }
